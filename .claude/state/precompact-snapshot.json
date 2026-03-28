@@ -1,0 +1,20 @@
+{
+  "version": "1.0.0",
+  "timestamp": "2026-03-28T12:26:26.912Z",
+  "sessionId": "",
+  "wipTasks": [],
+  "recentEdits": [
+    "src/app/globals.css",
+    "src/app/info/page.tsx",
+    "src/app/layout.tsx",
+    "src/app/page.tsx",
+    "src/app/rules/page.tsx",
+    "src/app/schedule/page.tsx",
+    "src/app/standings/page.tsx",
+    "src/app/teams/[slug]/page.tsx",
+    "src/app/teams/page.tsx",
+    "src/components/layout/BottomNav.tsx",
+    "src/lib/types/app.ts"
+  ],
+  "metrics": null
+}

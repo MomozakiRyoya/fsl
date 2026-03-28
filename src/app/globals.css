@@ -1,35 +1,289 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-primary-50: #f0f5ff;
-  --color-primary-100: #dde8ff;
-  --color-primary-200: #c0d4ff;
-  --color-primary-300: #95b6ff;
-  --color-primary-400: #6492ff;
-  --color-primary-500: #2b70ef;
-  --color-primary-600: #2250df;
-  --color-primary-700: #1a40b5;
-  --color-primary-800: #13318d;
-  --color-primary-900: #0e266a;
-  --color-primary-950: #07194e;
+  /* ===== Navy (メインカラー) ===== */
+  --color-primary-50:  #eef2f8;
+  --color-primary-100: #d5e0f0;
+  --color-primary-200: #adc1e1;
+  --color-primary-300: #7a9dcf;
+  --color-primary-400: #4d7abaee;
+  --color-primary-500: #2255a0;
+  --color-primary-600: #1a4288;
+  --color-primary-700: #133170;
+  --color-primary-800: #0e2458;
+  --color-primary-900: #0a1a40;
+  --color-primary-950: #050e24;
+
+  /* ===== Gold (アクセントカラー) ===== */
+  --color-gold-50:  #fdf8ee;
+  --color-gold-100: #faefcc;
+  --color-gold-200: #f4da96;
+  --color-gold-300: #ecc35b;
+  --color-gold-400: #e3ab32;
+  --color-gold-500: #c9921e;
+  --color-gold-600: #a97016;
+  --color-gold-700: #865316;
+  --color-gold-800: #6a4018;
+  --color-gold-900: #4d2e12;
+  --color-gold-950: #2b1808;
+
   --font-sans: 'Inter', 'Hiragino Sans', 'Noto Sans JP', sans-serif;
 }
 
 :root {
   color-scheme: light;
+  --navy: #0c1e42;
+  --gold: #c9921e;
+  --gold-light: #e3c060;
 }
 
 * {
   -webkit-tap-highlight-color: transparent;
 }
 
+body {
+  background-color: #f5f3ee;
+}
+
 .text-body {
-  color: #3d4b5f;
+  color: #3d4455;
+}
+
+/* ===== ゴールド・ネイビーユーティリティ ===== */
+
+.bg-navy    { background-color: var(--navy); }
+.text-gold  { color: var(--gold); }
+.text-gold-light { color: var(--gold-light); }
+.border-gold { border-color: var(--gold); }
+
+/* ゴールドグラデーション（ラインやアクセント用） */
+.bg-gold-gradient {
+  background: linear-gradient(90deg, #c9921e 0%, #e3c060 50%, #c9921e 100%);
+}
+
+/* カードスタイル（ゴールドアクセント） */
+.card-premium {
+  background: white;
+  border: 1px solid #e8dfc0;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px rgba(12,30,66,0.06), 0 1px 2px rgba(201,146,30,0.04);
+}
+
+.card-premium:hover {
+  border-color: #c9921e40;
+  box-shadow: 0 4px 12px rgba(12,30,66,0.1), 0 2px 6px rgba(201,146,30,0.08);
+}
+
+/* ゴールドバッジ */
+.badge-gold {
+  background: linear-gradient(135deg, #c9921e, #e3c060);
+  color: white;
+  font-weight: 600;
+}
+
+/* ネイビー背景ボタン */
+.btn-navy {
+  background-color: var(--navy);
+  color: white;
+}
+.btn-navy:hover { background-color: #142852; }
+
+/* ゴールドボタン */
+.btn-gold {
+  background: linear-gradient(135deg, #c9921e, #e3c060);
+  color: #0c1e42;
+  font-weight: 700;
 }
 
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus {
-  -webkit-text-fill-color: #0f172a;
+  -webkit-text-fill-color: #0c1e42;
   -webkit-box-shadow: 0 0 0px 1000px white inset;
+}
+
+/* ===== アニメーション ===== */
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in { animation: fadeIn 0.3s ease-out both; }
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-slide-up { animation: slideUp 0.4s ease-out both; }
+
+@keyframes skeletonPulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+.skeleton-pulse { animation: skeletonPulse 1.5s ease-in-out infinite; }
+
+/* スタガード遅延 */
+.animate-delay-100 { animation-delay: 0.1s; }
+.animate-delay-200 { animation-delay: 0.2s; }
+.animate-delay-300 { animation-delay: 0.3s; }
+.animate-delay-400 { animation-delay: 0.4s; }
+.animate-delay-500 { animation-delay: 0.5s; }
+
+html { scroll-behavior: smooth; }
+
+/* ===== スプラッシュ ===== */
+
+@keyframes splashLogo {
+  0%   { opacity: 0; transform: scale(0.85) translateY(10px); }
+  60%  { opacity: 1; transform: scale(1.03) translateY(0); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+.animate-splash-logo {
+  animation: splashLogo 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes loadingDot {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.3; }
+  40%           { transform: scale(1);   opacity: 1; }
+}
+.animate-loading-dot { animation: loadingDot 1.2s ease-in-out infinite; }
+
+.animation-delay-200 { animation-delay: 0.2s; }
+.animation-delay-400 { animation-delay: 0.4s; }
+.animation-delay-700 { animation-delay: 0.7s; }
+
+/* ===== スクロールバー非表示 ===== */
+.scroll-x-hidden::-webkit-scrollbar { display: none; }
+.scroll-x-hidden { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ===== セーフエリア ===== */
+.safe-area-pb { padding-bottom: env(safe-area-inset-bottom, 0px); }
+
+/* ===== ネイティブライクなスプリングアニメーション ===== */
+
+@keyframes springIn {
+  0%   { opacity: 0; transform: scale(0.92) translateY(12px); }
+  60%  { opacity: 1; transform: scale(1.02) translateY(-2px); }
+  80%  { transform: scale(0.99) translateY(0.5px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+.animate-spring-in {
+  animation: springIn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes popIn {
+  0%   { opacity: 0; transform: scale(0.8); }
+  70%  { transform: scale(1.05); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.animate-pop-in {
+  animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.animate-shimmer {
+  background: linear-gradient(90deg, #e8dfc0 25%, #f5f0e0 50%, #e8dfc0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+/* ===== ネイティブライクなシャドウシステム ===== */
+.shadow-native-sm {
+  box-shadow: 0 1px 3px rgba(12,30,66,0.08), 0 1px 2px rgba(12,30,66,0.06);
+}
+.shadow-native {
+  box-shadow: 0 4px 12px rgba(12,30,66,0.10), 0 1px 3px rgba(12,30,66,0.06);
+}
+.shadow-native-lg {
+  box-shadow: 0 8px 24px rgba(12,30,66,0.12), 0 2px 6px rgba(12,30,66,0.08);
+}
+.shadow-gold {
+  box-shadow: 0 4px 16px rgba(201,146,30,0.2), 0 1px 4px rgba(201,146,30,0.1);
+}
+
+/* ===== タッチフィードバック ===== */
+.touch-active {
+  transition: transform 120ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 120ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.touch-active:active {
+  transform: scale(0.97);
+  box-shadow: 0 1px 4px rgba(12,30,66,0.08);
+}
+
+/* ===== グラスモーフィズム ===== */
+.glass-navy {
+  background: rgba(12, 30, 66, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+.glass-white {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+/* ===== プレミアムカード ===== */
+.card-native {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(12,30,66,0.08), 0 0 0 1px rgba(12,30,66,0.04);
+  transition: box-shadow 200ms ease, transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.card-native:active {
+  transform: scale(0.98);
+  box-shadow: 0 1px 4px rgba(12,30,66,0.06), 0 0 0 1px rgba(12,30,66,0.04);
+}
+
+/* ===== スコア・数値表示 ===== */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ===== ページヘッダー（ネイティブスタイル） ===== */
+.page-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: rgba(245, 243, 238, 0.9);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(12,30,66,0.06);
+}
+
+/* ===== セクション見出し（ネイティブスタイル） ===== */
+.section-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* ===== ピル バッジ ===== */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* ===== Pull-to-refresh 感のある余白 ===== */
+.pt-safe {
+  padding-top: max(8px, env(safe-area-inset-top));
+}
+
+/* ===== スタッツ数値 ===== */
+.stat-number {
+  font-size: 1.75rem;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
 }
