@@ -123,3 +123,53 @@ export interface MatchResult {
   roundId: string;
   results: MatchResultEntry[];
 }
+
+export interface Player {
+  id: string;
+  name: string;
+  teamId: string;
+  teamName: string;
+  leagueId: string;
+  number: number;
+}
+
+export interface PlayerStats {
+  playerId: string;
+  playerName: string;
+  teamId: string;
+  teamName: string;
+  leagueId: string;
+  goals: number;
+  assists: number;
+  games: number;
+  mvpCount: number;
+}
+
+export interface MvpVoteOption {
+  playerId: string;
+  playerName: string;
+  teamName: string;
+  roundId: string;
+}
+
+export interface StackEntry {
+  roundId: string;
+  leagueId: string;
+  teamId: string;
+  teamName: string;
+  playerName: string;
+  stackCount: number;
+  breakNumber: number;
+}
+
+export interface HeadToHead {
+  teamAId: string;
+  teamBId: string;
+  teamAName: string;
+  teamBName: string;
+  wins: number;
+  draws: number;
+  losses: number;
+  teamAGoals: number;
+  teamBGoals: number;
+}

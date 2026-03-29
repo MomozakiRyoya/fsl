@@ -1,11 +1,15 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { MOCK_TEAMS, MOCK_LEAGUES, MOCK_STANDINGS } from "@/lib/mock-data";
+import {
+  getTeams,
+  getLeagues,
+  getStandings,
+  getPlayers,
+  getHeadToHead,
+} from "@/lib/data";
 import FollowButton from "@/components/teams/FollowButton";
 import RankChart from "@/components/standings/RankChart";
 import CheerComments from "@/components/teams/CheerComments";
-
-// const team = await getTeamBySlug(slug)
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -16,19 +20,43 @@ function getInitials(name: string): string {
   return stripped.slice(0, 2).toUpperCase();
 }
 
+export const revalidate = 300;
+
 export default async function TeamDetailPage({ params }: Props) {
   const { slug } = await params;
-  const team = MOCK_TEAMS.find((t) => t.slug === slug);
+  const [teams, leagues, allStandings, players, headToHead] = await Promise.all(
+    [getTeams(), getLeagues(), getStandings(), getPlayers(), getHeadToHead()],
+  );
+
+  const team = teams.find((t) => t.slug === slug);
 
   if (!team) notFound();
 
-  const league = MOCK_LEAGUES.find((l) => l.id === team.leagueId);
-  const standings = MOCK_STANDINGS[team.leagueId] ?? [];
+  const league = leagues.find((l) => l.id === team.leagueId);
+  const standings = allStandings[team.leagueId] ?? [];
   const standing = standings.find((s) => s.teamId === team.id);
+
+  // 選手データ
+  const teamPlayers = players.filter((p) => p.teamId === team.id);
+
+  // 対戦成績（このチームが teamA または teamB のもの）
+  const headToHeadData = headToHead
+    .filter((h) => h.teamAId === team.id || h.teamBId === team.id)
+    .map((h) => {
+      const isTeamA = h.teamAId === team.id;
+      return {
+        opponentName: isTeamA ? h.teamBName : h.teamAName,
+        wins: isTeamA ? h.wins : h.losses,
+        draws: h.draws,
+        losses: isTeamA ? h.losses : h.wins,
+        goalsFor: isTeamA ? h.teamAGoals : h.teamBGoals,
+        goalsAgainst: isTeamA ? h.teamBGoals : h.teamAGoals,
+      };
+    });
 
   const COMPLETED_ROUNDS = [1, 2, 3, 4];
 
-  const leagueStandings = MOCK_STANDINGS[team.leagueId] ?? [];
+  const leagueStandings = allStandings[team.leagueId] ?? [];
   const rankHistory = leagueStandings.map((s) => {
     const ranks = COMPLETED_ROUNDS.map((r) => {
       const roundPoints = leagueStandings.map((t) => ({
@@ -125,7 +153,7 @@ export default async function TeamDetailPage({ params }: Props) {
               <h1 className="text-2xl font-black text-slate-900 tracking-tight">
                 {team.name}
               </h1>
-              <div className="flex items-center gap-2 mt-1.5">
+              <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                 {league && (
                   <span
                     className="text-xs px-2.5 py-1 rounded-xl font-semibold text-white"
@@ -134,17 +162,17 @@ export default async function TeamDetailPage({ params }: Props) {
                     {league.name}
                   </span>
                 )}
-              </div>
-              {team.captainName && (
-                <p className="text-xs text-slate-500 mt-1.5 font-medium">
-                  Cap: {team.captainName}
-                </p>
-              )}
-              {/* フォローボタン */}
-              <div className="mt-2.5">
-                <FollowButton teamId={team.id} teamName={team.name} />
+                {team.captainName && (
+                  <span className="text-xs text-slate-500 font-medium">
+                    Cap: {team.captainName}
+                  </span>
+                )}
               </div>
             </div>
+          </div>
+          {/* フォローボタン（独立した目立つ配置） */}
+          <div className="mt-4">
+            <FollowButton teamId={team.id} teamName={team.name} />
           </div>
         </div>
       </div>
@@ -200,6 +228,49 @@ export default async function TeamDetailPage({ params }: Props) {
                   試合数
                 </p>
               </div>
+            </div>
+          </section>
+        )}
+
+        {/* 直近4試合の結果 */}
+        {standing && (
+          <section className="animate-fade-in animate-delay-150">
+            <h2 className="text-xs font-semibold text-slate-400 mb-3 uppercase tracking-wider">
+              直近の試合結果
+            </h2>
+            <div className="flex gap-2">
+              {COMPLETED_ROUNDS.map((r) => {
+                const pt = standing.roundPoints[r] ?? 0;
+                const allPts = standings
+                  .map((s) => s.roundPoints[r] ?? 0)
+                  .sort((a, b) => b - a);
+                const roundRank = allPts.indexOf(pt) + 1;
+                const isTop3 = roundRank <= 3;
+                return (
+                  <div
+                    key={r}
+                    className="flex-1 bg-white rounded-xl border border-slate-100 px-2 py-3 text-center shadow-sm"
+                    style={
+                      isTop3
+                        ? {
+                            borderBottom: `3px solid ${team.homeColor}`,
+                          }
+                        : undefined
+                    }
+                  >
+                    <p className="text-[10px] font-medium text-slate-400 mb-1">
+                      R{r}
+                    </p>
+                    <p
+                      className="text-lg font-black tabular-nums"
+                      style={{ color: isTop3 ? team.homeColor : "#64748b" }}
+                    >
+                      {pt}
+                    </p>
+                    <p className="text-[9px] text-slate-400 mt-0.5">pt</p>
+                  </div>
+                );
+              })}
             </div>
           </section>
         )}
@@ -295,8 +366,108 @@ export default async function TeamDetailPage({ params }: Props) {
           </div>
         </section>
 
+        {/* 選手一覧 */}
+        {teamPlayers.length > 0 && (
+          <section className="animate-fade-in animate-delay-350">
+            <h2 className="text-xs font-semibold text-slate-400 mb-3 uppercase tracking-wider">
+              選手一覧
+            </h2>
+            <div className="bg-white rounded-xl border border-slate-200 divide-y divide-slate-100 overflow-hidden">
+              {teamPlayers.map((player) => (
+                <Link
+                  key={player.id}
+                  href={`/players/${player.id}`}
+                  className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 transition-colors"
+                >
+                  <div
+                    className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black text-white flex-shrink-0"
+                    style={{ backgroundColor: team.homeColor }}
+                  >
+                    {player.number}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-slate-900">
+                      {player.name}
+                    </p>
+                  </div>
+                  <svg
+                    className="w-3.5 h-3.5 text-slate-300 flex-shrink-0"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* 対戦成績 */}
+        {headToHeadData.length > 0 && (
+          <section className="animate-fade-in animate-delay-400">
+            <h2 className="text-xs font-semibold text-slate-400 mb-3 uppercase tracking-wider">
+              主な対戦成績
+            </h2>
+            <div className="space-y-2">
+              {headToHeadData.map((h2h) => {
+                const totalGames = h2h.wins + h2h.draws + h2h.losses;
+                const winRate =
+                  totalGames > 0
+                    ? Math.round((h2h.wins / totalGames) * 100)
+                    : 0;
+                return (
+                  <div
+                    key={h2h.opponentName}
+                    className="bg-white rounded-xl border border-slate-100 p-4 shadow-sm"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div>
+                        <p className="text-xs text-slate-500 mb-0.5">vs</p>
+                        <p className="text-sm font-bold text-slate-900">
+                          {h2h.opponentName}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm font-semibold">
+                        <span className="text-emerald-600">{h2h.wins}勝</span>
+                        <span className="text-slate-400">{h2h.draws}分</span>
+                        <span className="text-red-500">{h2h.losses}敗</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-xs text-slate-500">得点</span>
+                      <span className="text-xs font-bold text-slate-900">
+                        {h2h.goalsFor} - {h2h.goalsAgainst}
+                      </span>
+                    </div>
+                    {/* 勝率バー */}
+                    <div className="bg-slate-100 rounded-full h-1.5">
+                      <div
+                        className="h-1.5 rounded-full transition-all duration-500"
+                        style={{
+                          width: `${winRate}%`,
+                          backgroundColor: team.homeColor,
+                        }}
+                      />
+                    </div>
+                    <p className="text-[10px] text-slate-400 mt-1 text-right">
+                      勝率 {winRate}%
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
         {/* 応援コメント */}
-        <section className="animate-fade-in animate-delay-400">
+        <section className="animate-fade-in animate-delay-500">
           <CheerComments teamId={team.id} teamName={team.name} />
         </section>
       </div>
