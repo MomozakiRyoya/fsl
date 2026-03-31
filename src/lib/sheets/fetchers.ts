@@ -152,6 +152,7 @@ export async function fetchPlayers(): Promise<Player[]> {
     teamName: r.get("チーム名"),
     leagueId: r.get("リーグID"),
     number: Number(r.get("背番号")),
+    birthday: r.get("誕生日") || null,
   }));
 }
 

@@ -131,6 +131,7 @@ export interface Player {
   teamName: string;
   leagueId: string;
   number: number;
+  birthday: string | null;
 }
 
 export interface PlayerStats {
