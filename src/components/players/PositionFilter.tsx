@@ -87,7 +87,7 @@ export default function PositionFilter({
         {filtered.map((player) => {
           const stat = statsMap.get(player.id);
           const isTopScorer = player.id === topScorerPlayerId;
-          const recentBirthday = isRecentBirthday(player.birthday);
+          const recentBirthday = isRecentBirthday(player.birthday ?? null);
           return (
             <a
               key={player.id}
