@@ -51,6 +51,26 @@ export interface Round {
   venueUrl: string | null;
   status: RoundStatus;
   isPlayoff: boolean;
+  format?: string;
+  structureId?: string | null;
+}
+
+export interface BlindLevel {
+  level: number | "break";
+  sb?: number;
+  bb?: number;
+  ante?: number;
+  duration: string;
+  start: string;
+}
+
+export interface Structure {
+  id: string;
+  name: string;
+  startingStack: number;
+  maxPlayers: number;
+  format: string;
+  levels: BlindLevel[];
 }
 
 export interface Match {
@@ -72,6 +92,7 @@ export interface TeamStanding {
   teamId: string;
   teamName: string;
   teamLogoUrl: string | null;
+  teamSlug?: string | null;
   totalPoints: number;
   roundPoints: Record<number, number>;
 }
@@ -132,6 +153,9 @@ export interface Player {
   leagueId: string;
   number: number;
   birthday?: string | null;
+  photoUrl?: string | null;
+  isCaptain?: boolean;
+  userEmail?: string | null;
 }
 
 export interface PlayerStats {
