@@ -11,7 +11,10 @@ export async function POST(request: Request) {
 
   const body = await request.json();
   const avatarUrl = (body.avatarUrl as string | null) ?? null;
-  const playerId = user.user_metadata?.player_id as string | undefined;
+  const playerId =
+    (body.playerId as string | null) ??
+    (user.user_metadata?.player_id as string | undefined) ??
+    null;
 
   let query = supabase.from("players").update({ photo_url: avatarUrl });
 

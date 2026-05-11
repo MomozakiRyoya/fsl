@@ -20,11 +20,13 @@ export default function AccountClient({
   displayName: initialDisplayName,
   avatarColor: initialAvatarColor,
   avatarUrl: initialAvatarUrl,
+  playerId,
 }: {
   email: string;
   displayName: string;
   avatarColor: string;
   avatarUrl: string | null;
+  playerId?: string | null;
 }) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -94,7 +96,7 @@ export default function AccountClient({
       await fetch("/api/account/sync-photo", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ avatarUrl }),
+        body: JSON.stringify({ avatarUrl, playerId: playerId ?? null }),
       });
       setProfileSaved(true);
       setTimeout(() => setProfileSaved(false), 2500);

@@ -85,6 +85,7 @@ export default async function MyPage() {
         displayName={user.user_metadata?.display_name ?? ""}
         avatarColor={user.user_metadata?.avatar_color ?? "#0c1e42"}
         avatarUrl={user.user_metadata?.avatar_url ?? null}
+        playerId={playerId}
       />
       <PlayerStatsSection
         player={myPlayer}
