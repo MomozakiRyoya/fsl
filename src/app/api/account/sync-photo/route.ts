@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createClient as createAdmin } from "@supabase/supabase-js";
 
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -16,7 +17,13 @@ export async function POST(request: Request) {
     (user.user_metadata?.player_id as string | undefined) ??
     null;
 
-  let query = supabase.from("players").update({ photo_url: avatarUrl });
+  // RLSをバイパスしてphoto_urlを更新
+  const admin = createAdmin(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+
+  let query = admin.from("players").update({ photo_url: avatarUrl });
 
   if (playerId) {
     query = query.eq("player_id", playerId);
