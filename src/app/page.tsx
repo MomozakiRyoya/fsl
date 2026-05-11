@@ -77,11 +77,6 @@ export default async function HomePage() {
 
         {/* コンテンツ */}
         <div className="relative px-6 pt-12 pb-6 text-center text-white">
-          {/* Season 1 LIVE バッジ */}
-          <div className="inline-flex items-center gap-1.5 bg-red-600/90 backdrop-blur-md px-3 py-1.5 rounded-full text-xs font-bold mb-3 border border-red-500/40">
-            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse inline-block" />
-            Season 7 LIVE
-          </div>
           <h1 className="text-3xl font-black tracking-wide mb-0.5 drop-shadow-lg">
             FUKUOKA
           </h1>
