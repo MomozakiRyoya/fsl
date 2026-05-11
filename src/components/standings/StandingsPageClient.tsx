@@ -208,10 +208,6 @@ export default function StandingsPageClient({ leagues, standings }: Props) {
       </div>
 
       <div className="px-4 py-4">
-        <p className="text-[11px] text-slate-400 mb-3">
-          プレーオフ進出圏: 上位4チーム
-        </p>
-
         <div className="flex border-b border-slate-200 bg-white -mx-4 px-4 mb-4">
           {SUB_TABS.map((tab) => (
             <button
@@ -251,49 +247,6 @@ export default function StandingsPageClient({ leagues, standings }: Props) {
               standings={currentStandings}
               leagueColor={currentLeague?.color ?? "#2b70ef"}
             />
-
-            <div className="mt-3 flex items-center gap-4">
-              <div className="flex items-center gap-1.5">
-                <span
-                  className="w-3 h-3 rounded-sm flex-shrink-0 border-l-2"
-                  style={{
-                    borderColor: "#c9921e",
-                    background: "rgba(201,146,30,0.12)",
-                  }}
-                />
-                <span className="text-xs text-slate-500">プレーオフ進出</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="w-3 h-3 rounded-sm flex-shrink-0 border-l-2 border-red-400 bg-red-50" />
-                <span className="text-xs text-slate-500">降格圏</span>
-              </div>
-            </div>
-
-            <div className="mt-4 animate-fade-in">
-              <RankChart
-                leagueId={activeLeague}
-                teams={topTeams}
-                rounds={COMPLETED_ROUNDS}
-              />
-            </div>
-
-            <div className="mt-4 flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-              <svg
-                className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5"
-                fill="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003ZM12 8.25a.75.75 0 0 1 .75.75v3.75a.75.75 0 0 1-1.5 0V9a.75.75 0 0 1 .75-.75Zm0 8.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              <p className="text-xs text-amber-800">
-                上位4チームがプレーオフ（WILD CARD）に進出。SEMI FINAL → THE
-                FINAL で優勝を争います。
-              </p>
-            </div>
           </>
         )}
 
