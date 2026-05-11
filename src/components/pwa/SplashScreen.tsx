@@ -40,11 +40,11 @@ export default function SplashScreen() {
       <div
         className="absolute inset-0"
         style={{
-          backgroundImage: "url(/fsl-logo.jpg)",
-          backgroundSize: "contain",
+          backgroundImage: "url(/fsl-season6-group.jpg)",
+          backgroundSize: "cover",
           backgroundRepeat: "no-repeat",
-          backgroundPosition: "center",
-          opacity: 0.18,
+          backgroundPosition: "center top",
+          opacity: 0.22,
         }}
       />
 
@@ -57,14 +57,14 @@ export default function SplashScreen() {
       {/* コンテンツ */}
       <div className="relative flex flex-col items-center gap-6 animate-splash-logo">
         {/* ロゴ: fsl-logo.jpg の右半分（青いFSLロゴ）を表示 */}
-        <div
-          className="w-24 h-24 rounded-2xl shadow-2xl overflow-hidden"
-          style={{
-            backgroundImage: "url(/fsl-logo.jpg)",
-            backgroundSize: "220% auto",
-            backgroundPosition: "100% 0%",
-          }}
-        />
+        <div className="w-56 h-80 rounded-3xl shadow-2xl overflow-hidden">
+          <img
+            src="/fsl-logo.jpg"
+            alt="FSL"
+            className="w-full h-full object-cover"
+            style={{ objectPosition: "right 15%" }}
+          />
+        </div>
 
         <div className="text-center">
           <p className="text-white/60 text-[10px] tracking-[0.4em] uppercase mb-1">
@@ -73,12 +73,6 @@ export default function SplashScreen() {
           <h1 className="text-white text-2xl font-bold tracking-widest leading-tight drop-shadow-lg">
             SUPER LEAGUE
           </h1>
-          <p
-            className="text-sm font-semibold tracking-[0.3em] mt-1.5"
-            style={{ color: "#e3c060" }}
-          >
-            Season 1
-          </p>
         </div>
 
         {/* ローディングドット */}

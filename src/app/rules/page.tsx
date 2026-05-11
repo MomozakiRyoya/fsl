@@ -1,13 +1,13 @@
 export default function RulesPage() {
   const POINT_TABLE = [
-    { rank: "1位", points: 14 },
-    { rank: "2位", points: 11 },
-    { rank: "3位", points: 9 },
-    { rank: "4位", points: 7 },
-    { rank: "5位", points: 5 },
-    { rank: "6位", points: 3 },
-    { rank: "7位", points: 2 },
-    { rank: "8位", points: 1 },
+    { rank: "1位", points: 12 },
+    { rank: "2位", points: 9 },
+    { rank: "3位", points: 7 },
+    { rank: "4位", points: 5 },
+    { rank: "5位", points: 3 },
+    { rank: "6位", points: 2 },
+    { rank: "7位", points: 1 },
+    { rank: "8位", points: 0 },
   ];
 
   const RULES_SUMMARY = [
@@ -22,7 +22,8 @@ export default function RulesPage() {
         </svg>
       ),
       title: "チーム構成",
-      description: "各チーム 3〜6名で構成。試合当日は最低3名出場が必要です。",
+      description:
+        "各チーム最大8シート。各節は8チーム1テーブルで対戦します。チーム登録料（初回）は80,000円です。",
       color: "#2b70ef",
     },
     {
@@ -35,9 +36,9 @@ export default function RulesPage() {
           />
         </svg>
       ),
-      title: "遅刻ペナルティ",
+      title: "遅刻・欠場ペナルティ",
       description:
-        "試合開始時刻から10分以内は-1pt、30分以上の遅刻は参加不可となります。",
+        "試合開始時刻に遅刻または欠場した場合は失格となり、-2ptのペナルティが課されます。",
       color: "#EF4444",
     },
     {
@@ -47,9 +48,9 @@ export default function RulesPage() {
           <path d="M13.06 15.473a48.45 48.45 0 0 1 7.666-3.282c.134 1.414.22 2.843.255 4.285a.75.75 0 0 1-.46.71 47.878 47.878 0 0 0-8.105 4.342.75.75 0 0 1-.832 0 47.877 47.877 0 0 0-8.104-4.342.75.75 0 0 1-.461-.71c.035-1.442.121-2.87.255-4.286A48.4 48.4 0 0 1 6 13.18v1.27a1.5 1.5 0 0 0-.14 2.508c-.09.38-.222.753-.397 1.11.452.213.901.434 1.346.661a6.729 6.729 0 0 0 .551-1.608 1.5 1.5 0 0 0 .14-2.67v-.645a48.549 48.549 0 0 1 3.44 1.668 2.25 2.25 0 0 0 2.12 0Z" />
         </svg>
       ),
-      title: "ゲーム形式",
+      title: "競技形式",
       description:
-        "テキサスホールデム形式のポーカーで行います。各節複数ゲームを実施し、成績に応じてポイントを付与。",
+        "バドゥギ（Badugi）ポーカーで対戦します。各節8チーム1テーブルのフリーズアウト形式。施設使用料は6,000円/節/シートです。",
       color: "#10B981",
     },
     {
@@ -64,14 +65,33 @@ export default function RulesPage() {
       ),
       title: "プレーオフ",
       description:
-        "レギュラーシーズン上位4チームがWILD CARDに進出。SEMI FINAL → THE FINALで優勝を争います。",
+        "ワイルドカード（9/6）→ セミファイナル（9/7）→ THE FINAL（9/8）の3段階。THE FINAL優勝賞金70万円。",
       color: "#F59E0B",
     },
   ];
 
+  const PRIZE_TABLE = [
+    { category: "レギュラーシーズン優勝", prize: "300,000円", icon: "🏆" },
+    { category: "THE FINAL 優勝", prize: "700,000円", icon: "👑" },
+    { category: "THE FINAL 2位", prize: "300,000円", icon: "🥈" },
+    { category: "THE FINAL 3位", prize: "100,000円", icon: "🥉" },
+  ];
+
   return (
     <div className="max-w-lg mx-auto px-4 py-6">
-      <h1 className="text-xl font-bold text-slate-900 mb-4">ルール</h1>
+      {/* ヘッダー */}
+      <div
+        className="rounded-2xl p-5 mb-6 text-center animate-fade-in"
+        style={{
+          background: "linear-gradient(135deg, #0c1e42 0%, #1a3268 60%, #0c1e42 100%)",
+        }}
+      >
+        <p className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] mb-1">
+          FSL Season 7
+        </p>
+        <h1 className="text-2xl font-black text-white tracking-widest mb-1">RULES</h1>
+        <p className="text-xs text-white/50">2026年5月9日〜9月8日 | 全16節 | 6ディビジョン × 8チーム</p>
+      </div>
 
       {/* ルールブックリンク */}
       <a
@@ -98,7 +118,7 @@ export default function RulesPage() {
         </div>
         <div className="flex-1">
           <p className="font-semibold text-sm" style={{ color: "#0c1e42" }}>
-            FSL Season 1 公式ルールブック
+            FSL Season 7 公式ルールブック
           </p>
           <p className="text-xs mt-0.5" style={{ color: "rgba(12,30,66,0.6)" }}>
             競技規定・詳細ルールを確認する
@@ -127,16 +147,14 @@ export default function RulesPage() {
             className="w-1 h-4 rounded-full inline-block"
             style={{ background: "linear-gradient(180deg, #c9921e, #e3c060)" }}
           />
-          ポイント体系
+          ポイントシステム
         </h2>
         <div className="bg-white rounded-xl border border-[#e8dfc0] overflow-hidden">
           <div className="grid grid-cols-2 divide-x divide-slate-100">
             {POINT_TABLE.map((row, i) => (
               <div
                 key={row.rank}
-                className={`flex items-center justify-between px-4 py-2.5 border-b border-slate-100 last:border-0 ${
-                  i % 2 === 1 ? "border-l border-slate-100" : ""
-                } animate-slide-up`}
+                className={`flex items-center justify-between px-4 py-2.5 border-b border-slate-100 last:border-0 animate-slide-up`}
                 style={{ animationDelay: `${i * 40}ms` }}
               >
                 <span className="text-sm text-slate-700">{row.rank}</span>
@@ -161,8 +179,143 @@ export default function RulesPage() {
         </div>
       </section>
 
-      {/* ルールサマリー */}
-      <section className="animate-fade-in animate-delay-200">
+      {/* プレーオフ構成 */}
+      <section className="mb-6 animate-fade-in animate-delay-150">
+        <h2 className="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
+          <span
+            className="w-1 h-4 rounded-full inline-block"
+            style={{ background: "linear-gradient(180deg, #c9921e, #e3c060)" }}
+          />
+          プレーオフ構成
+        </h2>
+        <div className="space-y-3">
+          {/* ワイルドカード */}
+          <div className="bg-white rounded-xl border border-[#e8dfc0] p-4 animate-slide-up">
+            <div className="flex items-start gap-3">
+              <div
+                className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 text-sm font-black"
+                style={{ background: "linear-gradient(135deg, #0c1e42, #1a3268)", color: "#e3c060" }}
+              >
+                WC
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center justify-between mb-0.5">
+                  <p className="text-sm font-semibold text-slate-900">ワイルドカード</p>
+                  <span className="text-[10px] font-bold text-white bg-slate-500 px-2 py-0.5 rounded-full">
+                    9/6(金)
+                  </span>
+                </div>
+                <p className="text-xs text-body leading-relaxed">
+                  各ディビジョン5〜8位の計16チームが参加。ターボトーナメント形式で上位2チームがセミファイナルへ進出。
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* セミファイナル */}
+          <div className="bg-white rounded-xl border border-[#e8dfc0] p-4 animate-slide-up" style={{ animationDelay: "60ms" }}>
+            <div className="flex items-start gap-3">
+              <div
+                className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 text-[10px] font-black"
+                style={{ background: "linear-gradient(135deg, #1a3268, #2b4a8a)", color: "#e3c060" }}
+              >
+                SF
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center justify-between mb-0.5">
+                  <p className="text-sm font-semibold text-slate-900">セミファイナル</p>
+                  <span className="text-[10px] font-bold text-white bg-slate-500 px-2 py-0.5 rounded-full">
+                    9/7(土)
+                  </span>
+                </div>
+                <p className="text-xs text-body leading-relaxed mb-2">
+                  各ディビジョン上位4チーム＋ワイルドカード上位2チームが参加。9名になった瞬間ファイナルテーブル確定。
+                </p>
+                <div className="bg-slate-50 rounded-lg p-2.5">
+                  <p className="text-[10px] font-bold text-slate-500 mb-1">スタート スタック</p>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
+                    {[
+                      { rank: "1位シード", stack: "400BB + ポイント分" },
+                      { rank: "2位シード", stack: "350BB + ポイント分" },
+                      { rank: "3位シード", stack: "300BB + ポイント分" },
+                      { rank: "4位シード", stack: "250BB + ポイント分" },
+                    ].map((s) => (
+                      <div key={s.rank} className="flex items-center gap-1">
+                        <span className="text-[10px] text-slate-500">{s.rank}:</span>
+                        <span className="text-[10px] font-semibold text-slate-700">{s.stack}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* THE FINAL */}
+          <div
+            className="rounded-xl p-4 animate-slide-up"
+            style={{
+              animationDelay: "120ms",
+              background: "linear-gradient(135deg, #0c1e42 0%, #1a3268 100%)",
+            }}
+          >
+            <div className="flex items-start gap-3">
+              <div
+                className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 text-[10px] font-black"
+                style={{ background: "linear-gradient(135deg, #c9921e, #e3c060)", color: "#0c1e42" }}
+              >
+                F
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center justify-between mb-0.5">
+                  <p className="text-sm font-semibold text-white">THE FINAL</p>
+                  <span
+                    className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                    style={{ background: "linear-gradient(135deg, #c9921e, #e3c060)", color: "#0c1e42" }}
+                  >
+                    9/8(日)
+                  </span>
+                </div>
+                <p className="text-xs text-white/60 leading-relaxed">
+                  9MAX 1テーブル フリーズアウト。ファイナリスト9名が頂点を争います。
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 賞金 */}
+      <section className="mb-6 animate-fade-in animate-delay-200">
+        <h2 className="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
+          <span
+            className="w-1 h-4 rounded-full inline-block"
+            style={{ background: "linear-gradient(180deg, #c9921e, #e3c060)" }}
+          />
+          賞金
+        </h2>
+        <div className="bg-white rounded-xl border border-[#e8dfc0] overflow-hidden">
+          {PRIZE_TABLE.map((item, i) => (
+            <div
+              key={item.category}
+              className="flex items-center gap-3 px-4 py-3 border-b border-slate-100 last:border-0 animate-slide-up"
+              style={{ animationDelay: `${i * 50}ms` }}
+            >
+              <span className="text-lg flex-shrink-0">{item.icon}</span>
+              <span className="flex-1 text-sm text-slate-700">{item.category}</span>
+              <span
+                className="text-base font-black tabular-nums"
+                style={{ color: "#c9921e" }}
+              >
+                {item.prize}
+              </span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* 基本ルール */}
+      <section className="animate-fade-in animate-delay-300">
         <h2 className="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
           <span
             className="w-1 h-4 rounded-full inline-block"

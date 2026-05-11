@@ -2,17 +2,32 @@
 
 import Link from "next/link";
 import { useFollowedTeams } from "@/hooks/useFollowedTeams";
-import { MOCK_TEAMS, MOCK_STANDINGS } from "@/lib/mock-data";
+import type { Team, TeamStanding, NewsItem } from "@/lib/types/app";
 
-export default function MyTeamsSection() {
+interface Props {
+  teams: Team[];
+  standings: Record<string, TeamStanding[]>;
+  news: NewsItem[];
+}
+
+export default function MyTeamsSection({ teams, standings, news }: Props) {
   const { followedTeams, mounted } = useFollowedTeams();
 
   if (!mounted) return null;
   if (followedTeams.length === 0) return null;
 
   const myTeams = followedTeams
-    .map((id) => MOCK_TEAMS.find((t) => t.id === id))
-    .filter(Boolean) as typeof MOCK_TEAMS;
+    .map((id) => teams.find((t) => t.id === id))
+    .filter(Boolean) as Team[];
+
+  // フォロー中チームに関連するニュース件数
+  const followedTeamNames = myTeams.map((t) => t.name);
+  const myNewsCount = news.filter((item) =>
+    followedTeamNames.some(
+      (teamName) =>
+        item.title.includes(teamName) || item.body.includes(teamName),
+    ),
+  ).length;
 
   return (
     <section className="mb-5 animate-fade-in">
@@ -24,11 +39,27 @@ export default function MyTeamsSection() {
           />
           マイチーム
         </h2>
+        {myNewsCount > 0 && (
+          <Link
+            href="/my-news"
+            className="flex items-center gap-1 text-xs font-semibold transition-colors"
+            style={{ color: "#c9921e" }}
+          >
+            チームニュース
+            <span
+              className="inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-bold text-white"
+              style={{ background: "#c9921e" }}
+            >
+              {myNewsCount}
+            </span>
+            →
+          </Link>
+        )}
       </div>
       <div className="flex gap-3 overflow-x-auto pb-1 -mx-4 px-4">
         {myTeams.map((team) => {
-          const standings = MOCK_STANDINGS[team.leagueId] ?? [];
-          const standing = standings.find((s) => s.teamId === team.id);
+          const teamStandings = standings[team.leagueId] ?? [];
+          const standing = teamStandings.find((s) => s.teamId === team.id);
           return (
             <Link
               key={team.id}

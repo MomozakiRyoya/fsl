@@ -96,9 +96,17 @@ export default function PositionFilter({
             >
               {/* アバター + バッジ */}
               <div className="flex items-start justify-between mb-3">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white font-black text-sm flex-shrink-0">
-                  {getInitials(player.name)}
-                </div>
+                {player.photoUrl ? (
+                  <img
+                    src={player.photoUrl}
+                    alt={player.name}
+                    className="w-12 h-12 rounded-xl object-cover flex-shrink-0"
+                  />
+                ) : (
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white font-black text-sm flex-shrink-0">
+                    {getInitials(player.name)}
+                  </div>
+                )}
                 <div className="flex flex-col items-end gap-1">
                   <span className="text-xs font-medium text-slate-400 bg-slate-100 rounded-full px-2 py-0.5">
                     #{player.number}

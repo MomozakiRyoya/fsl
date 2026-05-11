@@ -25,14 +25,22 @@ function TeamCard({
       className="flex items-center gap-3 bg-white rounded-2xl border border-slate-100 p-4 shadow-sm hover:shadow-md active:scale-[0.98] transition-all duration-200"
       style={{ borderLeft: league ? `3px solid ${league.color}60` : undefined }}
     >
-      <div
-        className="w-12 h-12 rounded-2xl flex items-center justify-center text-sm font-bold text-white flex-shrink-0 shadow-sm"
-        style={{ backgroundColor: team.homeColor }}
-        role="img"
-        aria-label={team.name}
-      >
-        {getInitials(team.name)}
-      </div>
+      {team.logoUrl ? (
+        <img
+          src={team.logoUrl}
+          alt={team.name}
+          className="w-12 h-12 rounded-2xl object-cover flex-shrink-0 shadow-sm"
+        />
+      ) : (
+        <div
+          className="w-12 h-12 rounded-2xl flex items-center justify-center text-sm font-bold text-white flex-shrink-0 shadow-sm"
+          style={{ backgroundColor: team.homeColor }}
+          role="img"
+          aria-label={team.name}
+        >
+          {getInitials(team.name)}
+        </div>
+      )}
       <div className="flex-1 min-w-0">
         <p className="font-bold text-slate-900 text-base truncate leading-tight">
           {team.name}

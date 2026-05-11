@@ -25,26 +25,6 @@ const NAV_ITEMS = [
     ),
   },
   {
-    href: "/search",
-    label: "検索",
-    icon: (active: boolean) => (
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 24 24"
-        fill={active ? "currentColor" : "none"}
-        stroke={active ? "none" : "currentColor"}
-        strokeWidth={1.8}
-        className="w-[22px] h-[22px]"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
-        />
-      </svg>
-    ),
-  },
-  {
     href: "/standings",
     label: "順位",
     icon: (active: boolean) => (
@@ -85,8 +65,8 @@ const NAV_ITEMS = [
     ),
   },
   {
-    href: "/live",
-    label: "速報",
+    href: "/search",
+    label: "検索",
     icon: (active: boolean) => (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -99,7 +79,27 @@ const NAV_ITEMS = [
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
-          d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"
+          d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
+        />
+      </svg>
+    ),
+  },
+  {
+    href: "/mypage",
+    label: "マイページ",
+    icon: (active: boolean) => (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill={active ? "currentColor" : "none"}
+        stroke={active ? "none" : "currentColor"}
+        strokeWidth={1.8}
+        className="w-[22px] h-[22px]"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
         />
       </svg>
     ),
@@ -108,6 +108,8 @@ const NAV_ITEMS = [
 
 export default function BottomNav() {
   const pathname = usePathname();
+
+  if (pathname.startsWith("/auth/")) return null;
 
   return (
     <nav

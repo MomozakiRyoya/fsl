@@ -17,20 +17,20 @@ export default function FollowButton({ teamId, teamName }: Props) {
   return (
     <button
       onClick={() => toggleFollow(teamId)}
-      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 active:scale-95"
+      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 active:scale-95 w-full justify-center"
       style={following ? {
-        background: 'rgba(201,146,30,0.15)',
-        color: '#c9921e',
-        border: '1px solid rgba(201,146,30,0.4)',
+        background: 'linear-gradient(135deg, #c9921e, #e3c060)',
+        color: '#0c1e42',
+        boxShadow: '0 4px 12px rgba(201,146,30,0.35)',
       } : {
-        background: 'rgba(255,255,255,0.9)',
-        color: '#64748b',
-        border: '1px solid #e2e8f0',
+        background: '#0c1e42',
+        color: 'white',
+        boxShadow: '0 4px 12px rgba(12,30,66,0.2)',
       }}
       aria-label={following ? `${teamName}のフォローを解除` : `${teamName}をフォロー`}
     >
       <svg
-        className="w-3.5 h-3.5"
+        className="w-4 h-4"
         fill={following ? 'currentColor' : 'none'}
         viewBox="0 0 24 24"
         stroke="currentColor"
@@ -38,7 +38,7 @@ export default function FollowButton({ teamId, teamName }: Props) {
       >
         <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
       </svg>
-      {following ? 'フォロー中' : 'フォロー'}
+      {following ? '★ フォロー中' : 'このチームをフォロー'}
     </button>
   )
 }

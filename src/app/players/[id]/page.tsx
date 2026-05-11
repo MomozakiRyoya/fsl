@@ -66,17 +66,25 @@ export default async function PlayerDetailPage({ params }: Props) {
 
           {/* アバター + 名前 */}
           <div className="flex items-center gap-5">
-            <div
-              className="w-24 h-24 rounded-3xl flex items-center justify-center text-3xl font-black text-white shadow-lg flex-shrink-0"
-              style={{
-                background: `linear-gradient(135deg, #F59E0B 0%, #D97706 100%)`,
-                boxShadow: `0 8px 24px #F59E0B50`,
-              }}
-              role="img"
-              aria-label={player.name}
-            >
-              {getInitials(player.name)}
-            </div>
+            {player.photoUrl ? (
+              <img
+                src={player.photoUrl}
+                alt={player.name}
+                className="w-24 h-24 rounded-3xl object-cover shadow-lg flex-shrink-0"
+              />
+            ) : (
+              <div
+                className="w-24 h-24 rounded-3xl flex items-center justify-center text-3xl font-black text-white shadow-lg flex-shrink-0"
+                style={{
+                  background: `linear-gradient(135deg, #F59E0B 0%, #D97706 100%)`,
+                  boxShadow: `0 8px 24px #F59E0B50`,
+                }}
+                role="img"
+                aria-label={player.name}
+              >
+                {getInitials(player.name)}
+              </div>
+            )}
 
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
@@ -176,12 +184,20 @@ export default async function PlayerDetailPage({ params }: Props) {
               className="flex items-center justify-between bg-white rounded-xl border border-slate-200 px-4 py-3.5 hover:bg-slate-50 transition-colors"
             >
               <div className="flex items-center gap-3">
-                <div
-                  className="w-9 h-9 rounded-xl flex items-center justify-center text-xs font-black text-white flex-shrink-0"
-                  style={{ backgroundColor: team.homeColor }}
-                >
-                  {getInitials(team.name)}
-                </div>
+                {team.logoUrl ? (
+                  <img
+                    src={team.logoUrl}
+                    alt={team.name}
+                    className="w-9 h-9 rounded-xl object-cover flex-shrink-0"
+                  />
+                ) : (
+                  <div
+                    className="w-9 h-9 rounded-xl flex items-center justify-center text-xs font-black text-white flex-shrink-0"
+                    style={{ backgroundColor: team.homeColor }}
+                  >
+                    {getInitials(team.name)}
+                  </div>
+                )}
                 <div>
                   <p className="text-sm font-semibold text-slate-900">
                     {team.name}

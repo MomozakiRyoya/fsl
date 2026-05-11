@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { MOCK_STANDINGS_DIV1, MOCK_LEAGUES } from "@/lib/mock-data";
+import type { TeamStanding } from "@/lib/types/app";
 
 const STORAGE_KEY_VOTE = "fsl-winner-vote";
 const STORAGE_KEY_VOTES = "fsl-winner-votes-count";
@@ -15,14 +15,12 @@ function loadVotes(): Record<string, number> {
   }
   // デモ用初期票数
   return {
-    "t1-1": 42,
-    "t1-2": 31,
-    "t1-3": 18,
-    "t1-4": 14,
-    "t1-5": 8,
-    "t1-6": 5,
-    "t1-7": 3,
-    "t1-8": 2,
+    "premier-1": 42,
+    "premier-2": 31,
+    "premier-3": 18,
+    "premier-4": 14,
+    "premier-5": 8,
+    "premier-6": 5,
   };
 }
 
@@ -34,13 +32,15 @@ function saveVotes(votes: Record<string, number>) {
   }
 }
 
-export default function WinnerVote() {
+export default function WinnerVote({
+  standings,
+}: {
+  standings: TeamStanding[];
+}) {
   const [myVote, setMyVote] = useState<string | null>(null);
   const [votes, setVotes] = useState<Record<string, number>>({});
   const [mounted, setMounted] = useState(false);
   const [justVoted, setJustVoted] = useState(false);
-
-  const div1League = MOCK_LEAGUES.find((l) => l.id === "div1");
 
   useEffect(() => {
     setMounted(true);
@@ -66,7 +66,7 @@ export default function WinnerVote() {
 
   const totalVotes = Object.values(votes).reduce((sum, v) => sum + v, 0);
   const showResults = !!myVote;
-  const topTeams = MOCK_STANDINGS_DIV1.slice(0, 5); // 上位5チームのみ表示
+  const topTeams = standings.slice(0, 5); // 上位5チームのみ表示
 
   return (
     <section className="mb-5 animate-fade-in">
@@ -81,7 +81,7 @@ export default function WinnerVote() {
           >
             <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
           </svg>
-          Season 1 優勝予想
+          Season 7 優勝予想
         </h2>
         <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full font-medium">
           {totalVotes}票
@@ -125,9 +125,6 @@ export default function WinnerVote() {
                 ? Math.round(((votes[team.teamId] ?? 0) / totalVotes) * 100)
                 : 0;
             const isMyVote = myVote === team.teamId;
-            // div1Leagueのcolorは未使用になるため参照のみ保持
-            void div1League;
-
             return (
               <button
                 key={team.teamId}

@@ -14,59 +14,7 @@ interface CommentaryItem {
   teamId?: string;
 }
 
-const BASE_COMMENTARY: CommentaryItem[] = [
-  {
-    id: 1,
-    time: "09:52",
-    type: "goal",
-    text: "🏆 BON が第5節首位確定！累計187pt でトップをキープ",
-    teamId: "premier-bon",
-  },
-  {
-    id: 2,
-    time: "09:45",
-    type: "goal",
-    text: "🃏 TRUMP 田中選手 が最終テーブルで逆転！チームに9pt 追加",
-    teamId: "premier-trump",
-  },
-  {
-    id: 3,
-    time: "09:38",
-    type: "info",
-    text: "📊 第5節 現在の暫定順位 → 1位: BON / 2位: TRUMP / 3位: SuperNova",
-  },
-  {
-    id: 4,
-    time: "09:30",
-    type: "goal",
-    text: "💥 SuperNova 山田選手 がバブルを突破！ポイント獲得確定",
-    teamId: "premier-supernova",
-  },
-  {
-    id: 5,
-    time: "09:20",
-    type: "info",
-    text: "🔄 KENPOKER 選手交代: 山本 OUT → 佐藤 IN（スタック温存のため）",
-  },
-  {
-    id: 6,
-    time: "09:10",
-    type: "info",
-    text: "📋 テーブル3 スタック状況: BON 田中 55BB / TRUMP 鈴木 32BB / SKY 高橋 18BB",
-  },
-  {
-    id: 7,
-    time: "09:00",
-    type: "info",
-    text: "🏁 Premier League 第5節 スタート！全6チームが出揃いました",
-  },
-  {
-    id: 8,
-    time: "08:50",
-    type: "info",
-    text: "📣 本日の会場: 福岡ポーカーラウンジ MEGA / 参加チーム: 6チーム・計24名",
-  },
-];
+const BASE_COMMENTARY: CommentaryItem[] = [];
 
 interface Props {
   rounds: Round[];

@@ -1,20 +1,6 @@
 /**
- * Unified data access layer.
- * All functions are async server-side — never import this in "use client" components.
+ * Unified data access layer — Supabase only.
  */
-import {
-  fetchLeagues,
-  fetchTeams,
-  fetchRounds,
-  fetchStandings,
-  fetchMatchResults,
-  fetchPlayers,
-  fetchPlayerStats,
-  fetchNews,
-  fetchMvpCandidates,
-  fetchHeadToHead,
-  fetchStacks,
-} from "./sheets/fetchers";
 import type {
   League,
   Team,
@@ -40,58 +26,83 @@ import {
   MOCK_MVP_CANDIDATES,
   MOCK_HEAD_TO_HEAD,
 } from "./mock-data";
+import {
+  fetchTeamsFromSupabase,
+  fetchPlayersFromSupabase,
+  fetchNewsFromSupabase,
+  fetchLeaguesFromSupabase,
+  fetchRoundsFromSupabase,
+  fetchStandingsFromSupabase,
+  fetchMatchResultsFromSupabase,
+} from "./supabase/queries";
 
 async function safe<T>(fn: () => Promise<T>, fallback: T): Promise<T> {
   try {
     const result = await fn();
-    // If sheets returns empty array, fall back to mock
     if (Array.isArray(result) && result.length === 0) return fallback;
     return result;
-  } catch {
+  } catch (e) {
+    console.error("[safe] fallback triggered:", e);
     return fallback;
   }
 }
 
 export async function getLeagues(): Promise<League[]> {
-  return safe(fetchLeagues, MOCK_LEAGUES);
+  return safe(fetchLeaguesFromSupabase, MOCK_LEAGUES);
 }
 
 export async function getTeams(): Promise<Team[]> {
-  return safe(fetchTeams, MOCK_TEAMS);
+  return safe(fetchTeamsFromSupabase, MOCK_TEAMS);
 }
 
 export async function getRounds(): Promise<Round[]> {
-  return safe(fetchRounds, MOCK_ROUNDS);
+  try {
+    return await fetchRoundsFromSupabase();
+  } catch {
+    return [];
+  }
 }
 
 export async function getStandings(): Promise<Record<string, TeamStanding[]>> {
-  return safe(fetchStandings, MOCK_STANDINGS);
+  try {
+    return await fetchStandingsFromSupabase();
+  } catch {
+    return {};
+  }
 }
 
 export async function getMatchResults(): Promise<MatchResult[]> {
-  return safe(fetchMatchResults, MOCK_MATCH_RESULTS);
+  try {
+    return await fetchMatchResultsFromSupabase();
+  } catch {
+    return [];
+  }
 }
 
 export async function getPlayers(): Promise<Player[]> {
-  return safe(fetchPlayers, MOCK_PLAYERS);
+  return safe(fetchPlayersFromSupabase, MOCK_PLAYERS);
 }
 
 export async function getPlayerStats(): Promise<PlayerStats[]> {
-  return safe(fetchPlayerStats, MOCK_PLAYER_STATS);
+  return MOCK_PLAYER_STATS;
 }
 
 export async function getNews(): Promise<NewsItem[]> {
-  return safe(fetchNews, MOCK_NEWS);
+  try {
+    return await fetchNewsFromSupabase();
+  } catch {
+    return [];
+  }
 }
 
 export async function getMvpCandidates(): Promise<MvpVoteOption[]> {
-  return safe(fetchMvpCandidates, MOCK_MVP_CANDIDATES);
+  return MOCK_MVP_CANDIDATES;
 }
 
 export async function getHeadToHead(): Promise<HeadToHead[]> {
-  return safe(fetchHeadToHead, MOCK_HEAD_TO_HEAD);
+  return MOCK_HEAD_TO_HEAD;
 }
 
 export async function getStacks(): Promise<StackEntry[]> {
-  return safe(fetchStacks, []);
+  return [];
 }

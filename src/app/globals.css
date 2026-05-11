@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* number input のスピナー非表示 */
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+input[type=number] { -moz-appearance: textfield; }
+
 @theme inline {
   /* ===== Navy (メインカラー) ===== */
   --color-primary-50:  #eef2f8;
@@ -39,6 +44,10 @@
 
 * {
   -webkit-tap-highlight-color: transparent;
+}
+
+button, a, [role="button"], input, select, textarea, label {
+  touch-action: manipulation;
 }
 
 body {
@@ -110,6 +119,18 @@ input:-webkit-autofill:focus {
 }
 .animate-fade-in { animation: fadeIn 0.3s ease-out both; }
 
+@keyframes zoomOut {
+  from { transform: scale(1.15); }
+  to   { transform: scale(1); }
+}
+.animate-zoom-out { animation: zoomOut 8s ease-out both; }
+
+@keyframes zoomIn {
+  from { transform: scale(1); }
+  to   { transform: scale(1.15); }
+}
+.animate-zoom-in { animation: zoomIn 8s ease-out both; }
+
 @keyframes slideUp {
   from { opacity: 0; transform: translateY(16px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -154,7 +175,12 @@ html { scroll-behavior: smooth; }
 
 /* ===== スクロールバー非表示 ===== */
 .scroll-x-hidden::-webkit-scrollbar { display: none; }
-.scroll-x-hidden { -ms-overflow-style: none; scrollbar-width: none; }
+.scroll-x-hidden {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+}
 
 /* ===== セーフエリア ===== */
 .safe-area-pb { padding-bottom: env(safe-area-inset-bottom, 0px); }
@@ -242,6 +268,65 @@ html { scroll-behavior: smooth; }
   font-variant-numeric: tabular-nums;
 }
 
+/* ===== スコアポップアニメーション ===== */
+@keyframes scorePop {
+  0%   { transform: scale(0.8); }
+  60%  { transform: scale(1.1); }
+  100% { transform: scale(1.0); }
+}
+.animate-score-pop {
+  animation: scorePop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* ===== 順位変動アニメーション（左からスライドイン） ===== */
+@keyframes rankChange {
+  from { opacity: 0; transform: translateX(-12px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.animate-rank-change {
+  animation: rankChange 0.3s ease-out both;
+}
+
+/* ===== ゴールドグラデーションテキスト ===== */
+.gradient-gold-text {
+  background: linear-gradient(135deg, #c9921e, #f0d060);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ===== カードホバー（タップフィードバック強化版） ===== */
+.card-hover {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.card-hover:active {
+  transform: scale(0.98);
+  box-shadow: 0 1px 3px rgba(12,30,66,0.08), 0 1px 2px rgba(12,30,66,0.06);
+}
+
+/* ===== LIVE バッジ ===== */
+.badge-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #ef4444;
+  color: white;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 3px 9px;
+  border-radius: 999px;
+}
+.badge-live::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: white;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
 /* ===== ページヘッダー（ネイティブスタイル） ===== */
 .page-header {
   position: sticky;
@@ -287,3 +372,95 @@ html { scroll-behavior: smooth; }
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
 }
+
+/* ===== ダークモード ===== */
+.dark body {
+  background-color: #0a0f1e;
+  color: #e2e8f0;
+}
+.dark .card-native {
+  background: #0f1a35;
+  border-color: rgba(255,255,255,0.08);
+}
+.dark .text-slate-900 { color: #f1f5f9; }
+.dark .text-slate-700 { color: #cbd5e1; }
+.dark .text-slate-500 { color: #94a3b8; }
+.dark .text-slate-400 { color: #64748b; }
+.dark .border-slate-100 { border-color: rgba(255,255,255,0.08); }
+.dark .border-slate-200 { border-color: rgba(255,255,255,0.1); }
+.dark .bg-slate-50 { background-color: rgba(255,255,255,0.04); }
+.dark .bg-slate-100 { background-color: rgba(255,255,255,0.06); }
+.dark .section-title { color: #cbd5e1; }
+.dark .page-header {
+  background: rgba(10, 15, 30, 0.9);
+  border-bottom-color: rgba(255,255,255,0.06);
+}
+
+/* ===== レスポンシブユーティリティ ===== */
+
+/* タブレット以上でのカードグリッド */
+@media (min-width: 768px) {
+  .responsive-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+  .responsive-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+}
+
+@media (min-width: 1024px) {
+  .responsive-grid-3 { grid-template-columns: repeat(3, 1fr); }
+  .responsive-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+
+  /* デスクトップ: ヒーローセクション改善 */
+  .hero-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+}
+
+/* デスクトップ表示時のページ内パディング */
+@media (min-width: 1024px) {
+  .page-content {
+    padding: 2rem 2rem 2rem;
+  }
+}
+
+/* ===== フロートアニメーション（デコレーション用） ===== */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-8px); }
+}
+.animate-float { animation: float 3.5s ease-in-out infinite; }
+.animate-float-slow { animation: float 5s ease-in-out infinite; }
+.animate-float-fast { animation: float 2.5s ease-in-out infinite; }
+
+/* ===== ゴールドシマー（バッジ・ポイント強調） ===== */
+@keyframes shimmerGold {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+.animate-shimmer-gold {
+  background: linear-gradient(90deg, #c9921e 0%, #f0d060 40%, #e3c060 60%, #c9921e 100%);
+  background-size: 200% auto;
+  animation: shimmerGold 2.5s linear infinite;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ===== パルスリング（ライブ・次試合バッジ用） ===== */
+@keyframes pulseRing {
+  0%   { box-shadow: 0 0 0 0 rgba(201,146,30,0.5); }
+  70%  { box-shadow: 0 0 0 8px rgba(201,146,30,0); }
+  100% { box-shadow: 0 0 0 0 rgba(201,146,30,0); }
+}
+.animate-pulse-gold { animation: pulseRing 1.8s ease-out infinite; }
+
+/* ===== バウンスイン（スコア表示） ===== */
+@keyframes bounceIn {
+  0%   { transform: scale(0); opacity: 0; }
+  60%  { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); }
+}
+.animate-bounce-in { animation: bounceIn 0.5s cubic-bezier(0.34,1.56,0.64,1) both; }
+
+/* ===== ストリーク（数字カウントアップ用グロー） ===== */
+@keyframes numberGlow {
+  0%, 100% { text-shadow: 0 0 0px rgba(201,146,30,0); }
+  50%       { text-shadow: 0 0 12px rgba(201,146,30,0.6); }
+}
+.animate-number-glow { animation: numberGlow 1.5s ease-in-out; }
