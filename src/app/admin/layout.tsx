@@ -12,6 +12,7 @@ const NAV = [
   { href: "/admin/schedule", label: "スケジュール", icon: "📅" },
   { href: "/admin/teams", label: "チーム", icon: "⬡" },
   { href: "/admin/players", label: "選手", icon: "◉" },
+  { href: "/admin/feedback", label: "意見箱", icon: "📬" },
 ];
 
 function SidebarContent({
