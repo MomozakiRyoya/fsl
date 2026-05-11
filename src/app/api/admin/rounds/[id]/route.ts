@@ -38,6 +38,7 @@ export async function PATCH(
   if (body.date !== undefined) updates.date = body.date;
   if (body.venue !== undefined) updates.venue = body.venue;
   if (body.venueUrl !== undefined) updates.venue_url = body.venueUrl;
+  if (body.format !== undefined) updates.format = body.format;
   if (body.status !== undefined) updates.status = body.status;
   if (body.isPlayoff !== undefined) updates.is_playoff = body.isPlayoff;
 
