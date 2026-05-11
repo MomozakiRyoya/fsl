@@ -301,23 +301,25 @@ export async function fetchPlayerStatsFromSupabase(): Promise<
 
   if (error || !data) return [];
 
-  return data.map((p) => {
-    const t = p.teams as { name: string }[] | { name: string } | null;
-    const teamName = !t
-      ? ""
-      : Array.isArray(t)
-        ? (t[0]?.name ?? "")
-        : (t.name ?? "");
-    return {
-      playerId: p.player_id as string,
-      playerName: (p.name as string) ?? "",
-      teamId: p.team_id as string,
-      teamName,
-      leagueId: p.league_id as string,
-      goals: 0,
-      assists: 0,
-      games: 0,
-      mvpCount: 0,
-    };
-  });
+  return data
+    .filter((p) => p.name && (p.name as string).trim() !== "")
+    .map((p) => {
+      const t = p.teams as { name: string }[] | { name: string } | null;
+      const teamName = !t
+        ? ""
+        : Array.isArray(t)
+          ? (t[0]?.name ?? "")
+          : (t.name ?? "");
+      return {
+        playerId: p.player_id as string,
+        playerName: (p.name as string) ?? "",
+        teamId: p.team_id as string,
+        teamName,
+        leagueId: p.league_id as string,
+        goals: 0,
+        assists: 0,
+        games: 0,
+        mvpCount: 0,
+      };
+    });
 }
