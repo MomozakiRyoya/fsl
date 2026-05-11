@@ -1,8 +1,231 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+
+const CROP_SIZE = 260;
+const CROP_OUTPUT = 400;
+
+function CropModal({
+  src,
+  onConfirm,
+  onCancel,
+}: {
+  src: string;
+  onConfirm: (blob: Blob) => void;
+  onCancel: () => void;
+}) {
+  const imgRef = useRef<HTMLImageElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const naturalRef = useRef<{ w: number; h: number } | null>(null);
+  const [zoom, setZoom] = useState(1);
+  const [pos, setPos] = useState({ x: 0, y: 0 });
+  const [loaded, setLoaded] = useState(false);
+  const dragRef = useRef<{ x: number; y: number } | null>(null);
+  const pinchRef = useRef<number | null>(null);
+
+  const onLoad = useCallback(() => {
+    const img = imgRef.current;
+    if (!img) return;
+    const nw = img.naturalWidth;
+    const nh = img.naturalHeight;
+    naturalRef.current = { w: nw, h: nh };
+    setZoom(Math.max(CROP_SIZE / nw, CROP_SIZE / nh));
+    setLoaded(true);
+  }, []);
+
+  const onMouseDown = (e: React.MouseEvent) => {
+    dragRef.current = { x: e.clientX, y: e.clientY };
+  };
+  const onMouseMove = (e: React.MouseEvent) => {
+    if (!dragRef.current) return;
+    setPos((p) => ({
+      x: p.x + e.clientX - dragRef.current!.x,
+      y: p.y + e.clientY - dragRef.current!.y,
+    }));
+    dragRef.current = { x: e.clientX, y: e.clientY };
+  };
+  const onMouseUp = () => {
+    dragRef.current = null;
+  };
+
+  const onWheel = (e: React.WheelEvent) => {
+    e.preventDefault();
+    const nat = naturalRef.current;
+    if (!nat) return;
+    const min = Math.max(CROP_SIZE / nat.w, CROP_SIZE / nat.h);
+    setZoom((z) =>
+      Math.max(min * 0.5, Math.min(min * 6, z * (1 - e.deltaY * 0.002))),
+    );
+  };
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    e.preventDefault();
+    if (e.touches.length === 1) {
+      dragRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    } else if (e.touches.length === 2) {
+      dragRef.current = null;
+      pinchRef.current = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY,
+      );
+    }
+  };
+  const onTouchMove = (e: React.TouchEvent) => {
+    e.preventDefault();
+    if (e.touches.length === 1 && dragRef.current) {
+      setPos((p) => ({
+        x: p.x + e.touches[0].clientX - dragRef.current!.x,
+        y: p.y + e.touches[0].clientY - dragRef.current!.y,
+      }));
+      dragRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    } else if (e.touches.length === 2 && pinchRef.current !== null) {
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY,
+      );
+      const nat = naturalRef.current;
+      if (nat) {
+        const min = Math.max(CROP_SIZE / nat.w, CROP_SIZE / nat.h);
+        setZoom((z) =>
+          Math.max(
+            min * 0.5,
+            Math.min(min * 6, z * (dist / pinchRef.current!)),
+          ),
+        );
+      }
+      pinchRef.current = dist;
+    }
+  };
+  const onTouchEnd = () => {
+    dragRef.current = null;
+    pinchRef.current = null;
+  };
+
+  const handleConfirm = () => {
+    const img = imgRef.current;
+    const canvas = canvasRef.current;
+    const nat = naturalRef.current;
+    if (!img || !canvas || !nat) return;
+    canvas.width = CROP_OUTPUT;
+    canvas.height = CROP_OUTPUT;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    const srcCX = -pos.x / zoom + nat.w / 2;
+    const srcCY = -pos.y / zoom + nat.h / 2;
+    const srcR = CROP_SIZE / 2 / zoom;
+    ctx.beginPath();
+    ctx.arc(CROP_OUTPUT / 2, CROP_OUTPUT / 2, CROP_OUTPUT / 2, 0, Math.PI * 2);
+    ctx.clip();
+    ctx.drawImage(
+      img,
+      srcCX - srcR,
+      srcCY - srcR,
+      srcR * 2,
+      srcR * 2,
+      0,
+      0,
+      CROP_OUTPUT,
+      CROP_OUTPUT,
+    );
+    canvas.toBlob(
+      (blob) => {
+        if (blob) onConfirm(blob);
+      },
+      "image/jpeg",
+      0.9,
+    );
+  };
+
+  const nat = naturalRef.current;
+  const imgW = nat ? nat.w * zoom : 0;
+  const imgH = nat ? nat.h * zoom : 0;
+  const imgX = CROP_SIZE / 2 - imgW / 2 + pos.x;
+  const imgY = CROP_SIZE / 2 - imgH / 2 + pos.y;
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 px-4">
+      <div
+        className="w-full max-w-sm rounded-2xl p-5"
+        style={{ background: "#0c1e42" }}
+      >
+        <h3 className="text-sm font-bold text-white text-center mb-1">
+          画像をトリミング
+        </h3>
+        <p className="text-[11px] text-white/40 text-center mb-4">
+          ドラッグで移動・ピンチ/スクロールでズーム
+        </p>
+        <div
+          className="relative mx-auto"
+          style={{ width: CROP_SIZE, height: CROP_SIZE }}
+        >
+          <div
+            className="absolute inset-0 rounded-full overflow-hidden"
+            style={{
+              background: "#111",
+              cursor: dragRef.current ? "grabbing" : "grab",
+            }}
+            onMouseDown={onMouseDown}
+            onMouseMove={onMouseMove}
+            onMouseUp={onMouseUp}
+            onMouseLeave={onMouseUp}
+            onWheel={onWheel}
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
+          >
+            {!loaded && (
+              <div className="w-full h-full flex items-center justify-center text-white/30 text-xs">
+                読み込み中...
+              </div>
+            )}
+            <img
+              ref={imgRef}
+              src={src}
+              onLoad={onLoad}
+              draggable={false}
+              alt=""
+              style={{
+                position: "absolute",
+                left: imgX,
+                top: imgY,
+                width: imgW,
+                height: imgH,
+                display: loaded ? "block" : "none",
+                userSelect: "none",
+              }}
+            />
+          </div>
+          <div
+            className="absolute inset-0 rounded-full pointer-events-none"
+            style={{ border: "2px solid rgba(201,146,30,0.8)" }}
+          />
+        </div>
+        <canvas ref={canvasRef} className="hidden" />
+        <div className="flex gap-3 mt-5">
+          <button
+            onClick={onCancel}
+            className="flex-1 py-2.5 rounded-xl text-sm font-semibold border border-white/10 text-white/50 hover:text-white transition-colors"
+          >
+            キャンセル
+          </button>
+          <button
+            onClick={handleConfirm}
+            disabled={!loaded}
+            className="flex-1 py-2.5 rounded-xl text-sm font-bold disabled:opacity-40"
+            style={{
+              background: "linear-gradient(135deg, #c9921e, #e3c060)",
+              color: "#0c1e42",
+            }}
+          >
+            確定
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 const AVATAR_COLORS = [
   "#0c1e42",
@@ -41,17 +264,26 @@ export default function AccountClient({
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
   const [profileSaved, setProfileSaved] = useState(false);
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
 
-  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    setCropSrc(URL.createObjectURL(file));
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const handleCropConfirm = async (blob: Blob) => {
+    if (cropSrc) {
+      URL.revokeObjectURL(cropSrc);
+      setCropSrc(null);
+    }
     setUploadingAvatar(true);
     const supabase = createClient();
-    const ext = file.name.split(".").pop();
-    const path = `avatars/${Date.now()}.${ext}`;
+    const path = `avatars/${Date.now()}.jpg`;
     const { error } = await supabase.storage
       .from("fsl-images")
-      .upload(path, file, { upsert: true });
+      .upload(path, blob, { upsert: true, contentType: "image/jpeg" });
     if (!error) {
       const {
         data: { publicUrl },
@@ -59,7 +291,6 @@ export default function AccountClient({
       setAvatarUrl(publicUrl);
     }
     setUploadingAvatar(false);
-    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleRemoveAvatar = async () => {
@@ -374,6 +605,17 @@ export default function AccountClient({
             </div>
           </div>
         </div>
+      )}
+
+      {cropSrc && (
+        <CropModal
+          src={cropSrc}
+          onConfirm={handleCropConfirm}
+          onCancel={() => {
+            URL.revokeObjectURL(cropSrc);
+            setCropSrc(null);
+          }}
+        />
       )}
     </div>
   );
