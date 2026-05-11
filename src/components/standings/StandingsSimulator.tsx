@@ -60,7 +60,7 @@ export default function StandingsSimulator({
             Standings Simulator
           </p>
           <h2 className="text-lg font-black text-slate-900 mt-0.5">
-            第5節 順位シミュレーター
+            順位シミュレーター
           </h2>
           <p className="text-xs text-slate-400 mt-0.5">
             次節の獲得予想ポイントを設定してください
