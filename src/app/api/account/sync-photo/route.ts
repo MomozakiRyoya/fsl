@@ -1,0 +1,31 @@
+import { NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
+
+export async function POST(request: Request) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user)
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const body = await request.json();
+  const avatarUrl = (body.avatarUrl as string | null) ?? null;
+  const playerId = user.user_metadata?.player_id as string | undefined;
+
+  let query = supabase.from("players").update({ photo_url: avatarUrl });
+
+  if (playerId) {
+    query = query.eq("player_id", playerId);
+  } else if (user.email) {
+    query = query.eq("user_email", user.email);
+  } else {
+    return NextResponse.json({ ok: false, reason: "no player linked" });
+  }
+
+  const { error } = await query;
+  if (error)
+    return NextResponse.json({ error: error.message }, { status: 500 });
+
+  return NextResponse.json({ ok: true });
+}
