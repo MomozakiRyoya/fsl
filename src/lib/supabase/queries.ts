@@ -288,3 +288,36 @@ export async function fetchStandingsFromSupabase(): Promise<
 
   return result;
 }
+
+export async function fetchPlayerStatsFromSupabase(): Promise<
+  import("../types/app").PlayerStats[]
+> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("players")
+    .select("player_id, name, team_id, league_id, teams(name)")
+    .order("league_id")
+    .order("team_id");
+
+  if (error || !data) return [];
+
+  return data.map((p) => {
+    const t = p.teams as { name: string }[] | { name: string } | null;
+    const teamName = !t
+      ? ""
+      : Array.isArray(t)
+        ? (t[0]?.name ?? "")
+        : (t.name ?? "");
+    return {
+      playerId: p.player_id as string,
+      playerName: (p.name as string) ?? "",
+      teamId: p.team_id as string,
+      teamName,
+      leagueId: p.league_id as string,
+      goals: 0,
+      assists: 0,
+      games: 0,
+      mvpCount: 0,
+    };
+  });
+}

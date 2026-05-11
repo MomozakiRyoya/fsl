@@ -34,6 +34,7 @@ import {
   fetchRoundsFromSupabase,
   fetchStandingsFromSupabase,
   fetchMatchResultsFromSupabase,
+  fetchPlayerStatsFromSupabase,
 } from "./supabase/queries";
 
 async function safe<T>(fn: () => Promise<T>, fallback: T): Promise<T> {
@@ -84,7 +85,11 @@ export async function getPlayers(): Promise<Player[]> {
 }
 
 export async function getPlayerStats(): Promise<PlayerStats[]> {
-  return MOCK_PLAYER_STATS;
+  try {
+    return await fetchPlayerStatsFromSupabase();
+  } catch {
+    return MOCK_PLAYER_STATS;
+  }
 }
 
 export async function getNews(): Promise<NewsItem[]> {
