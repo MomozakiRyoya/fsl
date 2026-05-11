@@ -54,9 +54,12 @@ export default async function TeamDetailPage({ params }: Props) {
       };
     });
 
-  const COMPLETED_ROUNDS = [1, 2, 3, 4];
-
   const leagueStandings = allStandings[team.leagueId] ?? [];
+  const COMPLETED_ROUNDS = [
+    ...new Set(
+      leagueStandings.flatMap((s) => Object.keys(s.roundPoints).map(Number)),
+    ),
+  ].sort((a, b) => a - b);
   const rankHistory = leagueStandings.map((s) => {
     const ranks = COMPLETED_ROUNDS.map((r) => {
       const roundPoints = leagueStandings.map((t) => ({
@@ -138,17 +141,25 @@ export default async function TeamDetailPage({ params }: Props) {
             </a>
           </div>
           <div className="flex items-center gap-5">
-            <div
-              className="w-20 h-20 rounded-3xl flex items-center justify-center text-2xl font-black text-white shadow-lg flex-shrink-0"
-              style={{
-                backgroundColor: team.homeColor,
-                boxShadow: `0 8px 24px ${team.homeColor}60`,
-              }}
-              role="img"
-              aria-label={team.name}
-            >
-              {getInitials(team.name)}
-            </div>
+            {team.logoUrl ? (
+              <img
+                src={team.logoUrl}
+                alt={team.name}
+                className="w-20 h-20 rounded-3xl object-cover shadow-lg flex-shrink-0"
+              />
+            ) : (
+              <div
+                className="w-20 h-20 rounded-3xl flex items-center justify-center text-2xl font-black text-white shadow-lg flex-shrink-0"
+                style={{
+                  backgroundColor: team.homeColor,
+                  boxShadow: `0 8px 24px ${team.homeColor}60`,
+                }}
+                role="img"
+                aria-label={team.name}
+              >
+                {getInitials(team.name)}
+              </div>
+            )}
             <div className="flex-1 min-w-0">
               <h1 className="text-2xl font-black text-slate-900 tracking-tight">
                 {team.name}
@@ -169,10 +180,6 @@ export default async function TeamDetailPage({ params }: Props) {
                 )}
               </div>
             </div>
-          </div>
-          {/* フォローボタン（独立した目立つ配置） */}
-          <div className="mt-4">
-            <FollowButton teamId={team.id} teamName={team.name} />
           </div>
         </div>
       </div>
@@ -222,7 +229,7 @@ export default async function TeamDetailPage({ params }: Props) {
               </div>
               <div className="bg-white rounded-2xl border border-slate-100 p-4 text-center shadow-sm">
                 <p className="text-3xl font-black tabular-nums text-slate-700">
-                  {COMPLETED_ROUNDS.length}
+                  {Object.keys(standing.roundPoints).length}
                 </p>
                 <p className="text-xs text-slate-400 font-medium uppercase tracking-wide mt-1">
                   試合数
@@ -233,44 +240,48 @@ export default async function TeamDetailPage({ params }: Props) {
         )}
 
         {/* 直近4試合の結果 */}
-        {standing && (
+        {standing && Object.keys(standing.roundPoints).length > 0 && (
           <section className="animate-fade-in animate-delay-150">
             <h2 className="text-xs font-semibold text-slate-400 mb-3 uppercase tracking-wider">
               直近の試合結果
             </h2>
             <div className="flex gap-2">
-              {COMPLETED_ROUNDS.map((r) => {
-                const pt = standing.roundPoints[r] ?? 0;
-                const allPts = standings
-                  .map((s) => s.roundPoints[r] ?? 0)
-                  .sort((a, b) => b - a);
-                const roundRank = allPts.indexOf(pt) + 1;
-                const isTop3 = roundRank <= 3;
-                return (
-                  <div
-                    key={r}
-                    className="flex-1 bg-white rounded-xl border border-slate-100 px-2 py-3 text-center shadow-sm"
-                    style={
-                      isTop3
-                        ? {
-                            borderBottom: `3px solid ${team.homeColor}`,
-                          }
-                        : undefined
-                    }
-                  >
-                    <p className="text-[10px] font-medium text-slate-400 mb-1">
-                      R{r}
-                    </p>
-                    <p
-                      className="text-lg font-black tabular-nums"
-                      style={{ color: isTop3 ? team.homeColor : "#64748b" }}
+              {Object.keys(standing.roundPoints)
+                .map(Number)
+                .sort((a, b) => a - b)
+                .slice(-4)
+                .map((r) => {
+                  const pt = standing.roundPoints[r] ?? 0;
+                  const allPts = standings
+                    .map((s) => s.roundPoints[r] ?? 0)
+                    .sort((a, b) => b - a);
+                  const roundRank = allPts.indexOf(pt) + 1;
+                  const isTop3 = roundRank <= 3;
+                  return (
+                    <div
+                      key={r}
+                      className="flex-1 bg-white rounded-xl border border-slate-100 px-2 py-3 text-center shadow-sm"
+                      style={
+                        isTop3
+                          ? {
+                              borderBottom: `3px solid ${team.homeColor}`,
+                            }
+                          : undefined
+                      }
                     >
-                      {pt}
-                    </p>
-                    <p className="text-[9px] text-slate-400 mt-0.5">pt</p>
-                  </div>
-                );
-              })}
+                      <p className="text-[10px] font-medium text-slate-400 mb-1">
+                        R{r}
+                      </p>
+                      <p
+                        className="text-lg font-black tabular-nums"
+                        style={{ color: isTop3 ? team.homeColor : "#64748b" }}
+                      >
+                        {pt}
+                      </p>
+                      <p className="text-[9px] text-slate-400 mt-0.5">pt</p>
+                    </div>
+                  );
+                })}
             </div>
           </section>
         )}
@@ -357,12 +368,6 @@ export default async function TeamDetailPage({ params }: Props) {
                 </span>
               </div>
             )}
-            <div className="px-4 py-3 flex items-center justify-between">
-              <span className="text-xs text-slate-500">参加シーズン</span>
-              <span className="text-sm font-medium text-slate-900">
-                FSL Season 1
-              </span>
-            </div>
           </div>
         </section>
 
