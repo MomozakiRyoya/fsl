@@ -384,12 +384,20 @@ export default async function TeamDetailPage({ params }: Props) {
                   href={`/players/${player.id}`}
                   className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 transition-colors"
                 >
-                  <div
-                    className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black text-white flex-shrink-0"
-                    style={{ backgroundColor: team.homeColor }}
-                  >
-                    {player.number}
-                  </div>
+                  {player.photoUrl ? (
+                    <img
+                      src={player.photoUrl}
+                      alt={player.name}
+                      className="w-8 h-8 rounded-lg object-cover flex-shrink-0"
+                    />
+                  ) : (
+                    <div
+                      className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black text-white flex-shrink-0"
+                      style={{ backgroundColor: team.homeColor }}
+                    >
+                      {player.number}
+                    </div>
+                  )}
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-slate-900">
                       {player.name}
