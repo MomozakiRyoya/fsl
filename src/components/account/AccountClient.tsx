@@ -376,6 +376,7 @@ export default function AccountClient({
                 src={avatarUrl}
                 alt="avatar"
                 className="w-16 h-16 rounded-full object-cover shadow-lg border-2 border-white/20"
+                onError={() => setAvatarUrl(null)}
               />
             ) : (
               <div
@@ -414,6 +415,7 @@ export default function AccountClient({
                     src={avatarUrl}
                     alt="avatar"
                     className="w-14 h-14 rounded-full object-cover border border-slate-200"
+                    onError={() => setAvatarUrl(null)}
                   />
                 ) : (
                   <div
