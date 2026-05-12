@@ -308,6 +308,7 @@ export default function StructuresAdminClient({
   // 節の紐づけ
   const [assignTarget, setAssignTarget] = useState<Structure | null>(null);
   const [assignRoundId, setAssignRoundId] = useState("");
+  const [createRoundId, setCreateRoundId] = useState("");
   const [assigning, setAssigning] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -393,6 +394,7 @@ export default function StructuresAdminClient({
     setParseError("");
     setInputTab("paste");
     setTarget(null);
+    setCreateRoundId("");
     setModal("create");
   };
 
@@ -438,6 +440,19 @@ export default function StructuresAdminClient({
         setStructures(structures.map((s) => (s.id === target!.id ? raw : s)));
       } else {
         setStructures([raw, ...structures]);
+        // 試合に自動紐づけ
+        if (createRoundId) {
+          await fetch(`/api/admin/rounds/${createRoundId}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ structureId: raw.id }),
+          });
+          setRounds((prev) =>
+            prev.map((r) =>
+              r.id === createRoundId ? { ...r, structureId: raw.id } : r,
+            ),
+          );
+        }
       }
       setModal(null);
       showToast(modal === "edit" ? "更新しました" : "作成しました");
@@ -596,17 +611,66 @@ export default function StructuresAdminClient({
           <div className="space-y-4">
             {/* 基本情報 */}
             <div className="grid grid-cols-2 gap-3">
-              <div className="col-span-2">
-                <label className="block text-xs font-semibold text-white/50 uppercase tracking-wider mb-1.5">
-                  名前
-                </label>
-                <input
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  className="w-full px-3 py-2.5 text-sm rounded-lg border border-white/10 bg-white/5 text-white outline-none focus:border-amber-500/50"
-                  placeholder="FSL プレミア 第1節 ストラクチャー"
-                />
-              </div>
+              {modal === "create" ? (
+                <div className="col-span-2">
+                  <label className="block text-xs font-semibold text-white/50 uppercase tracking-wider mb-1.5">
+                    試合（節）
+                  </label>
+                  <select
+                    value={createRoundId}
+                    onChange={(e) => {
+                      const rid = e.target.value;
+                      setCreateRoundId(rid);
+                      const r = rounds.find((r) => r.id === rid);
+                      if (r)
+                        setForm((f) => ({
+                          ...f,
+                          name: `${r.leagueName} ${r.name}`,
+                        }));
+                    }}
+                    className="w-full px-3 py-2.5 text-sm rounded-lg border border-white/10 bg-[#060b14] text-white outline-none focus:border-amber-500/50"
+                  >
+                    <option value="">-- 試合（節）を選択 --</option>
+                    {Object.entries(
+                      rounds.reduce<
+                        Record<string, { name: string; items: RoundItem[] }>
+                      >((acc, r) => {
+                        if (!acc[r.leagueId])
+                          acc[r.leagueId] = { name: r.leagueName, items: [] };
+                        acc[r.leagueId].items.push(r);
+                        return acc;
+                      }, {}),
+                    ).map(([lid, { name, items }]) => (
+                      <optgroup key={lid} label={name}>
+                        {items.map((r) => (
+                          <option key={r.id} value={r.id}>
+                            {r.name}
+                            {r.date ? ` (${r.date})` : ""}
+                            {r.structureId ? " ※ST設定済み" : ""}
+                          </option>
+                        ))}
+                      </optgroup>
+                    ))}
+                  </select>
+                  {createRoundId && form.name && (
+                    <p className="text-[11px] text-white/30 mt-1">
+                      ストラクチャー名: {form.name}
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div className="col-span-2">
+                  <label className="block text-xs font-semibold text-white/50 uppercase tracking-wider mb-1.5">
+                    名前
+                  </label>
+                  <input
+                    value={form.name}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    className="w-full px-3 py-2.5 text-sm rounded-lg border border-white/10 bg-white/5 text-white outline-none focus:border-amber-500/50"
+                    placeholder="FSL プレミア 第1節 ストラクチャー"
+                  />
+                </div>
+              )}
               <div>
                 <label className="block text-xs font-semibold text-white/50 uppercase tracking-wider mb-1.5">
                   初期スタック
