@@ -63,6 +63,7 @@ type RoundForm = {
   format: string;
   status: string;
   isPlayoff: boolean;
+  structureId: string;
 };
 
 const defaultRoundForm = (): RoundForm => ({
@@ -77,6 +78,7 @@ const defaultRoundForm = (): RoundForm => ({
   format: "",
   status: "scheduled",
   isPlayoff: false,
+  structureId: "",
 });
 
 function Modal({
@@ -115,12 +117,14 @@ function RoundFormUI({
   onSave,
   onCancel,
   saving,
+  structures,
 }: {
   form: RoundForm;
   setForm: (f: RoundForm) => void;
   onSave: () => void;
   onCancel: () => void;
   saving: boolean;
+  structures: { id: string; name: string }[];
 }) {
   const handleLeague = (v: string) => {
     const label = LEAGUES.find((l) => l.value === v)?.label ?? "";
@@ -232,6 +236,25 @@ function RoundFormUI({
           />
         </div>
       </div>
+      {structures.length > 0 && (
+        <div>
+          <label className="block text-xs font-semibold text-white/50 uppercase tracking-wider mb-1.5">
+            ストラクチャー（任意）
+          </label>
+          <select
+            value={form.structureId}
+            onChange={(e) => setForm({ ...form, structureId: e.target.value })}
+            className="w-full px-3 py-2.5 text-sm rounded-lg border border-white/10 bg-[#0c1e42] text-white outline-none"
+          >
+            <option value="">設定しない</option>
+            {structures.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
       <div className="flex gap-3 pt-2">
         <button
           onClick={onCancel}
@@ -519,9 +542,11 @@ function rawToMatch(d: Record<string, unknown>): Match {
 export default function ScheduleAdminClient({
   initialRounds,
   teams,
+  structures = [],
 }: {
   initialRounds: Round[];
   teams: Team[];
+  structures?: { id: string; name: string }[];
 }) {
   const [rounds, setRounds] = useState(initialRounds);
   const [filterLeague, setFilterLeague] = useState("");
@@ -582,6 +607,7 @@ export default function ScheduleAdminClient({
     format: r.format ?? "",
     status: r.status,
     isPlayoff: r.isPlayoff,
+    structureId: r.structureId ?? "",
   });
 
   const formToPayload = (f: RoundForm) => ({
@@ -596,6 +622,7 @@ export default function ScheduleAdminClient({
     format: f.format,
     status: f.status,
     isPlayoff: f.isPlayoff,
+    structureId: f.structureId || null,
   });
 
   const rawToRound = (d: Record<string, unknown>): Round => ({
@@ -611,6 +638,7 @@ export default function ScheduleAdminClient({
     status: ((d.status as string) ?? "scheduled") as Round["status"],
     isPlayoff: (d.is_playoff as boolean) ?? false,
     format: (d.format as string) ?? "",
+    structureId: (d.structure_id as string | null) ?? null,
   });
 
   const handleCreate = async () => {
@@ -825,6 +853,7 @@ export default function ScheduleAdminClient({
             onSave={handleCreate}
             onCancel={() => setModal(null)}
             saving={saving}
+            structures={structures}
           />
         </Modal>
       )}
@@ -836,6 +865,7 @@ export default function ScheduleAdminClient({
             onSave={handleEdit}
             onCancel={() => setModal(null)}
             saving={saving}
+            structures={structures}
           />
         </Modal>
       )}

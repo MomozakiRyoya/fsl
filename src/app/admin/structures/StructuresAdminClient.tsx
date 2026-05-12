@@ -44,7 +44,10 @@ function Modal({
       >
         <div className="flex items-center justify-between px-5 py-4 border-b border-white/8 flex-shrink-0">
           <h2 className="text-base font-bold text-white">{title}</h2>
-          <button onClick={onClose} className="text-white/40 hover:text-white text-xl">
+          <button
+            onClick={onClose}
+            className="text-white/40 hover:text-white text-xl"
+          >
             ✕
           </button>
         </div>
@@ -54,28 +57,101 @@ function Modal({
   );
 }
 
-function LevelsPreview({ levels }: { levels: BlindLevel[] }) {
-  if (levels.length === 0) return null;
+function recalcStarts(levels: BlindLevel[]): BlindLevel[] {
+  let elapsed = 0;
+  return levels.map((l) => {
+    const h = Math.floor(elapsed / 60);
+    const m = elapsed % 60;
+    const start = `${h}:${String(m).padStart(2, "0")}`;
+    elapsed += parseInt(String(l.duration)) || 0;
+    return { ...l, start };
+  });
+}
+
+function LevelsEditor({
+  levels,
+  onChange,
+}: {
+  levels: BlindLevel[];
+  onChange: (l: BlindLevel[]) => void;
+}) {
+  const update = (i: number, patch: Partial<BlindLevel>) => {
+    const next = levels.map((l, idx) => (idx === i ? { ...l, ...patch } : l));
+    onChange(recalcStarts(next));
+  };
+  const remove = (i: number) => {
+    const next = levels.filter((_, idx) => idx !== i);
+    onChange(recalcStarts(next));
+  };
+  const move = (i: number, dir: -1 | 1) => {
+    if (i + dir < 0 || i + dir >= levels.length) return;
+    const next = [...levels];
+    [next[i], next[i + dir]] = [next[i + dir], next[i]];
+    onChange(recalcStarts(next));
+  };
+  const addLevel = () => {
+    const normals = levels.filter((l) => l.level !== "break");
+    const nextLv =
+      normals.length > 0
+        ? Math.max(
+            ...normals.map((l) => (typeof l.level === "number" ? l.level : 0)),
+          ) + 1
+        : 1;
+    const prev = normals.at(-1);
+    onChange(
+      recalcStarts([
+        ...levels,
+        {
+          level: nextLv,
+          sb: prev?.sb ?? 0,
+          bb: prev?.bb ?? 0,
+          ante: prev?.ante ?? 0,
+          duration: prev?.duration ?? "20",
+          start: "0:00",
+        },
+      ]),
+    );
+  };
+  const addBreak = () => {
+    onChange(
+      recalcStarts([
+        ...levels,
+        { level: "break", duration: "15", start: "0:00" },
+      ]),
+    );
+  };
+
+  const inputCls =
+    "w-full px-1 py-1 text-xs text-right rounded border border-white/10 bg-white/5 text-white outline-none focus:border-amber-500/50 tabular-nums";
+
   return (
     <div className="mt-3">
       <div className="flex items-center justify-between mb-2">
         <span className="text-xs font-semibold text-white/50 uppercase tracking-wider">
-          プレビュー
+          ブラインドレベル編集
         </span>
-        <span className="text-xs text-amber-400 font-bold">{levels.length} レベル</span>
+        <span className="text-xs text-amber-400 font-bold">
+          {levels.length} レベル
+        </span>
       </div>
       <div
-        className="rounded-lg overflow-hidden border border-white/8 max-h-52 overflow-y-auto"
+        className="rounded-lg overflow-hidden border border-white/8 max-h-64 overflow-y-auto"
         style={{ background: "#060b14" }}
       >
         <table className="w-full text-xs">
           <thead>
             <tr className="border-b border-white/8">
-              {["Lv", "SB", "BB", "Ante", "分", "開始"].map((h) => (
-                <th key={h} className="px-2 py-1.5 text-white/40 text-right first:text-left">
-                  {h}
-                </th>
-              ))}
+              <th className="px-1 py-1.5 text-white/40 text-left w-7">Lv</th>
+              <th className="px-1 py-1.5 text-white/40 text-right w-16">SB</th>
+              <th className="px-1 py-1.5 text-white/40 text-right w-16">BB</th>
+              <th className="px-1 py-1.5 text-white/40 text-right w-16">
+                Ante
+              </th>
+              <th className="px-1 py-1.5 text-white/40 text-right w-10">分</th>
+              <th className="px-1 py-1.5 text-white/40 text-right w-10">
+                開始
+              </th>
+              <th className="w-16" />
             </tr>
           </thead>
           <tbody>
@@ -86,25 +162,116 @@ function LevelsPreview({ levels }: { levels: BlindLevel[] }) {
                   key={i}
                   className={`border-b border-white/5 last:border-0 ${isBreak ? "bg-amber-900/20" : ""}`}
                 >
-                  <td className="px-2 py-1 text-white/70">
-                    {isBreak ? "Break" : l.level}
+                  <td className="px-1 py-1 text-white/50 text-center">
+                    {isBreak ? (
+                      <span className="text-amber-400 font-bold">B</span>
+                    ) : (
+                      l.level
+                    )}
                   </td>
-                  <td className="px-2 py-1 text-right text-white/60">
-                    {isBreak ? "—" : (l.sb ?? 0).toLocaleString("ja-JP")}
+                  <td className="px-1 py-1">
+                    {isBreak ? (
+                      <span className="text-white/20 text-center block">—</span>
+                    ) : (
+                      <input
+                        type="number"
+                        min="0"
+                        value={l.sb ?? 0}
+                        onChange={(e) =>
+                          update(i, { sb: parseInt(e.target.value) || 0 })
+                        }
+                        className={inputCls}
+                      />
+                    )}
                   </td>
-                  <td className="px-2 py-1 text-right text-white/60">
-                    {isBreak ? "—" : (l.bb ?? 0).toLocaleString("ja-JP")}
+                  <td className="px-1 py-1">
+                    {isBreak ? (
+                      <span className="text-white/20 text-center block">—</span>
+                    ) : (
+                      <input
+                        type="number"
+                        min="0"
+                        value={l.bb ?? 0}
+                        onChange={(e) =>
+                          update(i, { bb: parseInt(e.target.value) || 0 })
+                        }
+                        className={inputCls}
+                      />
+                    )}
                   </td>
-                  <td className="px-2 py-1 text-right text-white/60">
-                    {isBreak ? "—" : (l.ante ?? 0).toLocaleString("ja-JP")}
+                  <td className="px-1 py-1">
+                    {isBreak ? (
+                      <span className="text-white/20 text-center block">—</span>
+                    ) : (
+                      <input
+                        type="number"
+                        min="0"
+                        value={l.ante ?? 0}
+                        onChange={(e) =>
+                          update(i, { ante: parseInt(e.target.value) || 0 })
+                        }
+                        className={inputCls}
+                      />
+                    )}
                   </td>
-                  <td className="px-2 py-1 text-right text-white/60">{l.duration}</td>
-                  <td className="px-2 py-1 text-right text-white/40">{l.start}</td>
+                  <td className="px-1 py-1">
+                    <input
+                      type="number"
+                      min="1"
+                      value={l.duration}
+                      onChange={(e) => update(i, { duration: e.target.value })}
+                      className={inputCls}
+                    />
+                  </td>
+                  <td className="px-1 py-1 text-right text-white/30 text-[10px]">
+                    {l.start}
+                  </td>
+                  <td className="px-1 py-1">
+                    <div className="flex gap-0.5 justify-end">
+                      <button
+                        onClick={() => move(i, -1)}
+                        disabled={i === 0}
+                        className="w-5 h-5 text-white/30 hover:text-white disabled:opacity-20 transition-colors"
+                        title="上へ"
+                      >
+                        ↑
+                      </button>
+                      <button
+                        onClick={() => move(i, 1)}
+                        disabled={i === levels.length - 1}
+                        className="w-5 h-5 text-white/30 hover:text-white disabled:opacity-20 transition-colors"
+                        title="下へ"
+                      >
+                        ↓
+                      </button>
+                      <button
+                        onClick={() => remove(i)}
+                        className="w-5 h-5 text-red-400/50 hover:text-red-400 transition-colors"
+                        title="削除"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               );
             })}
           </tbody>
         </table>
+      </div>
+      <div className="flex gap-2 mt-2">
+        <button
+          onClick={addLevel}
+          className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-white/10 text-white/50 hover:text-white hover:border-white/20 transition-colors"
+        >
+          + レベル追加
+        </button>
+        <button
+          onClick={addBreak}
+          className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-amber-900/40 text-amber-400/60 hover:text-amber-400 hover:border-amber-900 transition-colors"
+        >
+          + ブレイク追加
+        </button>
       </div>
     </div>
   );
@@ -137,7 +304,9 @@ export default function StructuresAdminClient({
     try {
       const levels = parseStructureText(pasteText);
       if (levels.length === 0) {
-        setParseError("データが解析できませんでした。列順: Lv / SB / BB / Ante / 分");
+        setParseError(
+          "データが解析できませんでした。列順: Lv / SB / BB / Ante / 分",
+        );
         return;
       }
       setParsedLevels(levels);
@@ -355,7 +524,9 @@ export default function StructuresAdminClient({
       {/* 作成/編集モーダル */}
       {(modal === "create" || modal === "edit") && (
         <Modal
-          title={modal === "edit" ? "ストラクチャーを編集" : "新規ストラクチャー"}
+          title={
+            modal === "edit" ? "ストラクチャーを編集" : "新規ストラクチャー"
+          }
           onClose={() => setModal(null)}
         >
           <div className="space-y-4">
@@ -379,7 +550,9 @@ export default function StructuresAdminClient({
                 <input
                   type="number"
                   value={form.startingStack}
-                  onChange={(e) => setForm({ ...form, startingStack: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, startingStack: e.target.value })
+                  }
                   className="w-full px-3 py-2.5 text-sm rounded-lg border border-white/10 bg-white/5 text-white outline-none focus:border-amber-500/50"
                 />
               </div>
@@ -390,7 +563,9 @@ export default function StructuresAdminClient({
                 <input
                   type="number"
                   value={form.maxPlayers}
-                  onChange={(e) => setForm({ ...form, maxPlayers: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, maxPlayers: e.target.value })
+                  }
                   className="w-full px-3 py-2.5 text-sm rounded-lg border border-white/10 bg-white/5 text-white outline-none focus:border-amber-500/50"
                 />
               </div>
@@ -435,14 +610,17 @@ export default function StructuresAdminClient({
               {inputTab === "paste" && (
                 <div>
                   <p className="text-[11px] text-white/30 mb-1.5">
-                    Excel/スプレッドシートからコピーしてペースト。列順: Lv / SB / BB / Ante / 分数
+                    Excel/スプレッドシートからコピーしてペースト。列順: Lv / SB
+                    / BB / Ante / 分数
                   </p>
                   <textarea
                     value={pasteText}
                     onChange={(e) => setPasteText(e.target.value)}
                     rows={6}
                     className="w-full px-3 py-2.5 text-xs rounded-lg border border-white/10 bg-white/5 text-white outline-none focus:border-amber-500/50 font-mono resize-none"
-                    placeholder={"Lv\tSB\tBB\tAnte\t分\n1\t100\t200\t0\t20\n2\t150\t300\t0\t20\nBreak\t\t\t\t15\n3\t200\t400\t50\t20"}
+                    placeholder={
+                      "Lv\tSB\tBB\tAnte\t分\n1\t100\t200\t0\t20\n2\t150\t300\t0\t20\nBreak\t\t\t\t15\n3\t200\t400\t50\t20"
+                    }
                   />
                   <div className="flex items-center gap-2 mt-2">
                     <button
@@ -501,7 +679,7 @@ export default function StructuresAdminClient({
                 </div>
               )}
 
-              <LevelsPreview levels={parsedLevels} />
+              <LevelsEditor levels={parsedLevels} onChange={setParsedLevels} />
             </div>
 
             <div className="flex gap-3 pt-2">

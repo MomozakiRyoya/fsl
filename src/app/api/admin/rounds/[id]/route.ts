@@ -42,6 +42,7 @@ export async function PATCH(
   if (body.format !== undefined) updates.format = body.format;
   if (body.status !== undefined) updates.status = body.status;
   if (body.isPlayoff !== undefined) updates.is_playoff = body.isPlayoff;
+  if ("structureId" in body) updates.structure_id = body.structureId || null;
 
   const { data, error } = await supabase
     .from("rounds")
