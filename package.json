@@ -18,14 +18,17 @@
     "google-auth-library": "^10.6.2",
     "google-spreadsheet": "^5.2.0",
     "next": "16.2.1",
+    "papaparse": "^5.5.3",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "resend": "^6.9.4",
-    "web-push": "^3.6.7"
+    "web-push": "^3.6.7",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
+    "@types/papaparse": "^5.5.2",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/web-push": "^3.6.4",
