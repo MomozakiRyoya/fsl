@@ -307,9 +307,7 @@ export default function StructuresAdminClient({
   const [toast, setToast] = useState("");
   // 節の紐づけ
   const [assignTarget, setAssignTarget] = useState<Structure | null>(null);
-  const [selectedRoundIds, setSelectedRoundIds] = useState<Set<string>>(
-    new Set(),
-  );
+  const [assignRoundId, setAssignRoundId] = useState("");
   const [assigning, setAssigning] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -319,47 +317,29 @@ export default function StructuresAdminClient({
   };
 
   const openAssign = (s: Structure) => {
-    const ids = rounds.filter((r) => r.structureId === s.id).map((r) => r.id);
-    setSelectedRoundIds(new Set(ids));
+    setAssignRoundId("");
     setAssignTarget(s);
   };
 
-  const toggleRound = (id: string) => {
-    setSelectedRoundIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
-
   const handleAssign = async () => {
-    if (!assignTarget) return;
+    if (!assignTarget || !assignRoundId) return;
     setAssigning(true);
-    const res = await fetch(
-      `/api/admin/structures/${assignTarget.id}/assign-rounds`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ roundIds: [...selectedRoundIds] }),
-      },
-    );
+    const res = await fetch(`/api/admin/rounds/${assignRoundId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ structureId: assignTarget.id }),
+    });
     setAssigning(false);
     if (res.ok) {
       setRounds((prev) =>
-        prev.map((r) => ({
-          ...r,
-          structureId: selectedRoundIds.has(r.id)
-            ? assignTarget.id
-            : r.structureId === assignTarget.id
-              ? null
-              : r.structureId,
-        })),
+        prev.map((r) =>
+          r.id === assignRoundId ? { ...r, structureId: assignTarget.id } : r,
+        ),
       );
-      setAssignTarget(null);
-      showToast("節を紐づけました");
+      setAssignRoundId("");
+      showToast("節に登録しました");
     } else {
-      showToast("紐づけに失敗しました");
+      showToast("登録に失敗しました");
     }
   };
 
@@ -820,15 +800,16 @@ export default function StructuresAdminClient({
           onClose={() => setAssignTarget(null)}
         >
           <div className="space-y-4">
-            <p className="text-xs text-white/40">
-              このストラクチャーを使用する節を選択してください。
-            </p>
-            {rounds.length === 0 ? (
-              <p className="text-sm text-white/30 text-center py-8">
-                節データなし
-              </p>
-            ) : (
-              <div className="space-y-3 max-h-80 overflow-y-auto">
+            <div>
+              <label className="block text-xs font-semibold text-white/50 uppercase tracking-wider mb-2">
+                節を選択
+              </label>
+              <select
+                value={assignRoundId}
+                onChange={(e) => setAssignRoundId(e.target.value)}
+                className="w-full px-3 py-2.5 text-sm rounded-lg border border-white/10 bg-[#060b14] text-white outline-none focus:border-amber-500/50"
+              >
+                <option value="">-- 節を選択してください --</option>
                 {Object.entries(
                   rounds.reduce<
                     Record<string, { name: string; items: RoundItem[] }>
@@ -839,43 +820,32 @@ export default function StructuresAdminClient({
                     return acc;
                   }, {}),
                 ).map(([leagueId, { name, items }]) => (
-                  <div key={leagueId}>
-                    <p className="text-[10px] font-bold text-white/30 uppercase tracking-wider mb-1.5">
-                      {name}
-                    </p>
-                    <div className="space-y-1">
-                      {items.map((r) => (
-                        <label
-                          key={r.id}
-                          className="flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer hover:bg-white/5 transition-colors"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={selectedRoundIds.has(r.id)}
-                            onChange={() => toggleRound(r.id)}
-                            className="w-4 h-4 accent-amber-500"
-                          />
-                          <span className="text-sm text-white/80 flex-1">
-                            {r.name}
-                          </span>
-                          <span className="text-xs text-white/30">
-                            {r.date}
-                          </span>
-                          {r.structureId &&
-                            r.structureId !== assignTarget.id && (
-                              <span className="text-[10px] text-white/20">
-                                他のST使用中
-                              </span>
-                            )}
-                        </label>
-                      ))}
-                    </div>
-                  </div>
+                  <optgroup key={leagueId} label={name}>
+                    {items.map((r) => (
+                      <option key={r.id} value={r.id}>
+                        {r.name}
+                        {r.date ? ` (${r.date})` : ""}
+                        {r.structureId && r.structureId !== assignTarget?.id
+                          ? " ※他のST設定済み"
+                          : r.structureId === assignTarget?.id
+                            ? " ✓ 現在設定中"
+                            : ""}
+                      </option>
+                    ))}
+                  </optgroup>
                 ))}
-              </div>
-            )}
-            <div className="flex items-center justify-between text-xs text-white/40 pt-1">
-              <span>{selectedRoundIds.size}節を選択中</span>
+              </select>
+              {assignRoundId &&
+                (() => {
+                  const r = rounds.find((r) => r.id === assignRoundId);
+                  return r?.structureId &&
+                    r.structureId !== assignTarget?.id ? (
+                    <p className="text-xs text-amber-400/80 mt-1.5">
+                      ※
+                      この節には別のストラクチャーが設定されています。上書きされます。
+                    </p>
+                  ) : null;
+                })()}
             </div>
             <div className="flex gap-3 pt-2">
               <button
@@ -886,14 +856,14 @@ export default function StructuresAdminClient({
               </button>
               <button
                 onClick={handleAssign}
-                disabled={assigning}
+                disabled={assigning || !assignRoundId}
                 className="flex-1 py-2.5 rounded-xl text-sm font-bold disabled:opacity-40"
                 style={{
                   background: "linear-gradient(135deg, #c9921e, #e3c060)",
                   color: "#0c1e42",
                 }}
               >
-                {assigning ? "保存中..." : "保存する"}
+                {assigning ? "登録中..." : "この節に登録する"}
               </button>
             </div>
           </div>
