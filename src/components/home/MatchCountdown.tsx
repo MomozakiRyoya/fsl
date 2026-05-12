@@ -85,14 +85,12 @@ function MatchCard({
         {/* 日付・時刻 */}
         <p className="text-sm font-black text-white mb-1">
           📅 {round.date}
-          {round.startTime && (
-            <span
-              className="ml-1.5 text-xs font-semibold"
-              style={{ color: "rgba(201,146,30,0.85)" }}
-            >
-              🕒 {round.startTime}
-            </span>
-          )}
+          <span
+            className="ml-1.5 text-xs font-semibold"
+            style={{ color: "rgba(201,146,30,0.85)" }}
+          >
+            🕒 {round.startTime ?? "18:00"}
+          </span>
         </p>
 
         {/* カウントダウン */}
@@ -126,10 +124,7 @@ function MatchCard({
             ))}
           </div>
         ) : (
-          <p
-            className="text-sm font-bold mb-2.5"
-            style={{ color: "#e3c060" }}
-          >
+          <p className="text-sm font-bold mb-2.5" style={{ color: "#e3c060" }}>
             試合開始！
           </p>
         )}
@@ -188,12 +183,7 @@ export default function MatchCountdown({ rounds, leagues }: Props) {
     <div className="-mx-4">
       <AutoScroll speed={30} className="px-4">
         {upcoming.map(({ round, league }) => (
-          <MatchCard
-            key={round.id}
-            round={round}
-            league={league}
-            tick={tick}
-          />
+          <MatchCard key={round.id} round={round} league={league} tick={tick} />
         ))}
       </AutoScroll>
     </div>

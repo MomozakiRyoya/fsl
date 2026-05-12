@@ -84,9 +84,9 @@ function RoundCard({ round }: { round: Round }) {
                 />
               </svg>
               {round.date}
-              {round.startTime && (
-                <span className="text-slate-400">🕒 {round.startTime}</span>
-              )}
+              <span className="text-slate-400">
+                🕒 {round.startTime ?? "18:00"}
+              </span>
             </div>
             <div className="flex items-center gap-1.5 text-xs text-body">
               <svg
