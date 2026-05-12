@@ -115,9 +115,6 @@ function CropModal({
     const srcCX = -pos.x / zoom + nat.w / 2;
     const srcCY = -pos.y / zoom + nat.h / 2;
     const srcR = CROP_SIZE / 2 / zoom;
-    ctx.beginPath();
-    ctx.arc(CROP_OUTPUT / 2, CROP_OUTPUT / 2, CROP_OUTPUT / 2, 0, Math.PI * 2);
-    ctx.clip();
     ctx.drawImage(
       img,
       srcCX - srcR,
@@ -161,7 +158,7 @@ function CropModal({
           style={{ width: CROP_SIZE, height: CROP_SIZE }}
         >
           <div
-            className="absolute inset-0 rounded-full overflow-hidden"
+            className="absolute inset-0 rounded-xl overflow-hidden"
             style={{
               background: "#111",
               cursor: dragRef.current ? "grabbing" : "grab",
@@ -198,12 +195,65 @@ function CropModal({
             />
           </div>
           <div
-            className="absolute inset-0 rounded-full pointer-events-none"
+            className="absolute inset-0 rounded-xl pointer-events-none"
             style={{ border: "2px solid rgba(201,146,30,0.8)" }}
           />
         </div>
         <canvas ref={canvasRef} className="hidden" />
-        <div className="flex gap-3 mt-5">
+        {/* 矢印ボタン（ドラッグが難しい場合の代替） */}
+        <div className="mt-3 flex flex-col items-center gap-1">
+          <button
+            onClick={() => setPos((p) => ({ ...p, y: p.y - 10 }))}
+            className="w-8 h-8 flex items-center justify-center rounded-lg border border-white/10 text-white/50 hover:text-white hover:border-white/20 transition-colors text-sm"
+          >
+            ↑
+          </button>
+          <div className="flex gap-1">
+            <button
+              onClick={() => setPos((p) => ({ ...p, x: p.x - 10 }))}
+              className="w-8 h-8 flex items-center justify-center rounded-lg border border-white/10 text-white/50 hover:text-white hover:border-white/20 transition-colors text-sm"
+            >
+              ←
+            </button>
+            <div className="flex flex-col gap-1">
+              <button
+                onClick={() => {
+                  const nat = naturalRef.current;
+                  if (!nat) return;
+                  const min = Math.max(CROP_SIZE / nat.w, CROP_SIZE / nat.h);
+                  setZoom((z) => Math.min(min * 6, z * 1.15));
+                }}
+                className="w-8 h-8 flex items-center justify-center rounded-lg border border-white/10 text-white/50 hover:text-white hover:border-white/20 transition-colors text-sm"
+              >
+                ＋
+              </button>
+              <button
+                onClick={() => {
+                  const nat = naturalRef.current;
+                  if (!nat) return;
+                  const min = Math.max(CROP_SIZE / nat.w, CROP_SIZE / nat.h);
+                  setZoom((z) => Math.max(min * 0.5, z / 1.15));
+                }}
+                className="w-8 h-8 flex items-center justify-center rounded-lg border border-white/10 text-white/50 hover:text-white hover:border-white/20 transition-colors text-sm"
+              >
+                －
+              </button>
+            </div>
+            <button
+              onClick={() => setPos((p) => ({ ...p, x: p.x + 10 }))}
+              className="w-8 h-8 flex items-center justify-center rounded-lg border border-white/10 text-white/50 hover:text-white hover:border-white/20 transition-colors text-sm"
+            >
+              →
+            </button>
+          </div>
+          <button
+            onClick={() => setPos((p) => ({ ...p, y: p.y + 10 }))}
+            className="w-8 h-8 flex items-center justify-center rounded-lg border border-white/10 text-white/50 hover:text-white hover:border-white/20 transition-colors text-sm"
+          >
+            ↓
+          </button>
+        </div>
+        <div className="flex gap-3 mt-3">
           <button
             onClick={onCancel}
             className="flex-1 py-2.5 rounded-xl text-sm font-semibold border border-white/10 text-white/50 hover:text-white transition-colors"
@@ -289,6 +339,23 @@ export default function AccountClient({
         data: { publicUrl },
       } = supabase.storage.from("fsl-images").getPublicUrl(path);
       setAvatarUrl(publicUrl);
+      // 即時保存（保存するボタン不要）
+      await supabase.auth.updateUser({
+        data: {
+          display_name: displayName.trim(),
+          avatar_color: avatarColor,
+          avatar_url: publicUrl,
+        },
+      });
+      // 選手プロフィール画像も同期
+      fetch("/api/account/sync-photo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          avatarUrl: publicUrl,
+          playerId: playerId ?? null,
+        }),
+      });
     }
     setUploadingAvatar(false);
   };
