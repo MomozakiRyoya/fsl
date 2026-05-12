@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import type { League, Round } from "@/lib/types/app";
+import { getEffectiveStatus } from "@/lib/round-status";
 
 const STATUS_STYLES: Record<string, string> = {
   finished: "bg-slate-100 text-slate-500",
@@ -17,7 +18,8 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 function RoundCard({ round }: { round: Round }) {
-  const isNext = round.status === "next";
+  const effectiveStatus = getEffectiveStatus(round);
+  const isNext = effectiveStatus === "next";
   const isPlayoff = round.isPlayoff;
 
   return (
@@ -34,7 +36,7 @@ function RoundCard({ round }: { round: Round }) {
                 PLAYOFF
               </span>
             )}
-            {round.status === "next" ? (
+            {effectiveStatus === "next" ? (
               <span
                 className="text-xs px-2 py-0.5 rounded-full font-bold"
                 style={{
@@ -82,6 +84,9 @@ function RoundCard({ round }: { round: Round }) {
                 />
               </svg>
               {round.date}
+              {round.startTime && (
+                <span className="text-slate-400">🕒 {round.startTime}</span>
+              )}
             </div>
             <div className="flex items-center gap-1.5 text-xs text-body">
               <svg
@@ -129,8 +134,12 @@ export default function SchedulePageClient({ leagues, rounds }: Props) {
   const regularRounds = allRoundsForLeague.filter((r) => !r.isPlayoff);
   const playoffRounds = allRoundsForLeague.filter((r) => r.isPlayoff);
 
-  const upcomingRounds = regularRounds.filter((r) => r.status !== "finished");
-  const finishedRounds = regularRounds.filter((r) => r.status === "finished");
+  const upcomingRounds = regularRounds.filter(
+    (r) => getEffectiveStatus(r) !== "finished",
+  );
+  const finishedRounds = regularRounds.filter(
+    (r) => getEffectiveStatus(r) === "finished",
+  );
 
   return (
     <div className="max-w-lg mx-auto px-4 py-6">

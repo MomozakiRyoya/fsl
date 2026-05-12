@@ -217,6 +217,11 @@ export default async function RoundDetailPage({ params }: Props) {
               />
             </svg>
             {round.date}
+            {round.startTime && (
+              <span className="ml-1" style={{ color: "rgba(201,146,30,0.9)" }}>
+                🕒 {round.startTime}
+              </span>
+            )}
           </div>
           <div
             className="flex items-center gap-2 text-xs"
