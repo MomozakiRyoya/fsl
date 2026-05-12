@@ -57,6 +57,7 @@ type RoundForm = {
   leagueName: string;
   roundNumber: string;
   date: string;
+  startTime: string;
   venue: string;
   venueUrl: string;
   format: string;
@@ -70,6 +71,7 @@ const defaultRoundForm = (): RoundForm => ({
   leagueName: "Premier League",
   roundNumber: "",
   date: "",
+  startTime: "18:00",
   venue: "sbmHARUYOSHI",
   venueUrl: "",
   format: "",
@@ -167,7 +169,7 @@ function RoundFormUI({
           />
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-3 gap-3">
         <div>
           <label className="block text-xs font-semibold text-white/50 uppercase tracking-wider mb-1.5">
             開催日
@@ -176,6 +178,17 @@ function RoundFormUI({
             type="date"
             value={form.date}
             onChange={(e) => setForm({ ...form, date: e.target.value })}
+            className="w-full px-3 py-2.5 text-sm rounded-lg border border-white/10 bg-white/5 text-white outline-none"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-semibold text-white/50 uppercase tracking-wider mb-1.5">
+            開始時刻
+          </label>
+          <input
+            type="time"
+            value={form.startTime}
+            onChange={(e) => setForm({ ...form, startTime: e.target.value })}
             className="w-full px-3 py-2.5 text-sm rounded-lg border border-white/10 bg-white/5 text-white outline-none"
           />
         </div>
@@ -563,6 +576,7 @@ export default function ScheduleAdminClient({
     leagueName: r.leagueName,
     roundNumber: String(r.roundNumber),
     date: r.date,
+    startTime: r.startTime ?? "18:00",
     venue: r.venue,
     venueUrl: r.venueUrl ?? "",
     format: r.format ?? "",
@@ -576,6 +590,7 @@ export default function ScheduleAdminClient({
     leagueName: f.leagueName,
     roundNumber: Number(f.roundNumber) || 0,
     date: f.date,
+    startTime: f.startTime || null,
     venue: f.venue,
     venueUrl: f.venueUrl || null,
     format: f.format,
@@ -590,6 +605,7 @@ export default function ScheduleAdminClient({
     leagueName: (d.league_name as string) ?? "",
     roundNumber: (d.round_number as number) ?? 0,
     date: (d.date as string) ?? "",
+    startTime: (d.start_time as string | null) ?? null,
     venue: (d.venue as string) ?? "",
     venueUrl: (d.venue_url as string | null) ?? null,
     status: ((d.status as string) ?? "scheduled") as Round["status"],

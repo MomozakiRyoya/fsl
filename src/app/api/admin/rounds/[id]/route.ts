@@ -36,6 +36,7 @@ export async function PATCH(
   if (body.leagueName !== undefined) updates.league_name = body.leagueName;
   if (body.roundNumber !== undefined) updates.round_number = body.roundNumber;
   if (body.date !== undefined) updates.date = body.date;
+  if ("startTime" in body) updates.start_time = body.startTime || null;
   if (body.venue !== undefined) updates.venue = body.venue;
   if (body.venueUrl !== undefined) updates.venue_url = body.venueUrl;
   if (body.format !== undefined) updates.format = body.format;

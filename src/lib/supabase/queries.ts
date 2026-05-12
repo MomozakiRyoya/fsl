@@ -126,6 +126,7 @@ export async function fetchRoundsFromSupabase(): Promise<Round[]> {
     leagueName: (r.league_name as string) ?? "",
     roundNumber: (r.round_number as number) ?? 0,
     date: (r.date as string) ?? "",
+    startTime: (r.start_time as string | null) ?? null,
     venue: (r.venue as string) ?? "",
     venueUrl: (r.venue_url as string | null) ?? null,
     status: (r.status as Round["status"]) ?? "scheduled",

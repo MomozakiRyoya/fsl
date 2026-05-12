@@ -47,6 +47,7 @@ export interface Round {
   leagueName: string;
   roundNumber: number;
   date: string;
+  startTime?: string | null;
   venue: string;
   venueUrl: string | null;
   status: RoundStatus;
