@@ -4,6 +4,31 @@ import { useState, useRef } from "react";
 import type { BlindLevel } from "@/lib/types/app";
 import { parseStructureText } from "@/lib/parse-structure";
 
+const LEAGUE_ORDER = ["premier", "spade", "diamond", "club", "heart"];
+
+function groupRoundsByLeague(
+  rounds: {
+    id: string;
+    name: string;
+    leagueId: string;
+    leagueName: string;
+    roundNumber: number;
+    date: string;
+    structureId: string | null;
+  }[],
+) {
+  const map = new Map<string, { name: string; items: typeof rounds }>();
+  for (const r of [...rounds].sort((a, b) => a.roundNumber - b.roundNumber)) {
+    if (!map.has(r.leagueId))
+      map.set(r.leagueId, { name: r.leagueName, items: [] });
+    map.get(r.leagueId)!.items.push(r);
+  }
+  return LEAGUE_ORDER.filter((lid) => map.has(lid)).map((lid) => ({
+    leagueId: lid,
+    ...map.get(lid)!,
+  }));
+}
+
 interface Structure {
   id: string;
   name: string;
@@ -631,26 +656,19 @@ export default function StructuresAdminClient({
                     className="w-full px-3 py-2.5 text-sm rounded-lg border border-white/10 bg-[#060b14] text-white outline-none focus:border-amber-500/50"
                   >
                     <option value="">-- 試合（節）を選択 --</option>
-                    {Object.entries(
-                      rounds.reduce<
-                        Record<string, { name: string; items: RoundItem[] }>
-                      >((acc, r) => {
-                        if (!acc[r.leagueId])
-                          acc[r.leagueId] = { name: r.leagueName, items: [] };
-                        acc[r.leagueId].items.push(r);
-                        return acc;
-                      }, {}),
-                    ).map(([lid, { name, items }]) => (
-                      <optgroup key={lid} label={name}>
-                        {items.map((r) => (
-                          <option key={r.id} value={r.id}>
-                            {r.name}
-                            {r.date ? ` (${r.date})` : ""}
-                            {r.structureId ? " ※ST設定済み" : ""}
-                          </option>
-                        ))}
-                      </optgroup>
-                    ))}
+                    {groupRoundsByLeague(rounds).map(
+                      ({ leagueId, name, items }) => (
+                        <optgroup key={leagueId} label={name}>
+                          {items.map((r) => (
+                            <option key={r.id} value={r.id}>
+                              {r.name}
+                              {r.date ? ` (${r.date})` : ""}
+                              {r.structureId ? " ※ST設定済み" : ""}
+                            </option>
+                          ))}
+                        </optgroup>
+                      ),
+                    )}
                   </select>
                   {createRoundId && form.name && (
                     <p className="text-[11px] text-white/30 mt-1">
@@ -874,30 +892,23 @@ export default function StructuresAdminClient({
                 className="w-full px-3 py-2.5 text-sm rounded-lg border border-white/10 bg-[#060b14] text-white outline-none focus:border-amber-500/50"
               >
                 <option value="">-- 節を選択してください --</option>
-                {Object.entries(
-                  rounds.reduce<
-                    Record<string, { name: string; items: RoundItem[] }>
-                  >((acc, r) => {
-                    if (!acc[r.leagueId])
-                      acc[r.leagueId] = { name: r.leagueName, items: [] };
-                    acc[r.leagueId].items.push(r);
-                    return acc;
-                  }, {}),
-                ).map(([leagueId, { name, items }]) => (
-                  <optgroup key={leagueId} label={name}>
-                    {items.map((r) => (
-                      <option key={r.id} value={r.id}>
-                        {r.name}
-                        {r.date ? ` (${r.date})` : ""}
-                        {r.structureId && r.structureId !== assignTarget?.id
-                          ? " ※他のST設定済み"
-                          : r.structureId === assignTarget?.id
-                            ? " ✓ 現在設定中"
-                            : ""}
-                      </option>
-                    ))}
-                  </optgroup>
-                ))}
+                {groupRoundsByLeague(rounds).map(
+                  ({ leagueId, name, items }) => (
+                    <optgroup key={leagueId} label={name}>
+                      {items.map((r) => (
+                        <option key={r.id} value={r.id}>
+                          {r.name}
+                          {r.date ? ` (${r.date})` : ""}
+                          {r.structureId && r.structureId !== assignTarget?.id
+                            ? " ※他のST設定済み"
+                            : r.structureId === assignTarget?.id
+                              ? " ✓ 現在設定中"
+                              : ""}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ),
+                )}
               </select>
               {assignRoundId &&
                 (() => {
