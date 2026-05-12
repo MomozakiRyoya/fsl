@@ -13,6 +13,16 @@ interface Structure {
   levels: BlindLevel[];
 }
 
+interface RoundItem {
+  id: string;
+  name: string;
+  leagueId: string;
+  leagueName: string;
+  roundNumber: number;
+  date: string;
+  structureId: string | null;
+}
+
 type FormData = {
   name: string;
   startingStack: string;
@@ -279,10 +289,13 @@ function LevelsEditor({
 
 export default function StructuresAdminClient({
   initialStructures,
+  rounds: initialRounds = [],
 }: {
   initialStructures: Structure[];
+  rounds?: RoundItem[];
 }) {
   const [structures, setStructures] = useState(initialStructures);
+  const [rounds, setRounds] = useState(initialRounds);
   const [modal, setModal] = useState<"create" | "edit" | "delete" | null>(null);
   const [target, setTarget] = useState<Structure | null>(null);
   const [form, setForm] = useState<FormData>(defaultForm());
@@ -292,11 +305,62 @@ export default function StructuresAdminClient({
   const [inputTab, setInputTab] = useState<"paste" | "file">("paste");
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState("");
+  // 節の紐づけ
+  const [assignTarget, setAssignTarget] = useState<Structure | null>(null);
+  const [selectedRoundIds, setSelectedRoundIds] = useState<Set<string>>(
+    new Set(),
+  );
+  const [assigning, setAssigning] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const showToast = (msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(""), 3000);
+  };
+
+  const openAssign = (s: Structure) => {
+    const ids = rounds.filter((r) => r.structureId === s.id).map((r) => r.id);
+    setSelectedRoundIds(new Set(ids));
+    setAssignTarget(s);
+  };
+
+  const toggleRound = (id: string) => {
+    setSelectedRoundIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleAssign = async () => {
+    if (!assignTarget) return;
+    setAssigning(true);
+    const res = await fetch(
+      `/api/admin/structures/${assignTarget.id}/assign-rounds`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ roundIds: [...selectedRoundIds] }),
+      },
+    );
+    setAssigning(false);
+    if (res.ok) {
+      setRounds((prev) =>
+        prev.map((r) => ({
+          ...r,
+          structureId: selectedRoundIds.has(r.id)
+            ? assignTarget.id
+            : r.structureId === assignTarget.id
+              ? null
+              : r.structureId,
+        })),
+      );
+      setAssignTarget(null);
+      showToast("節を紐づけました");
+    } else {
+      showToast("紐づけに失敗しました");
+    }
   };
 
   const handleParsePaste = () => {
@@ -470,7 +534,10 @@ export default function StructuresAdminClient({
                   <th className="text-left px-4 py-3 text-xs font-semibold text-white/40 uppercase tracking-wider w-16">
                     Lv数
                   </th>
-                  <th className="w-40 px-4 py-3" />
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-white/40 uppercase tracking-wider hidden sm:table-cell w-16">
+                    使用節
+                  </th>
+                  <th className="w-48 px-4 py-3" />
                 </tr>
               </thead>
               <tbody>
@@ -494,8 +561,25 @@ export default function StructuresAdminClient({
                     <td className="px-4 py-3 text-sm text-white/60">
                       {s.levels.length}
                     </td>
+                    <td className="px-4 py-3 text-xs text-white/50 hidden sm:table-cell">
+                      {rounds.filter((r) => r.structureId === s.id).length >
+                      0 ? (
+                        <span className="text-amber-400/80">
+                          {rounds.filter((r) => r.structureId === s.id).length}
+                          節
+                        </span>
+                      ) : (
+                        "—"
+                      )}
+                    </td>
                     <td className="px-4 py-3">
-                      <div className="flex gap-2 justify-end">
+                      <div className="flex gap-1.5 justify-end flex-wrap">
+                        <button
+                          onClick={() => openAssign(s)}
+                          className="text-xs px-2.5 py-1.5 rounded-lg border border-amber-900/40 text-amber-400/70 hover:text-amber-400 hover:border-amber-900/60 transition-colors whitespace-nowrap"
+                        >
+                          節に紐づけ
+                        </button>
                         <button
                           onClick={() => openEdit(s)}
                           className="text-xs px-3 py-1.5 rounded-lg border border-white/10 text-white/50 hover:text-white hover:border-white/20 transition-colors whitespace-nowrap"
@@ -725,6 +809,93 @@ export default function StructuresAdminClient({
             >
               {saving ? "削除中..." : "削除する"}
             </button>
+          </div>
+        </Modal>
+      )}
+
+      {/* 節の紐づけモーダル */}
+      {assignTarget && (
+        <Modal
+          title={`節に紐づける — ${assignTarget.name}`}
+          onClose={() => setAssignTarget(null)}
+        >
+          <div className="space-y-4">
+            <p className="text-xs text-white/40">
+              このストラクチャーを使用する節を選択してください。
+            </p>
+            {rounds.length === 0 ? (
+              <p className="text-sm text-white/30 text-center py-8">
+                節データなし
+              </p>
+            ) : (
+              <div className="space-y-3 max-h-80 overflow-y-auto">
+                {Object.entries(
+                  rounds.reduce<
+                    Record<string, { name: string; items: RoundItem[] }>
+                  >((acc, r) => {
+                    if (!acc[r.leagueId])
+                      acc[r.leagueId] = { name: r.leagueName, items: [] };
+                    acc[r.leagueId].items.push(r);
+                    return acc;
+                  }, {}),
+                ).map(([leagueId, { name, items }]) => (
+                  <div key={leagueId}>
+                    <p className="text-[10px] font-bold text-white/30 uppercase tracking-wider mb-1.5">
+                      {name}
+                    </p>
+                    <div className="space-y-1">
+                      {items.map((r) => (
+                        <label
+                          key={r.id}
+                          className="flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer hover:bg-white/5 transition-colors"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedRoundIds.has(r.id)}
+                            onChange={() => toggleRound(r.id)}
+                            className="w-4 h-4 accent-amber-500"
+                          />
+                          <span className="text-sm text-white/80 flex-1">
+                            {r.name}
+                          </span>
+                          <span className="text-xs text-white/30">
+                            {r.date}
+                          </span>
+                          {r.structureId &&
+                            r.structureId !== assignTarget.id && (
+                              <span className="text-[10px] text-white/20">
+                                他のST使用中
+                              </span>
+                            )}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="flex items-center justify-between text-xs text-white/40 pt-1">
+              <span>{selectedRoundIds.size}節を選択中</span>
+            </div>
+            <div className="flex gap-3 pt-2">
+              <button
+                onClick={() => setAssignTarget(null)}
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold border border-white/10 text-white/50 hover:text-white transition-colors"
+              >
+                キャンセル
+              </button>
+              <button
+                onClick={handleAssign}
+                disabled={assigning}
+                className="flex-1 py-2.5 rounded-xl text-sm font-bold disabled:opacity-40"
+                style={{
+                  background: "linear-gradient(135deg, #c9921e, #e3c060)",
+                  color: "#0c1e42",
+                }}
+              >
+                {assigning ? "保存中..." : "保存する"}
+              </button>
+            </div>
           </div>
         </Modal>
       )}

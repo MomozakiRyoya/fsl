@@ -4,10 +4,19 @@ import type { BlindLevel } from "@/lib/types/app";
 
 export default async function AdminStructuresPage() {
   const supabase = await createClient();
-  const { data } = await supabase
-    .from("structures")
-    .select("*")
-    .order("created_at", { ascending: false });
+  const [{ data }, { data: roundsData }] = await Promise.all([
+    supabase
+      .from("structures")
+      .select("*")
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("rounds")
+      .select(
+        "id, name, league_id, league_name, round_number, date, structure_id",
+      )
+      .order("league_id")
+      .order("round_number"),
+  ]);
 
   const structures = (data ?? []).map((d) => ({
     id: d.id as string,
@@ -18,5 +27,17 @@ export default async function AdminStructuresPage() {
     levels: (d.levels as BlindLevel[]) ?? [],
   }));
 
-  return <StructuresAdminClient initialStructures={structures} />;
+  const rounds = (roundsData ?? []).map((r) => ({
+    id: r.id as string,
+    name: r.name as string,
+    leagueId: r.league_id as string,
+    leagueName: r.league_name as string,
+    roundNumber: r.round_number as number,
+    date: r.date as string,
+    structureId: (r.structure_id as string | null) ?? null,
+  }));
+
+  return (
+    <StructuresAdminClient initialStructures={structures} rounds={rounds} />
+  );
 }
