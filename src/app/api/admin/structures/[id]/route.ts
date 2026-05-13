@@ -1,6 +1,7 @@
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createClient as createAdmin } from "@supabase/supabase-js";
 
 function isAdmin(email: string) {
   return (process.env.ADMIN_EMAILS ?? "")
@@ -15,6 +16,13 @@ async function checkAdmin() {
   } = await supabase.auth.getUser();
   if (!user || !isAdmin(user.email ?? "")) return null;
   return user;
+}
+
+function getAdmin() {
+  return createAdmin(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
 }
 
 function rawToStructure(d: Record<string, unknown>) {
@@ -37,7 +45,7 @@ export async function PATCH(
 
   const { id } = await params;
   const body = await request.json();
-  const supabase = await createClient();
+  const admin = getAdmin();
 
   const updates: Record<string, unknown> = {};
   if (body.name !== undefined) updates.name = body.name;
@@ -46,7 +54,7 @@ export async function PATCH(
   if (body.format !== undefined) updates.format = body.format;
   if (body.levels !== undefined) updates.levels = body.levels;
 
-  const { data, error } = await supabase
+  const { data, error } = await admin
     .from("structures")
     .update(updates)
     .eq("id", id)
@@ -67,8 +75,8 @@ export async function DELETE(
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id } = await params;
-  const supabase = await createClient();
-  const { error } = await supabase.from("structures").delete().eq("id", id);
+  const admin = getAdmin();
+  const { error } = await admin.from("structures").delete().eq("id", id);
   if (error) return NextResponse.json({ error: "削除失敗" }, { status: 500 });
   revalidatePath("/schedule");
   return NextResponse.json({ ok: true });
