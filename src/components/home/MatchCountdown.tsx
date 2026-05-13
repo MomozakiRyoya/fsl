@@ -4,12 +4,12 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { Round, League } from "@/lib/types/app";
 import AutoScroll from "@/components/ui/AutoScroll";
+import { getRoundStartTime } from "@/lib/start-time";
 
 const TARGET_LEAGUES = ["premier", "spade", "diamond", "club", "heart"];
 
 function getMatchTime(r: Round): number {
-  const time =
-    r.startTime && /^\d{2}:\d{2}$/.test(r.startTime) ? r.startTime : "18:00";
+  const time = getRoundStartTime(r);
   return new Date(`${r.date}T${time}:00+09:00`).getTime();
 }
 
@@ -89,7 +89,7 @@ function MatchCard({
             className="ml-1.5 text-xs font-semibold"
             style={{ color: "rgba(201,146,30,0.85)" }}
           >
-            🕒 {round.startTime ?? "18:00"}
+            🕒 {getRoundStartTime(round)}
           </span>
         </p>
 

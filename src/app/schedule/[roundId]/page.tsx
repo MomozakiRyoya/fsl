@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getRounds, getMatchResults } from "@/lib/data";
 import { createClient } from "@/lib/supabase/server";
 import type { Structure, BlindLevel } from "@/lib/types/app";
+import { getRoundStartTime } from "@/lib/start-time";
 
 export const dynamic = "force-dynamic";
 
@@ -218,7 +219,7 @@ export default async function RoundDetailPage({ params }: Props) {
             </svg>
             {round.date}
             <span className="ml-1" style={{ color: "rgba(201,146,30,0.9)" }}>
-              🕒 {round.startTime ?? "18:00"}
+              🕒 {getRoundStartTime(round)}
             </span>
           </div>
           <div

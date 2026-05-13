@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import type { League, Round } from "@/lib/types/app";
 import { getEffectiveStatus } from "@/lib/round-status";
+import { getRoundStartTime } from "@/lib/start-time";
 
 const STATUS_STYLES: Record<string, string> = {
   finished: "bg-slate-100 text-slate-500",
@@ -85,7 +86,7 @@ function RoundCard({ round }: { round: Round }) {
               </svg>
               {round.date}
               <span className="text-slate-400">
-                🕒 {round.startTime ?? "18:00"}
+                🕒 {getRoundStartTime(round)}
               </span>
             </div>
             <div className="flex items-center gap-1.5 text-xs text-body">
