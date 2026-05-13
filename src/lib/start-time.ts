@@ -22,3 +22,22 @@ export function getRoundStartTime(round: {
   }
   return getDefaultStartTime(round.date);
 }
+
+const WEEKDAYS = ["日", "月", "火", "水", "木", "金", "土"];
+
+export function getWeekday(date: string): string {
+  if (!date) return "";
+  const d = new Date(date + "T00:00:00+09:00");
+  return WEEKDAYS[d.getDay()];
+}
+
+/** "2026-05-14（木）19:00～" 形式で返す */
+export function formatRoundDateTime(round: {
+  date: string;
+  startTime?: string | null;
+}): string {
+  if (!round.date) return "";
+  const weekday = getWeekday(round.date);
+  const time = getRoundStartTime(round);
+  return `${round.date}（${weekday}）${time}～`;
+}

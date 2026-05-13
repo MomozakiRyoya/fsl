@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { Round, League } from "@/lib/types/app";
 import AutoScroll from "@/components/ui/AutoScroll";
-import { getRoundStartTime } from "@/lib/start-time";
+import { getRoundStartTime, formatRoundDateTime } from "@/lib/start-time";
 
 const TARGET_LEAGUES = ["premier", "spade", "diamond", "club", "heart"];
 
@@ -84,13 +84,7 @@ function MatchCard({
 
         {/* 日付・時刻 */}
         <p className="text-sm font-black text-white mb-1">
-          📅 {round.date}
-          <span
-            className="ml-1.5 text-xs font-semibold"
-            style={{ color: "rgba(201,146,30,0.85)" }}
-          >
-            🕒 {getRoundStartTime(round)}
-          </span>
+          📅 {formatRoundDateTime(round)}
         </p>
 
         {/* カウントダウン */}
