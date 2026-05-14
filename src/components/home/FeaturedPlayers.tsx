@@ -13,7 +13,7 @@ interface Props {
   players: FeaturedPlayer[];
 }
 
-const PER_PAGE = 4;
+const PER_PAGE = 2;
 
 export default function FeaturedPlayers({ players }: Props) {
   const pages = Math.ceil(players.length / PER_PAGE);
