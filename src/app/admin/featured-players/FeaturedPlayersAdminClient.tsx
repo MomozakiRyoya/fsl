@@ -12,6 +12,17 @@ interface FeaturedPlayer {
   isActive: boolean;
 }
 
+interface TeamItem {
+  id: string;
+  name: string;
+  leagueId: string;
+}
+interface PlayerItem {
+  id: string;
+  name: string;
+  teamId: string;
+}
+
 type FormData = {
   imageUrl: string;
   playerName: string;
@@ -60,13 +71,18 @@ function Modal({
 
 export default function FeaturedPlayersAdminClient({
   initialItems,
+  teams = [],
+  players = [],
 }: {
   initialItems: FeaturedPlayer[];
+  teams?: TeamItem[];
+  players?: PlayerItem[];
 }) {
   const [items, setItems] = useState(initialItems);
   const [modal, setModal] = useState<"create" | "edit" | "delete" | null>(null);
   const [target, setTarget] = useState<FeaturedPlayer | null>(null);
   const [form, setForm] = useState<FormData>(defaultForm());
+  const [selectedTeamId, setSelectedTeamId] = useState("");
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [toast, setToast] = useState("");
@@ -106,11 +122,14 @@ export default function FeaturedPlayersAdminClient({
 
   const openCreate = () => {
     setForm(defaultForm());
+    setSelectedTeamId("");
     setTarget(null);
     setModal("create");
   };
 
   const openEdit = (item: FeaturedPlayer) => {
+    const team = teams.find((t) => t.name === item.teamName);
+    setSelectedTeamId(team?.id ?? "");
     setForm({
       imageUrl: item.imageUrl,
       playerName: item.playerName,
@@ -302,33 +321,55 @@ export default function FeaturedPlayersAdminClient({
                 className="hidden"
               />
             </div>
-            {/* テキスト */}
-            <div className="grid grid-cols-2 gap-3">
+            {/* チーム・選手プルダウン */}
+            <div className="space-y-3">
               <div>
                 <label className="block text-xs font-semibold text-white/50 uppercase tracking-wider mb-1.5">
-                  チーム名
+                  チーム
                 </label>
-                <input
-                  value={form.teamName}
-                  onChange={(e) =>
-                    setForm({ ...form, teamName: e.target.value })
-                  }
-                  className="w-full px-3 py-2.5 text-sm rounded-lg border border-white/10 bg-white/5 text-white outline-none focus:border-amber-500/50"
-                  placeholder="TEAM BON"
-                />
+                <select
+                  value={selectedTeamId}
+                  onChange={(e) => {
+                    const tid = e.target.value;
+                    setSelectedTeamId(tid);
+                    const t = teams.find((t) => t.id === tid);
+                    setForm((f) => ({
+                      ...f,
+                      teamName: t?.name ?? "",
+                      playerName: "",
+                    }));
+                  }}
+                  className="w-full px-3 py-2.5 text-sm rounded-lg border border-white/10 bg-[#060b14] text-white outline-none focus:border-amber-500/50"
+                >
+                  <option value="">-- チームを選択 --</option>
+                  {teams.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.name}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className="block text-xs font-semibold text-white/50 uppercase tracking-wider mb-1.5">
-                  選手名
+                  選手
                 </label>
-                <input
+                <select
                   value={form.playerName}
+                  disabled={!selectedTeamId}
                   onChange={(e) =>
-                    setForm({ ...form, playerName: e.target.value })
+                    setForm((f) => ({ ...f, playerName: e.target.value }))
                   }
-                  className="w-full px-3 py-2.5 text-sm rounded-lg border border-white/10 bg-white/5 text-white outline-none focus:border-amber-500/50"
-                  placeholder="MO"
-                />
+                  className="w-full px-3 py-2.5 text-sm rounded-lg border border-white/10 bg-[#060b14] text-white outline-none focus:border-amber-500/50 disabled:opacity-40"
+                >
+                  <option value="">-- 選手を選択 --</option>
+                  {players
+                    .filter((p) => p.teamId === selectedTeamId)
+                    .map((p) => (
+                      <option key={p.id} value={p.name}>
+                        {p.name}
+                      </option>
+                    ))}
+                </select>
               </div>
             </div>
             <div className="flex items-center justify-between">
