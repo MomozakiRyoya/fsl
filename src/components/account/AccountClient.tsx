@@ -106,14 +106,15 @@ function CropModal({
   const handleConfirm = () => {
     const img = imgRef.current;
     const canvas = canvasRef.current;
-    const nat = naturalRef.current;
-    if (!img || !canvas || !nat) return;
+    if (!img || !canvas || !img.naturalWidth) return;
+    const nw = img.naturalWidth;
+    const nh = img.naturalHeight;
     canvas.width = CROP_OUTPUT;
     canvas.height = CROP_OUTPUT;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    const srcCX = -pos.x / zoom + nat.w / 2;
-    const srcCY = -pos.y / zoom + nat.h / 2;
+    const srcCX = -pos.x / zoom + nw / 2;
+    const srcCY = -pos.y / zoom + nh / 2;
     const srcR = CROP_SIZE / 2 / zoom;
     ctx.drawImage(
       img,
@@ -217,23 +218,13 @@ function CropModal({
             </button>
             <div className="flex flex-col gap-1">
               <button
-                onClick={() => {
-                  const nat = naturalRef.current;
-                  if (!nat) return;
-                  const min = Math.max(CROP_SIZE / nat.w, CROP_SIZE / nat.h);
-                  setZoom((z) => Math.min(min * 6, z * 1.15));
-                }}
+                onClick={() => setZoom((z) => z * 1.2)}
                 className="w-8 h-8 flex items-center justify-center rounded-lg border border-white/10 text-white/50 hover:text-white hover:border-white/20 transition-colors text-sm"
               >
                 ＋
               </button>
               <button
-                onClick={() => {
-                  const nat = naturalRef.current;
-                  if (!nat) return;
-                  const min = Math.max(CROP_SIZE / nat.w, CROP_SIZE / nat.h);
-                  setZoom((z) => Math.max(min * 0.5, z / 1.15));
-                }}
+                onClick={() => setZoom((z) => Math.max(0.05, z / 1.2))}
                 className="w-8 h-8 flex items-center justify-center rounded-lg border border-white/10 text-white/50 hover:text-white hover:border-white/20 transition-colors text-sm"
               >
                 －
