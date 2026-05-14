@@ -19,6 +19,7 @@ import TopScorers from "@/components/home/TopScorers";
 import MatchCountdown from "@/components/home/MatchCountdown";
 import SponsorBanner from "@/components/home/SponsorBanner";
 import StandingsSection from "@/components/home/StandingsSection";
+import FeaturedPlayers from "@/components/home/FeaturedPlayers";
 
 export const dynamic = "force-dynamic";
 
@@ -28,16 +29,41 @@ function getInitials(name: string): string {
 }
 
 export default async function HomePage() {
-  const [news, leagues, standings, rounds, playerStats, teams, latestVideo] =
-    await Promise.all([
-      getNews(),
-      getLeagues(),
-      getStandings(),
-      getRounds(),
-      getPlayerStats(),
-      getTeams(),
-      getLatestYouTubeVideo(),
-    ]);
+  const supabaseAdmin = (await import("@supabase/supabase-js")).createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+  const [
+    news,
+    leagues,
+    standings,
+    rounds,
+    playerStats,
+    teams,
+    latestVideo,
+    { data: featuredData },
+  ] = await Promise.all([
+    getNews(),
+    getLeagues(),
+    getStandings(),
+    getRounds(),
+    getPlayerStats(),
+    getTeams(),
+    getLatestYouTubeVideo(),
+    supabaseAdmin
+      .from("featured_players")
+      .select("id, image_url, player_name, team_name")
+      .eq("is_active", true)
+      .order("order_num")
+      .order("created_at"),
+  ]);
+
+  const featuredPlayers = (featuredData ?? []).map((d) => ({
+    id: d.id as string,
+    imageUrl: d.image_url as string,
+    playerName: (d.player_name as string) ?? "",
+    teamName: (d.team_name as string) ?? "",
+  }));
 
   // ヒーロー統計
   const teamCount = teams.length;
@@ -159,6 +185,11 @@ export default async function HomePage() {
             <StandingsSection leagues={leagues} standings={standings} />
           </section>
         </ScrollReveal>
+
+        {/* 注目選手 */}
+        {featuredPlayers.length > 0 && (
+          <FeaturedPlayers players={featuredPlayers} />
+        )}
 
         {/* 2. 直近の試合日程 */}
         <section>
