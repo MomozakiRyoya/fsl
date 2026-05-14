@@ -49,9 +49,11 @@ export default function FeaturedPlayers({ players }: Props) {
     players.slice(i * PER_PAGE, i * PER_PAGE + PER_PAGE),
   );
 
+  // translateX の % はフレックスコンテナ幅(pages倍)が基準なので pages で割る
+  const shift = page * (100 / pages);
   const translateX = dragging
-    ? `calc(-${page * 100}% + ${dragOffset}px)`
-    : `-${page * 100}%`;
+    ? `calc(-${shift}% + ${dragOffset}px)`
+    : `-${shift}%`;
 
   return (
     <section className="animate-fade-in">
