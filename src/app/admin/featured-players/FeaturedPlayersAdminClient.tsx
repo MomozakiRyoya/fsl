@@ -45,7 +45,12 @@ function Modal({
       >
         <div className="flex items-center justify-between px-5 py-4 border-b border-white/8 flex-shrink-0">
           <h2 className="text-base font-bold text-white">{title}</h2>
-          <button onClick={onClose} className="text-white/40 hover:text-white text-xl">✕</button>
+          <button
+            onClick={onClose}
+            className="text-white/40 hover:text-white text-xl"
+          >
+            ✕
+          </button>
         </div>
         <div className="p-5 overflow-y-auto">{children}</div>
       </div>
@@ -77,12 +82,23 @@ export default function FeaturedPlayersAdminClient({
     if (!file) return;
     setUploading(true);
     const supabase = createClient();
-    const ext = file.type.includes("png") ? "png" : file.type.includes("webp") ? "webp" : "jpg";
+    const ext = file.type.includes("png")
+      ? "png"
+      : file.type.includes("webp")
+        ? "webp"
+        : "jpg";
     const path = `featured/${Date.now()}.${ext}`;
-    const { error } = await supabase.storage.from("fsl-images").upload(path, file, { upsert: true });
+    const { error } = await supabase.storage
+      .from("fsl-images")
+      .upload(path, file, { upsert: true });
     if (!error) {
-      const { data: { publicUrl } } = supabase.storage.from("fsl-images").getPublicUrl(path);
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("fsl-images").getPublicUrl(path);
       setForm((f) => ({ ...f, imageUrl: publicUrl }));
+      showToast("画像アップロード完了");
+    } else {
+      showToast(`画像アップロード失敗: ${error.message}`);
     }
     setUploading(false);
     if (fileInputRef.current) fileInputRef.current.value = "";
@@ -115,9 +131,10 @@ export default function FeaturedPlayersAdminClient({
       orderNum: Number(form.orderNum) || 0,
       isActive: form.isActive,
     };
-    const url = modal === "edit" && target
-      ? `/api/admin/featured-players/${target.id}`
-      : "/api/admin/featured-players";
+    const url =
+      modal === "edit" && target
+        ? `/api/admin/featured-players/${target.id}`
+        : "/api/admin/featured-players";
     const method = modal === "edit" ? "PATCH" : "POST";
     const res = await fetch(url, {
       method,
@@ -135,14 +152,17 @@ export default function FeaturedPlayersAdminClient({
       setModal(null);
       showToast(modal === "edit" ? "更新しました" : "作成しました");
     } else {
-      showToast("保存に失敗しました");
+      const errData = await res.json().catch(() => ({}));
+      showToast(`保存失敗: ${errData.error ?? res.status}`);
     }
   };
 
   const handleDelete = async () => {
     if (!target) return;
     setSaving(true);
-    const res = await fetch(`/api/admin/featured-players/${target.id}`, { method: "DELETE" });
+    const res = await fetch(`/api/admin/featured-players/${target.id}`, {
+      method: "DELETE",
+    });
     setSaving(false);
     if (res.ok) {
       setItems(items.filter((i) => i.id !== target.id));
@@ -157,49 +177,83 @@ export default function FeaturedPlayersAdminClient({
     <div className="p-4 lg:p-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
         <div>
-          <p className="text-[10px] tracking-[0.3em] text-white/30 uppercase mb-1">Admin</p>
-          <h1 className="text-xl lg:text-2xl font-black text-white">注目選手管理</h1>
+          <p className="text-[10px] tracking-[0.3em] text-white/30 uppercase mb-1">
+            Admin
+          </p>
+          <h1 className="text-xl lg:text-2xl font-black text-white">
+            注目選手管理
+          </h1>
         </div>
         <button
           onClick={openCreate}
           className="px-4 py-2.5 rounded-xl text-sm font-bold"
-          style={{ background: "linear-gradient(135deg, #c9921e, #e3c060)", color: "#0c1e42" }}
+          style={{
+            background: "linear-gradient(135deg, #c9921e, #e3c060)",
+            color: "#0c1e42",
+          }}
         >
           + 追加
         </button>
       </div>
 
       {items.length === 0 ? (
-        <div className="rounded-xl border border-white/8 py-16 text-center text-sm text-white/30"
-          style={{ background: "#0c1e42" }}>
+        <div
+          className="rounded-xl border border-white/8 py-16 text-center text-sm text-white/30"
+          style={{ background: "#0c1e42" }}
+        >
           登録された注目選手なし
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           {items.map((item) => (
-            <div key={item.id} className="relative rounded-2xl overflow-hidden" style={{ aspectRatio: "3/4" }}>
-              <img src={item.imageUrl} alt={item.playerName} className="w-full h-full object-cover" />
+            <div
+              key={item.id}
+              className="relative rounded-2xl overflow-hidden"
+              style={{ aspectRatio: "3/4" }}
+            >
+              <img
+                src={item.imageUrl}
+                alt={item.playerName}
+                className="w-full h-full object-cover"
+              />
               {!item.isActive && (
                 <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                  <span className="text-xs text-white/60 font-bold">非表示</span>
+                  <span className="text-xs text-white/60 font-bold">
+                    非表示
+                  </span>
                 </div>
               )}
-              <div className="absolute bottom-0 left-0 right-0 p-3"
-                style={{ background: "linear-gradient(transparent, rgba(0,0,0,0.8))" }}>
+              <div
+                className="absolute bottom-0 left-0 right-0 p-3"
+                style={{
+                  background: "linear-gradient(transparent, rgba(0,0,0,0.8))",
+                }}
+              >
                 {item.teamName && (
-                  <p className="text-[10px] font-bold text-amber-400 uppercase tracking-wider">{item.teamName}</p>
+                  <p className="text-[10px] font-bold text-amber-400 uppercase tracking-wider">
+                    {item.teamName}
+                  </p>
                 )}
-                <p className="text-sm font-black text-white">{item.playerName}</p>
+                <p className="text-sm font-black text-white">
+                  {item.playerName}
+                </p>
               </div>
               <div className="absolute top-2 right-2 flex gap-1">
                 <button
                   onClick={() => openEdit(item)}
                   className="w-7 h-7 rounded-lg bg-black/60 text-white/70 hover:text-white text-xs flex items-center justify-center"
-                >✎</button>
+                >
+                  ✎
+                </button>
                 <button
-                  onClick={() => { setTarget(item); setModal("delete"); }}
+                  onClick={() => {
+                    setTarget(item);
+                    setModal("delete");
+                  }}
                   className="w-7 h-7 rounded-lg bg-black/60 text-red-400/70 hover:text-red-400 text-xs flex items-center justify-center"
-                >✕</button>
+                >
+                  ✕
+                </button>
               </div>
             </div>
           ))}
@@ -207,7 +261,10 @@ export default function FeaturedPlayersAdminClient({
       )}
 
       {(modal === "create" || modal === "edit") && (
-        <Modal title={modal === "edit" ? "注目選手を編集" : "注目選手を追加"} onClose={() => setModal(null)}>
+        <Modal
+          title={modal === "edit" ? "注目選手を編集" : "注目選手を追加"}
+          onClose={() => setModal(null)}
+        >
           <div className="space-y-4">
             {/* 画像 */}
             <div>
@@ -215,8 +272,15 @@ export default function FeaturedPlayersAdminClient({
                 選手カード画像
               </label>
               {form.imageUrl && (
-                <div className="relative w-32 rounded-xl overflow-hidden mb-3" style={{ aspectRatio: "3/4" }}>
-                  <img src={form.imageUrl} alt="" className="w-full h-full object-cover" />
+                <div
+                  className="relative w-32 rounded-xl overflow-hidden mb-3"
+                  style={{ aspectRatio: "3/4" }}
+                >
+                  <img
+                    src={form.imageUrl}
+                    alt=""
+                    className="w-full h-full object-cover"
+                  />
                 </div>
               )}
               <button
@@ -224,9 +288,19 @@ export default function FeaturedPlayersAdminClient({
                 disabled={uploading}
                 className="px-4 py-2 rounded-lg text-xs font-semibold border border-white/10 text-white/60 hover:text-white transition-colors disabled:opacity-40"
               >
-                {uploading ? "アップロード中..." : form.imageUrl ? "画像を変更" : "画像をアップロード"}
+                {uploading
+                  ? "アップロード中..."
+                  : form.imageUrl
+                    ? "画像を変更"
+                    : "画像をアップロード"}
               </button>
-              <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="hidden"
+              />
             </div>
             {/* テキスト */}
             <div className="grid grid-cols-2 gap-3">
@@ -236,7 +310,9 @@ export default function FeaturedPlayersAdminClient({
                 </label>
                 <input
                   value={form.teamName}
-                  onChange={(e) => setForm({ ...form, teamName: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, teamName: e.target.value })
+                  }
                   className="w-full px-3 py-2.5 text-sm rounded-lg border border-white/10 bg-white/5 text-white outline-none focus:border-amber-500/50"
                   placeholder="TEAM BON"
                 />
@@ -247,7 +323,9 @@ export default function FeaturedPlayersAdminClient({
                 </label>
                 <input
                   value={form.playerName}
-                  onChange={(e) => setForm({ ...form, playerName: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, playerName: e.target.value })
+                  }
                   className="w-full px-3 py-2.5 text-sm rounded-lg border border-white/10 bg-white/5 text-white outline-none focus:border-amber-500/50"
                   placeholder="MO"
                 />
@@ -258,7 +336,9 @@ export default function FeaturedPlayersAdminClient({
                 <input
                   type="checkbox"
                   checked={form.isActive}
-                  onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
+                  onChange={(e) =>
+                    setForm({ ...form, isActive: e.target.checked })
+                  }
                   className="w-4 h-4 accent-amber-500"
                 />
                 <span className="text-sm text-white/70">表示する</span>
@@ -269,19 +349,29 @@ export default function FeaturedPlayersAdminClient({
                   type="number"
                   min="0"
                   value={form.orderNum}
-                  onChange={(e) => setForm({ ...form, orderNum: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, orderNum: e.target.value })
+                  }
                   className="w-16 px-2 py-1.5 text-xs text-center rounded-lg border border-white/10 bg-white/5 text-white outline-none"
                 />
               </div>
             </div>
             <div className="flex gap-3 pt-2">
-              <button onClick={() => setModal(null)}
-                className="flex-1 py-2.5 rounded-xl text-sm font-semibold border border-white/10 text-white/50 hover:text-white transition-colors">
+              <button
+                onClick={() => setModal(null)}
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold border border-white/10 text-white/50 hover:text-white transition-colors"
+              >
                 キャンセル
               </button>
-              <button onClick={handleSave} disabled={saving || !form.imageUrl}
+              <button
+                onClick={handleSave}
+                disabled={saving || !form.imageUrl}
                 className="flex-1 py-2.5 rounded-xl text-sm font-bold disabled:opacity-40"
-                style={{ background: "linear-gradient(135deg, #c9921e, #e3c060)", color: "#0c1e42" }}>
+                style={{
+                  background: "linear-gradient(135deg, #c9921e, #e3c060)",
+                  color: "#0c1e42",
+                }}
+              >
                 {saving ? "保存中..." : "保存する"}
               </button>
             </div>
@@ -291,12 +381,21 @@ export default function FeaturedPlayersAdminClient({
 
       {modal === "delete" && target && (
         <Modal title="削除の確認" onClose={() => setModal(null)}>
-          <p className="text-sm text-white/70 mb-6">「{target.playerName || "この選手"}」を削除しますか？</p>
+          <p className="text-sm text-white/70 mb-6">
+            「{target.playerName || "この選手"}」を削除しますか？
+          </p>
           <div className="flex gap-3">
-            <button onClick={() => setModal(null)}
-              className="flex-1 py-2.5 rounded-xl text-sm font-semibold border border-white/10 text-white/50">キャンセル</button>
-            <button onClick={handleDelete} disabled={saving}
-              className="flex-1 py-2.5 rounded-xl text-sm font-bold bg-red-600 text-white disabled:opacity-40">
+            <button
+              onClick={() => setModal(null)}
+              className="flex-1 py-2.5 rounded-xl text-sm font-semibold border border-white/10 text-white/50"
+            >
+              キャンセル
+            </button>
+            <button
+              onClick={handleDelete}
+              disabled={saving}
+              className="flex-1 py-2.5 rounded-xl text-sm font-bold bg-red-600 text-white disabled:opacity-40"
+            >
               {saving ? "削除中..." : "削除する"}
             </button>
           </div>
@@ -304,8 +403,13 @@ export default function FeaturedPlayersAdminClient({
       )}
 
       {toast && (
-        <div className="fixed bottom-6 right-6 px-5 py-3 rounded-xl text-sm font-semibold text-white shadow-lg"
-          style={{ background: "#0c1e42", border: "1px solid rgba(255,255,255,0.1)" }}>
+        <div
+          className="fixed bottom-6 right-6 px-5 py-3 rounded-xl text-sm font-semibold text-white shadow-lg"
+          style={{
+            background: "#0c1e42",
+            border: "1px solid rgba(255,255,255,0.1)",
+          }}
+        >
           {toast}
         </div>
       )}
