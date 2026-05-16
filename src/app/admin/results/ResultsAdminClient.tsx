@@ -332,6 +332,13 @@ export default function ResultsAdminClient({
   const [toast, setToast] = useState("");
   const [playerResults, setPlayerResults] = useState<PlayerResult[]>([]);
   const [playerResultsLoading, setPlayerResultsLoading] = useState(false);
+  const [prEditTarget, setPrEditTarget] = useState<PlayerResult | null>(null);
+  const [prEditForm, setPrEditForm] = useState({
+    playerName: "",
+    rank: "",
+    points: "",
+  });
+  const [prSaving, setPrSaving] = useState(false);
 
   const loadAllMatches = () => {
     setAllLoading(true);
@@ -579,6 +586,54 @@ export default function ResultsAdminClient({
       setModal(null);
       showToast("削除しました");
     } else showToast("削除に失敗しました");
+  };
+
+  const handlePlayerResultDelete = async (pr: PlayerResult) => {
+    if (!confirm(`「${pr.player_name}」の結果を削除しますか？`)) return;
+    const res = await fetch(`/api/admin/player-results/${pr.id}`, {
+      method: "DELETE",
+    });
+    if (res.ok) {
+      setPlayerResults((prev) => prev.filter((r) => r.id !== pr.id));
+      showToast("削除しました");
+    } else {
+      showToast("削除に失敗しました");
+    }
+  };
+
+  const handlePlayerResultEdit = async () => {
+    if (!prEditTarget) return;
+    setPrSaving(true);
+    const res = await fetch(`/api/admin/player-results/${prEditTarget.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        playerName: prEditForm.playerName,
+        rank: Number(prEditForm.rank) || null,
+        points: Number(prEditForm.points) || 0,
+      }),
+    });
+    setPrSaving(false);
+    if (res.ok) {
+      const updated = await res.json();
+      setPlayerResults((prev) =>
+        prev.map((r) =>
+          r.id === prEditTarget.id
+            ? {
+                ...r,
+                player_name: updated.player_name,
+                rank: updated.rank,
+                points: updated.points,
+              }
+            : r,
+        ),
+      );
+      setPrEditTarget(null);
+      showToast("更新しました");
+    } else {
+      const err = await res.json().catch(() => ({}));
+      showToast(`更新エラー: ${err.error ?? res.status}`);
+    }
   };
 
   const openEdit = (m: Match) => {
@@ -975,6 +1030,30 @@ export default function ResultsAdminClient({
                                 </span>
                               </span>
                             </td>
+                            <td className="px-3 py-2">
+                              <div className="flex gap-1 justify-end">
+                                <button
+                                  onClick={() => {
+                                    setPrEditTarget(pr);
+                                    setPrEditForm({
+                                      playerName: pr.player_name,
+                                      rank:
+                                        pr.rank != null ? String(pr.rank) : "",
+                                      points: String(pr.points),
+                                    });
+                                  }}
+                                  className="text-xs px-2 py-1 rounded-lg border border-white/10 text-white/50 hover:text-white transition-colors"
+                                >
+                                  編集
+                                </button>
+                                <button
+                                  onClick={() => handlePlayerResultDelete(pr)}
+                                  className="text-xs px-2 py-1 rounded-lg border border-red-900/50 text-red-400/70 hover:text-red-400 transition-colors"
+                                >
+                                  削除
+                                </button>
+                              </div>
+                            </td>
                           </tr>
                         ))}
                     </tbody>
@@ -1042,6 +1121,76 @@ export default function ResultsAdminClient({
             >
               {saving ? "削除中..." : "削除する"}
             </button>
+          </div>
+        </Modal>
+      )}
+
+      {prEditTarget && (
+        <Modal title="選手ポイントを編集" onClose={() => setPrEditTarget(null)}>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-xs font-semibold text-white/50 uppercase tracking-wider mb-1.5">
+                選手名
+              </label>
+              <input
+                type="text"
+                value={prEditForm.playerName}
+                onChange={(e) =>
+                  setPrEditForm((f) => ({ ...f, playerName: e.target.value }))
+                }
+                className="w-full px-3 py-2.5 text-sm rounded-lg border border-white/10 bg-[#060b14] text-white outline-none focus:border-amber-500/50"
+              />
+            </div>
+            <div className="flex gap-3">
+              <div className="flex-1">
+                <label className="block text-xs font-semibold text-white/50 uppercase tracking-wider mb-1.5">
+                  順位
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  value={prEditForm.rank}
+                  onChange={(e) =>
+                    setPrEditForm((f) => ({ ...f, rank: e.target.value }))
+                  }
+                  className="w-full px-3 py-2.5 text-sm rounded-lg border border-white/10 bg-[#060b14] text-white outline-none focus:border-amber-500/50"
+                  placeholder="-"
+                />
+              </div>
+              <div className="flex-1">
+                <label className="block text-xs font-semibold text-white/50 uppercase tracking-wider mb-1.5">
+                  ポイント
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  value={prEditForm.points}
+                  onChange={(e) =>
+                    setPrEditForm((f) => ({ ...f, points: e.target.value }))
+                  }
+                  className="w-full px-3 py-2.5 text-sm rounded-lg border border-white/10 bg-[#060b14] text-white outline-none focus:border-amber-500/50"
+                />
+              </div>
+            </div>
+            <div className="flex gap-3 pt-2">
+              <button
+                onClick={() => setPrEditTarget(null)}
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold border border-white/10 text-white/50 hover:text-white transition-colors"
+              >
+                キャンセル
+              </button>
+              <button
+                onClick={handlePlayerResultEdit}
+                disabled={prSaving || !prEditForm.playerName}
+                className="flex-1 py-2.5 rounded-xl text-sm font-bold disabled:opacity-40"
+                style={{
+                  background: "linear-gradient(135deg, #c9921e, #e3c060)",
+                  color: "#0c1e42",
+                }}
+              >
+                {prSaving ? "保存中..." : "保存する"}
+              </button>
+            </div>
           </div>
         </Modal>
       )}
