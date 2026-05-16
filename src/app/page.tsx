@@ -96,13 +96,12 @@ export default async function HomePage() {
     if (rank !== null && rank <= 3) statsMap[key].itmCount += 1;
   }
   const playerStats = Object.values(statsMap)
-    .filter((s) => s.totalPoints > 0 || s.games > 0)
     .map((s) => ({
       playerId: `${s.playerName}::${s.teamId}`,
       playerName: s.playerName,
       teamId: s.teamId,
       teamName: s.teamName,
-      leagueId: teamLeagueMap[s.teamId] ?? "",
+      leagueId: teamLeagueMap[s.teamId] ?? "premier",
       goals: s.totalPoints,
       assists: s.games > 0 ? Math.round((s.itmCount / s.games) * 100) : 0,
       games: s.games,
