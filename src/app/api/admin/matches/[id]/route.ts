@@ -1,6 +1,7 @@
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createClient as createAdmin } from "@supabase/supabase-js";
 
 function isAdmin(email: string) {
   return (process.env.ADMIN_EMAILS ?? "")
@@ -17,6 +18,13 @@ async function checkAdmin() {
   return user;
 }
 
+function getAdmin() {
+  return createAdmin(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+}
+
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -27,7 +35,7 @@ export async function PATCH(
 
   const { id } = await params;
   const body = await request.json();
-  const supabase = await createClient();
+  const admin = getAdmin();
 
   const updates: Record<string, unknown> = {};
   if (body.homeTeamId !== undefined) updates.home_team_id = body.homeTeamId;
@@ -42,14 +50,14 @@ export async function PATCH(
   if ("awayRoundPt" in body) updates.away_round_pt = body.awayRoundPt;
   if (body.status !== undefined) updates.status = body.status;
 
-  const { data, error } = await supabase
+  const { data, error } = await admin
     .from("matches")
     .update(updates)
     .eq("id", id)
     .select()
     .single();
   if (error || !data)
-    return NextResponse.json({ error: "更新に失敗しました" }, { status: 500 });
+    return NextResponse.json({ error: `更新に失敗しました: ${error?.message}` }, { status: 500 });
   revalidatePath("/schedule");
   revalidatePath("/standings");
   revalidatePath("/");
@@ -65,10 +73,10 @@ export async function DELETE(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id } = await params;
-  const supabase = await createClient();
-  const { error } = await supabase.from("matches").delete().eq("id", id);
+  const admin = getAdmin();
+  const { error } = await admin.from("matches").delete().eq("id", id);
   if (error)
-    return NextResponse.json({ error: "削除に失敗しました" }, { status: 500 });
+    return NextResponse.json({ error: `削除に失敗しました: ${error?.message}` }, { status: 500 });
   revalidatePath("/schedule");
   revalidatePath("/standings");
   revalidatePath("/");

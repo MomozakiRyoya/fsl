@@ -1,6 +1,7 @@
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createClient as createAdmin } from "@supabase/supabase-js";
 
 function isAdmin(email: string) {
   return (process.env.ADMIN_EMAILS ?? "")
@@ -17,12 +18,19 @@ async function checkAdmin() {
   return user;
 }
 
+function getAdmin() {
+  return createAdmin(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const roundId = searchParams.get("roundId");
 
-  const supabase = await createClient();
-  let query = supabase.from("matches").select("*").order("id");
+  const admin = getAdmin();
+  let query = admin.from("matches").select("*").order("id");
   if (roundId) query = query.eq("round_id", roundId);
 
   const { data, error } = await query;
@@ -37,9 +45,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await request.json();
-  const supabase = await createClient();
+  const admin = getAdmin();
 
-  const { data, error } = await supabase
+  const { data, error } = await admin
     .from("matches")
     .insert({
       round_id: body.roundId ?? "",
@@ -57,7 +65,10 @@ export async function POST(request: Request) {
     .single();
 
   if (error || !data)
-    return NextResponse.json({ error: "作成に失敗しました" }, { status: 500 });
+    return NextResponse.json(
+      { error: `作成に失敗しました: ${error?.message}` },
+      { status: 500 },
+    );
   revalidatePath("/schedule");
   revalidatePath("/standings");
   revalidatePath("/");
