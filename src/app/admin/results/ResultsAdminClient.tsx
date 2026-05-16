@@ -346,7 +346,7 @@ export default function ResultsAdminClient({
 
   const showToast = (msg: string) => {
     setToast(msg);
-    setTimeout(() => setToast(""), 3000);
+    setTimeout(() => setToast(""), 8000);
   };
 
   const round = rounds.find((r) => r.id === selectedRoundId);

@@ -47,11 +47,21 @@ export async function POST(request: Request) {
   const body = await request.json();
   const admin = getAdmin();
 
+  const roundId = body.roundId ?? "";
+  const homeTeamId = body.homeTeamId ?? "";
+
+  // 同じ round+team が既にあれば削除して上書き（重複防止）
+  await admin
+    .from("matches")
+    .delete()
+    .eq("round_id", roundId)
+    .eq("home_team_id", homeTeamId);
+
   const { data, error } = await admin
     .from("matches")
     .insert({
-      round_id: body.roundId ?? "",
-      home_team_id: body.homeTeamId ?? "",
+      round_id: roundId,
+      home_team_id: homeTeamId,
       home_team_name: body.homeTeamName ?? "",
       away_team_id: body.awayTeamId ?? "",
       away_team_name: body.awayTeamName ?? "",

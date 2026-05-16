@@ -58,7 +58,7 @@ export async function POST(request: Request) {
 
   const rows = players.map((p) => ({
     round_id: roundId,
-    player_id: p.playerId,
+    player_id: p.playerId ?? "",
     player_name: p.playerName,
     team_id: p.teamId,
     team_name: p.teamName,
