@@ -639,13 +639,39 @@ export default function ResultsAdminClient({
   const openEdit = (m: Match) => {
     setTarget(m);
     const f = emptyForm();
-    f.players[0] = {
-      teamId: m.homeTeamId,
-      playerId: "",
-      playerName: "",
-      rank: "1",
-      points: String(m.homeRoundPt ?? ""),
-    };
+
+    // このチームの登録済み選手データを読み込んでフォームに入力
+    const teamPlayerResults = playerResults.filter(
+      (pr) => pr.team_id === m.homeTeamId,
+    );
+
+    if (teamPlayerResults.length > 0) {
+      // 既存の選手データをフォームに展開
+      const sorted = [...teamPlayerResults].sort(
+        (a, b) => (a.rank ?? 99) - (b.rank ?? 99),
+      );
+      sorted.forEach((pr, i) => {
+        if (i < 9) {
+          f.players[i] = {
+            teamId: pr.team_id,
+            playerId: pr.player_id ?? "",
+            playerName: pr.player_name,
+            rank: pr.rank != null ? String(pr.rank) : "",
+            points: String(pr.points),
+          };
+        }
+      });
+    } else {
+      // 選手データがない場合はチーム合計ポイントのみ
+      f.players[0] = {
+        teamId: m.homeTeamId,
+        playerId: "",
+        playerName: "",
+        rank: "1",
+        points: String(m.homeRoundPt ?? ""),
+      };
+    }
+
     setForm(f);
     setModal("edit");
   };
