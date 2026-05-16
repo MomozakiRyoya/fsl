@@ -90,7 +90,7 @@ function ResultFormUI({
   saving,
 }: {
   form: ResultForm;
-  setForm: (f: ResultForm) => void;
+  setForm: React.Dispatch<React.SetStateAction<ResultForm>>;
   round: Round | undefined;
   teams: Team[];
   players: Player[];
@@ -103,11 +103,14 @@ function ResultFormUI({
     0,
   );
 
+  // 最新の state を参照する関数型 setState でスタールクロージャを防ぐ
   const update = (i: number, patch: Partial<PlayerEntry>) => {
-    const next = form.players.map((p, idx) =>
-      idx === i ? { ...p, ...patch } : p,
-    );
-    setForm({ ...form, players: next });
+    setForm((prev) => ({
+      ...prev,
+      players: prev.players.map((p, idx) =>
+        idx === i ? { ...p, ...patch } : p,
+      ),
+    }));
   };
 
   // teamId と points がある行を「入力済み」とみなす
@@ -384,87 +387,95 @@ export default function ResultsAdminClient({
 
     setSaving(true);
 
-    // チームごとにポイント集計
-    const byTeam: Record<string, { teamId: string; pts: number }> = {};
-    for (const p of filled) {
-      if (!byTeam[p.teamId]) {
-        byTeam[p.teamId] = { teamId: p.teamId, pts: 0 };
+    try {
+      // チームごとにポイント集計
+      const byTeam: Record<string, { teamId: string; pts: number }> = {};
+      for (const p of filled) {
+        if (!byTeam[p.teamId]) {
+          byTeam[p.teamId] = { teamId: p.teamId, pts: 0 };
+        }
+        byTeam[p.teamId].pts += Number(p.points) || 0;
       }
-      byTeam[p.teamId].pts += Number(p.points) || 0;
-    }
 
-    let matchError = "";
-    let playerError = "";
+      let matchError = "";
+      let playerError = "";
 
-    for (const { teamId, pts } of Object.values(byTeam)) {
-      const team = roundTeams.find((t) => t.id === teamId);
-      const res = await fetch("/api/admin/matches", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          roundId: selectedRoundId,
-          homeTeamId: teamId,
-          homeTeamName: team?.name ?? "",
-          awayTeamId: "",
-          awayTeamName: "",
-          homeScore: null,
-          awayScore: null,
-          homeRoundPt: pts,
-          awayRoundPt: null,
-          status: "finished",
-        }),
-      });
-      if (res.ok) {
-        const raw = await res.json();
-        setMatches((prev) => [...prev, rawToMatch(raw)]);
+      for (const { teamId, pts } of Object.values(byTeam)) {
+        const team = roundTeams.find((t) => t.id === teamId);
+        const res = await fetch("/api/admin/matches", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            roundId: selectedRoundId,
+            homeTeamId: teamId,
+            homeTeamName: team?.name ?? "",
+            awayTeamId: "",
+            awayTeamName: "",
+            homeScore: null,
+            awayScore: null,
+            homeRoundPt: pts,
+            awayRoundPt: null,
+            status: "finished",
+          }),
+        });
+        if (res.ok) {
+          const raw = await res.json();
+          setMatches((prev) => [...prev, rawToMatch(raw)]);
+        } else {
+          const errJson = await res.json().catch(() => ({}));
+          matchError = errJson.error ?? `matches HTTP ${res.status}`;
+        }
+      }
+
+      // 選手個別ポイントを保存（playerName があれば保存）
+      const playerPayload = filled
+        .filter((p) => p.playerName)
+        .map((p) => ({
+          playerId: p.playerId || "",
+          playerName: p.playerName,
+          teamId: p.teamId,
+          teamName: roundTeams.find((t) => t.id === p.teamId)?.name ?? "",
+          rank: Number(p.rank) || null,
+          points: Number(p.points) || 0,
+        }));
+
+      if (playerPayload.length > 0) {
+        const prRes = await fetch("/api/admin/player-results", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            roundId: selectedRoundId,
+            players: playerPayload,
+          }),
+        });
+        if (!prRes.ok) {
+          const errJson = await prRes.json().catch(() => ({}));
+          playerError = errJson.error ?? `player-results HTTP ${prRes.status}`;
+        }
+      }
+
+      if (!matchError && !playerError) {
+        setModal(null);
+        showToast(
+          `登録しました（チーム${Object.keys(byTeam).length}件・選手${playerPayload.length}件）`,
+        );
+        if (selectedRoundId) {
+          fetch(`/api/admin/player-results?roundId=${selectedRoundId}`)
+            .then((r) => r.json())
+            .then((data: PlayerResult[]) => setPlayerResults(data))
+            .catch(() => {});
+        }
+      } else if (matchError) {
+        showToast(`チーム保存エラー: ${matchError}`);
       } else {
-        const errJson = await res.json().catch(() => ({}));
-        matchError = errJson.error ?? `HTTP ${res.status}`;
+        showToast(`選手保存エラー: ${playerError}`);
       }
-    }
-
-    // 選手個別ポイントを保存（playerName があれば playerId がなくても保存）
-    const playerPayload = filled
-      .filter((p) => p.playerName)
-      .map((p) => ({
-        playerId: p.playerId || null,
-        playerName: p.playerName,
-        teamId: p.teamId,
-        teamName: roundTeams.find((t) => t.id === p.teamId)?.name ?? "",
-        rank: Number(p.rank) || null,
-        points: Number(p.points) || 0,
-      }));
-
-    if (playerPayload.length > 0) {
-      const prRes = await fetch("/api/admin/player-results", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          roundId: selectedRoundId,
-          players: playerPayload,
-        }),
-      });
-      if (!prRes.ok) {
-        const errJson = await prRes.json().catch(() => ({}));
-        playerError = errJson.error ?? `HTTP ${prRes.status}`;
-      }
-    }
-
-    setSaving(false);
-    if (!matchError && !playerError) {
-      setModal(null);
-      showToast("登録しました");
-      // 選手結果一覧を更新
-      if (selectedRoundId) {
-        fetch(`/api/admin/player-results?roundId=${selectedRoundId}`)
-          .then((r) => r.json())
-          .then((data: PlayerResult[]) => setPlayerResults(data))
-          .catch(() => {});
-      }
-    } else if (matchError) {
-      showToast(`チーム保存エラー: ${matchError}`);
-    } else {
-      showToast(`選手保存エラー: ${playerError}`);
+    } catch (e) {
+      showToast(
+        `予期しないエラー: ${e instanceof Error ? e.message : String(e)}`,
+      );
+    } finally {
+      setSaving(false);
     }
   };
 
