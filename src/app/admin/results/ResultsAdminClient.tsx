@@ -351,7 +351,9 @@ export default function ResultsAdminClient({
       byTeam[p.teamId].pts += Number(p.points) || 0;
     }
 
-    let ok = true;
+    let matchError = "";
+    let playerError = "";
+
     for (const { teamId, pts } of Object.values(byTeam)) {
       const team = roundTeams.find((t) => t.id === teamId);
       const res = await fetch("/api/admin/matches", {
@@ -374,7 +376,8 @@ export default function ResultsAdminClient({
         const raw = await res.json();
         setMatches((prev) => [...prev, rawToMatch(raw)]);
       } else {
-        ok = false;
+        const errJson = await res.json().catch(() => ({}));
+        matchError = errJson.error ?? `HTTP ${res.status}`;
       }
     }
 
@@ -399,14 +402,21 @@ export default function ResultsAdminClient({
           players: playerPayload,
         }),
       });
-      if (!prRes.ok) ok = false;
+      if (!prRes.ok) {
+        const errJson = await prRes.json().catch(() => ({}));
+        playerError = errJson.error ?? `HTTP ${prRes.status}`;
+      }
     }
 
     setSaving(false);
-    if (ok) {
+    if (!matchError && !playerError) {
       setModal(null);
       showToast("登録しました");
-    } else showToast("一部の登録に失敗しました");
+    } else if (matchError) {
+      showToast(`チーム保存エラー: ${matchError}`);
+    } else {
+      showToast(`選手保存エラー: ${playerError}`);
+    }
   };
 
   const handleEditSave = async () => {
