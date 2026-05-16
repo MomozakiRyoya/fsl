@@ -3,6 +3,17 @@
 import { useEffect, useState } from "react";
 import type { Round, Team, League, Player } from "@/lib/types/app";
 
+interface PlayerResult {
+  id: string;
+  round_id: string;
+  player_id: string | null;
+  player_name: string;
+  team_id: string;
+  team_name: string;
+  rank: number | null;
+  points: number;
+}
+
 interface Match {
   id: string;
   roundId: string;
@@ -99,7 +110,12 @@ function ResultFormUI({
     setForm({ ...form, players: next });
   };
 
+  // teamId と points がある行を「入力済み」とみなす
   const filledCount = form.players.filter((p) => p.teamId && p.points).length;
+  // playerName がある行のうち、DB保存対象となる選手データ件数
+  const playerSaveCount = form.players.filter(
+    (p) => p.teamId && p.points && p.playerName,
+  ).length;
 
   return (
     <div className="space-y-4">
@@ -227,6 +243,22 @@ function ResultFormUI({
         </div>
       </div>
 
+      {filledCount > 0 && (
+        <div className="text-xs text-white/50 px-1">
+          チームポイント {filledCount} 件
+          {playerSaveCount > 0 && (
+            <span className="ml-2 text-amber-400 font-semibold">
+              · 選手データ {playerSaveCount} 件を保存します
+            </span>
+          )}
+          {playerSaveCount === 0 && (
+            <span className="ml-2 text-white/30">
+              （選手を選択すると個人ポイントも保存されます）
+            </span>
+          )}
+        </div>
+      )}
+
       <div className="flex gap-3 pt-2">
         <button
           onClick={onCancel}
@@ -284,6 +316,8 @@ export default function ResultsAdminClient({
   const [form, setForm] = useState<ResultForm>(emptyForm());
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState("");
+  const [playerResults, setPlayerResults] = useState<PlayerResult[]>([]);
+  const [playerResultsLoading, setPlayerResultsLoading] = useState(false);
 
   const loadAllMatches = () => {
     setAllLoading(true);
@@ -324,6 +358,7 @@ export default function ResultsAdminClient({
   useEffect(() => {
     if (!selectedRoundId) {
       setMatches([]);
+      setPlayerResults([]);
       return;
     }
     setLoading(true);
@@ -333,6 +368,13 @@ export default function ResultsAdminClient({
         setMatches(data.map(rawToMatch)),
       )
       .finally(() => setLoading(false));
+
+    setPlayerResultsLoading(true);
+    fetch(`/api/admin/player-results?roundId=${selectedRoundId}`)
+      .then((r) => r.json())
+      .then((data: PlayerResult[]) => setPlayerResults(data))
+      .catch(() => setPlayerResults([]))
+      .finally(() => setPlayerResultsLoading(false));
   }, [selectedRoundId]);
 
   // 選手ごとの結果をチーム別に集計して一括登録
@@ -381,11 +423,11 @@ export default function ResultsAdminClient({
       }
     }
 
-    // 選手個別ポイントを保存
+    // 選手個別ポイントを保存（playerName があれば playerId がなくても保存）
     const playerPayload = filled
-      .filter((p) => p.playerId)
+      .filter((p) => p.playerName)
       .map((p) => ({
-        playerId: p.playerId,
+        playerId: p.playerId || null,
         playerName: p.playerName,
         teamId: p.teamId,
         teamName: roundTeams.find((t) => t.id === p.teamId)?.name ?? "",
@@ -412,6 +454,13 @@ export default function ResultsAdminClient({
     if (!matchError && !playerError) {
       setModal(null);
       showToast("登録しました");
+      // 選手結果一覧を更新
+      if (selectedRoundId) {
+        fetch(`/api/admin/player-results?roundId=${selectedRoundId}`)
+          .then((r) => r.json())
+          .then((data: PlayerResult[]) => setPlayerResults(data))
+          .catch(() => {});
+      }
     } else if (matchError) {
       showToast(`チーム保存エラー: ${matchError}`);
     } else {
@@ -777,6 +826,92 @@ export default function ResultsAdminClient({
                   </tbody>
                 </table>
               )}
+            </div>
+          )}
+
+          {/* 選手結果一覧（保存確認用） */}
+          {selectedRoundId && (
+            <div className="mt-6">
+              <div className="flex items-center justify-between mb-2">
+                <h2 className="text-xs font-semibold text-white/50 uppercase tracking-wider">
+                  登録済み選手ポイント
+                </h2>
+                {playerResults.length > 0 && (
+                  <span className="text-xs text-amber-400 font-bold">
+                    {playerResults.length} 件
+                  </span>
+                )}
+              </div>
+              <div
+                className="rounded-xl border border-white/8 overflow-hidden"
+                style={{ background: "#0c1e42" }}
+              >
+                {playerResultsLoading && (
+                  <div className="py-8 text-center text-xs text-white/30">
+                    読み込み中...
+                  </div>
+                )}
+                {!playerResultsLoading && playerResults.length === 0 && (
+                  <div className="py-8 text-center text-xs text-white/30">
+                    選手ポイントデータなし
+                  </div>
+                )}
+                {!playerResultsLoading && playerResults.length > 0 && (
+                  <table className="w-full min-w-[360px]">
+                    <thead>
+                      <tr className="border-b border-white/8">
+                        <th className="text-left px-4 py-2 text-[10px] font-semibold text-white/40 uppercase tracking-wider w-10">
+                          順位
+                        </th>
+                        <th className="text-left px-4 py-2 text-[10px] font-semibold text-white/40 uppercase tracking-wider">
+                          選手名
+                        </th>
+                        <th className="text-left px-4 py-2 text-[10px] font-semibold text-white/40 uppercase tracking-wider">
+                          チーム
+                        </th>
+                        <th className="text-right px-4 py-2 text-[10px] font-semibold text-white/40 uppercase tracking-wider w-16">
+                          pt
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[...playerResults]
+                        .sort(
+                          (a, b) =>
+                            (a.rank ?? 99) - (b.rank ?? 99) ||
+                            b.points - a.points,
+                        )
+                        .map((pr) => (
+                          <tr
+                            key={pr.id}
+                            className="border-b border-white/5 last:border-0 hover:bg-white/3 transition-colors"
+                          >
+                            <td className="px-4 py-2 text-xs text-white/40 text-center">
+                              {pr.rank ?? "-"}
+                            </td>
+                            <td className="px-4 py-2 text-sm text-white font-semibold">
+                              {pr.player_name}
+                            </td>
+                            <td className="px-4 py-2 text-xs text-white/50">
+                              {pr.team_name}
+                            </td>
+                            <td className="px-4 py-2 text-right">
+                              <span
+                                className="text-sm font-black tabular-nums"
+                                style={{ color: "#c9921e" }}
+                              >
+                                {pr.points}
+                                <span className="text-xs font-normal text-white/30 ml-0.5">
+                                  pt
+                                </span>
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
             </div>
           )}
 

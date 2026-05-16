@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdmin } from "@supabase/supabase-js";
 
@@ -33,7 +34,7 @@ export async function POST(request: Request) {
   const { roundId, players } = body as {
     roundId: string;
     players: {
-      playerId: string;
+      playerId: string | null;
       playerName: string;
       teamId: string;
       teamName: string;
@@ -69,6 +70,7 @@ export async function POST(request: Request) {
   if (error)
     return NextResponse.json({ error: error.message }, { status: 500 });
 
+  revalidatePath("/");
   return NextResponse.json({ ok: true });
 }
 
