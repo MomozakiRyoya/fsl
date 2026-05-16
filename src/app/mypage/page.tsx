@@ -1,8 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
+import { createClient as createAdmin } from "@supabase/supabase-js";
 import AccountClient from "@/components/account/AccountClient";
 import PlayerStatsSection from "./PlayerStatsSection";
 import Link from "next/link";
-import { getPlayers, getStandings, getLeagues } from "@/lib/data";
+import { getPlayers, getStandings, getLeagues, getRounds } from "@/lib/data";
 
 export default async function MyPage() {
   const supabase = await createClient();
@@ -52,10 +53,11 @@ export default async function MyPage() {
     );
   }
 
-  const [players, standings, leagues] = await Promise.all([
+  const [players, standings, leagues, rounds] = await Promise.all([
     getPlayers(),
     getStandings(),
     getLeagues(),
+    getRounds(),
   ]);
 
   // 1. user_metadataのplayer_idで照合
@@ -72,9 +74,39 @@ export default async function MyPage() {
     );
     if (matched) {
       myPlayer = matched;
-      // player_idをuser_metadataに自動保存（バックグラウンド）
       await supabase.auth.updateUser({ data: { player_id: matched.id } });
       playerId = matched.id;
+    }
+  }
+
+  // 選手個別の player_results をサービスロールで取得
+  let playerRoundResults: {
+    roundNumber: number;
+    points: number;
+    rank: number | null;
+  }[] = [];
+  if (myPlayer) {
+    const admin = createAdmin(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    );
+    const { data: prData } = await admin
+      .from("player_results")
+      .select("round_id, points, rank")
+      .eq("team_id", myPlayer.teamId)
+      .ilike("player_name", myPlayer.name);
+
+    if (prData) {
+      const roundMap: Record<string, number> = {};
+      for (const r of rounds) roundMap[r.id] = r.roundNumber;
+      playerRoundResults = prData
+        .map((r) => ({
+          roundNumber: roundMap[r.round_id as string] ?? 0,
+          points: (r.points as number) ?? 0,
+          rank: r.rank as number | null,
+        }))
+        .filter((r) => r.roundNumber > 0)
+        .sort((a, b) => a.roundNumber - b.roundNumber);
     }
   }
 
@@ -92,6 +124,7 @@ export default async function MyPage() {
         allPlayers={players}
         standings={standings}
         leagues={leagues}
+        playerRoundResults={playerRoundResults}
       />
     </div>
   );

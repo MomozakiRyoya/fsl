@@ -6,11 +6,18 @@ import CountUp from "@/components/ui/CountUp";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 
+interface PlayerRoundResult {
+  roundNumber: number;
+  points: number;
+  rank: number | null;
+}
+
 interface Props {
   player: Player | null;
   allPlayers: Player[];
   standings: Record<string, TeamStanding[]>;
   leagues: League[];
+  playerRoundResults?: PlayerRoundResult[];
 }
 
 function getInitials(name: string) {
@@ -140,6 +147,7 @@ export default function PlayerStatsSection({
   allPlayers,
   standings,
   leagues,
+  playerRoundResults = [],
 }: Props) {
   if (!player) {
     return <PlayerSelector allPlayers={allPlayers} />;
@@ -151,26 +159,23 @@ export default function PlayerStatsSection({
   const leagueColor =
     leagues.find((l) => l.id === player.leagueId)?.color ?? "#0c1e42";
 
-  const allRounds = myStanding
-    ? Object.keys(myStanding.roundPoints)
-        .map(Number)
-        .sort((a, b) => a - b)
-    : [];
+  // 個人成績は player_results から、チーム順位は standings から
+  const roundRanks = playerRoundResults.map((r) => ({
+    round: r.roundNumber,
+    rank: r.rank ?? 0,
+    pts: r.points,
+  }));
 
-  const roundRanks = allRounds.map((r) => {
-    const sorted = [...leagueStandings]
-      .map((s) => ({ teamId: s.teamId, pts: s.roundPoints[r] ?? 0 }))
-      .sort((a, b) => b.pts - a.pts);
-    const rank = sorted.findIndex((s) => s.teamId === player.teamId) + 1;
-    return { round: r, rank, pts: myStanding?.roundPoints[r] ?? 0 };
-  });
-
-  const totalPoints = myStanding?.totalPoints ?? 0;
+  const totalPoints = playerRoundResults.reduce((s, r) => s + r.points, 0);
   const overallRank = myStanding?.rank ?? null;
   const avgRank =
-    roundRanks.length > 0
+    roundRanks.length > 0 && roundRanks.some((r) => r.rank > 0)
       ? Math.round(
-          (roundRanks.reduce((s, r) => s + r.rank, 0) / roundRanks.length) * 10,
+          (roundRanks
+            .filter((r) => r.rank > 0)
+            .reduce((s, r) => s + r.rank, 0) /
+            roundRanks.filter((r) => r.rank > 0).length) *
+            10,
         ) / 10
       : null;
   const maxPts = Math.max(...roundRanks.map((r) => r.pts), 1);
