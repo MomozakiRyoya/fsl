@@ -82,6 +82,7 @@ export default async function MyPage() {
   // 選手個別の player_results をサービスロールで取得
   let playerRoundResults: {
     roundNumber: number;
+    roundName: string;
     points: number;
     rank: number | null;
   }[] = [];
@@ -97,11 +98,18 @@ export default async function MyPage() {
       .ilike("player_name", myPlayer.name);
 
     if (prData) {
-      const roundMap: Record<string, number> = {};
-      for (const r of rounds) roundMap[r.id] = r.roundNumber;
+      const roundNumMap: Record<string, number> = {};
+      const roundNameMap: Record<string, string> = {};
+      for (const r of rounds) {
+        roundNumMap[r.id] = r.roundNumber;
+        roundNameMap[r.id] = r.name;
+      }
       playerRoundResults = prData
         .map((r) => ({
-          roundNumber: roundMap[r.round_id as string] ?? 0,
+          roundNumber: roundNumMap[r.round_id as string] ?? 0,
+          roundName:
+            roundNameMap[r.round_id as string] ??
+            `R${roundNumMap[r.round_id as string] ?? "?"}`,
           points: (r.points as number) ?? 0,
           rank: r.rank as number | null,
         }))

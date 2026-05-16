@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 
 interface PlayerRoundResult {
   roundNumber: number;
+  roundName: string;
   points: number;
   rank: number | null;
 }
@@ -162,19 +163,19 @@ export default function PlayerStatsSection({
   // 個人成績は player_results から、チーム順位は standings から
   const roundRanks = playerRoundResults.map((r) => ({
     round: r.roundNumber,
-    rank: r.rank ?? 0,
+    roundName: r.roundName,
+    rank: r.rank,
     pts: r.points,
   }));
 
   const totalPoints = playerRoundResults.reduce((s, r) => s + r.points, 0);
   const overallRank = myStanding?.rank ?? null;
+  const rankedRounds = roundRanks.filter((r) => r.rank != null && r.rank > 0);
   const avgRank =
-    roundRanks.length > 0 && roundRanks.some((r) => r.rank > 0)
+    rankedRounds.length > 0
       ? Math.round(
-          (roundRanks
-            .filter((r) => r.rank > 0)
-            .reduce((s, r) => s + r.rank, 0) /
-            roundRanks.filter((r) => r.rank > 0).length) *
+          (rankedRounds.reduce((s, r) => s + (r.rank ?? 0), 0) /
+            rankedRounds.length) *
             10,
         ) / 10
       : null;
@@ -268,10 +269,10 @@ export default function PlayerStatsSection({
             各節の成績
           </p>
           <div className="space-y-2.5">
-            {roundRanks.map(({ round, rank, pts }) => (
+            {roundRanks.map(({ round, roundName, rank, pts }) => (
               <div key={round} className="flex items-center gap-3">
-                <span className="text-xs font-bold text-slate-400 w-7 flex-shrink-0">
-                  R{round}
+                <span className="text-xs font-bold text-slate-500 flex-shrink-0 max-w-[80px] truncate">
+                  {roundName}
                 </span>
                 <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
                   <div
@@ -281,7 +282,7 @@ export default function PlayerStatsSection({
                       background:
                         rank === 1
                           ? "linear-gradient(90deg, #c9921e, #e3c060)"
-                          : rank <= 3
+                          : rank != null && rank <= 3
                             ? "#2b70ef"
                             : "#cbd5e1",
                     }}
@@ -294,7 +295,7 @@ export default function PlayerStatsSection({
                   {pts}pt
                 </span>
                 <span className="text-xs font-semibold text-slate-400 w-7 text-right flex-shrink-0">
-                  {rank}位
+                  {rank != null ? `${rank}位` : "-"}
                 </span>
               </div>
             ))}
