@@ -203,31 +203,42 @@ function ResultFormUI({
                     ))}
                   </select>
                 </div>
-                {/* 選手名 */}
+                {/* 選手名: 選択肢があればドロップダウン、なければテキスト入力 */}
                 <div>
-                  <select
-                    value={p.playerId}
-                    disabled={!p.teamId}
-                    onChange={(e) => {
-                      const pl = teamPlayers.find(
-                        (pl) => pl.id === e.target.value,
-                      );
-                      update(i, {
-                        playerId: e.target.value,
-                        playerName: pl?.name ?? "",
-                      });
-                    }}
-                    className="w-full px-1 py-1 text-xs rounded border border-white/10 bg-[#0c1e42] text-white outline-none focus:border-amber-500/50 disabled:opacity-40"
-                  >
-                    <option value="">
-                      {p.teamId ? "選手を選択" : "チームを選択"}
-                    </option>
-                    {teamPlayers.map((pl) => (
-                      <option key={pl.id} value={pl.id}>
-                        {pl.name}
-                      </option>
-                    ))}
-                  </select>
+                  {teamPlayers.length > 0 ? (
+                    <select
+                      value={p.playerId}
+                      disabled={!p.teamId}
+                      onChange={(e) => {
+                        const pl = teamPlayers.find(
+                          (pl) => pl.id === e.target.value,
+                        );
+                        update(i, {
+                          playerId: e.target.value,
+                          playerName: pl?.name ?? "",
+                        });
+                      }}
+                      className="w-full px-1 py-1 text-xs rounded border border-white/10 bg-[#0c1e42] text-white outline-none focus:border-amber-500/50 disabled:opacity-40"
+                    >
+                      <option value="">選手を選択</option>
+                      {teamPlayers.map((pl) => (
+                        <option key={pl.id} value={pl.id}>
+                          {pl.name}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      value={p.playerName}
+                      disabled={!p.teamId}
+                      onChange={(e) =>
+                        update(i, { playerName: e.target.value, playerId: "" })
+                      }
+                      placeholder={p.teamId ? "選手名を入力" : "チームを選択"}
+                      className="w-full px-1 py-1 text-xs rounded border border-white/10 bg-white/5 text-white outline-none focus:border-amber-500/50 disabled:opacity-40"
+                    />
+                  )}
                 </div>
                 {/* ポイント */}
                 <div>
