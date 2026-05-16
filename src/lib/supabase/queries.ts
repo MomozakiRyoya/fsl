@@ -295,60 +295,70 @@ export async function fetchPlayerStatsFromSupabase(): Promise<
 > {
   const supabase = await createClient();
 
-  const [{ data: playersData, error }, { data: resultsData }] =
-    await Promise.all([
-      supabase
-        .from("players")
-        .select("player_id, name, team_id, league_id, teams(name)")
-        .order("league_id")
-        .order("team_id"),
-      supabase.from("player_results").select("player_id, rank, points"),
-    ]);
+  const [{ data: resultsData }, { data: teamsData }] = await Promise.all([
+    supabase
+      .from("player_results")
+      .select("player_id, player_name, team_id, team_name, rank, points"),
+    supabase.from("teams").select("team_id, league_id"),
+  ]);
 
-  if (error || !playersData) return [];
+  if (!resultsData || resultsData.length === 0) return [];
 
-  // 選手ごとに集計（総ポイント・参加回数・ITM回数）
-  const statsMap: Record<
-    string,
-    { totalPoints: number; games: number; itmCount: number }
-  > = {};
-  for (const r of resultsData ?? []) {
-    const pid = r.player_id as string;
-    if (!statsMap[pid])
-      statsMap[pid] = { totalPoints: 0, games: 0, itmCount: 0 };
-    statsMap[pid].totalPoints += (r.points as number) || 0;
-    statsMap[pid].games += 1;
-    // rank 1-3 を ITM（入賞）とみなす
-    const rank = r.rank as number | null;
-    if (rank !== null && rank <= 3) statsMap[pid].itmCount += 1;
+  // チームID → リーグID のマップ
+  const teamLeagueMap: Record<string, string> = {};
+  for (const t of teamsData ?? []) {
+    teamLeagueMap[t.team_id as string] = t.league_id as string;
   }
 
-  return playersData
-    .filter((p) => p.name && (p.name as string).trim() !== "")
-    .map((p) => {
-      const t = p.teams as { name: string }[] | { name: string } | null;
-      const teamName = !t
-        ? ""
-        : Array.isArray(t)
-          ? (t[0]?.name ?? "")
-          : (t.name ?? "");
-      const s = statsMap[p.player_id as string] ?? {
+  // 選手名 + チームID をキーに集計（player_id が空でも対応）
+  type StatEntry = {
+    playerName: string;
+    teamId: string;
+    teamName: string;
+    totalPoints: number;
+    games: number;
+    itmCount: number;
+  };
+  const statsMap: Record<string, StatEntry> = {};
+
+  for (const r of resultsData) {
+    const playerName = (r.player_name as string) ?? "";
+    const teamId = (r.team_id as string) ?? "";
+    if (!playerName.trim()) continue;
+
+    const key = `${playerName}::${teamId}`;
+    if (!statsMap[key]) {
+      statsMap[key] = {
+        playerName,
+        teamId,
+        teamName: (r.team_name as string) ?? "",
         totalPoints: 0,
         games: 0,
         itmCount: 0,
       };
+    }
+    statsMap[key].totalPoints += (r.points as number) || 0;
+    statsMap[key].games += 1;
+    const rank = r.rank as number | null;
+    if (rank !== null && rank <= 3) statsMap[key].itmCount += 1;
+  }
+
+  return Object.values(statsMap)
+    .filter((s) => s.totalPoints > 0 || s.games > 0)
+    .map((s) => {
       const itmRate =
         s.games > 0 ? Math.round((s.itmCount / s.games) * 100) : 0;
       return {
-        playerId: p.player_id as string,
-        playerName: (p.name as string) ?? "",
-        teamId: p.team_id as string,
-        teamName,
-        leagueId: p.league_id as string,
-        goals: s.totalPoints, // 総獲得ポイント
-        assists: itmRate, // ITM率 (%)
+        playerId: `${s.playerName}::${s.teamId}`,
+        playerName: s.playerName,
+        teamId: s.teamId,
+        teamName: s.teamName,
+        leagueId: teamLeagueMap[s.teamId] ?? "",
+        goals: s.totalPoints,
+        assists: itmRate,
         games: s.games,
         mvpCount: 0,
       };
-    });
+    })
+    .sort((a, b) => b.goals - a.goals);
 }
