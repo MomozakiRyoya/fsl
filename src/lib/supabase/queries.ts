@@ -294,15 +294,36 @@ export async function fetchPlayerStatsFromSupabase(): Promise<
   import("../types/app").PlayerStats[]
 > {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("players")
-    .select("player_id, name, team_id, league_id, teams(name)")
-    .order("league_id")
-    .order("team_id");
 
-  if (error || !data) return [];
+  const [{ data: playersData, error }, { data: resultsData }] =
+    await Promise.all([
+      supabase
+        .from("players")
+        .select("player_id, name, team_id, league_id, teams(name)")
+        .order("league_id")
+        .order("team_id"),
+      supabase.from("player_results").select("player_id, rank, points"),
+    ]);
 
-  return data
+  if (error || !playersData) return [];
+
+  // 選手ごとに集計（総ポイント・参加回数・ITM回数）
+  const statsMap: Record<
+    string,
+    { totalPoints: number; games: number; itmCount: number }
+  > = {};
+  for (const r of resultsData ?? []) {
+    const pid = r.player_id as string;
+    if (!statsMap[pid])
+      statsMap[pid] = { totalPoints: 0, games: 0, itmCount: 0 };
+    statsMap[pid].totalPoints += (r.points as number) || 0;
+    statsMap[pid].games += 1;
+    // rank 1-3 を ITM（入賞）とみなす
+    const rank = r.rank as number | null;
+    if (rank !== null && rank <= 3) statsMap[pid].itmCount += 1;
+  }
+
+  return playersData
     .filter((p) => p.name && (p.name as string).trim() !== "")
     .map((p) => {
       const t = p.teams as { name: string }[] | { name: string } | null;
@@ -311,15 +332,22 @@ export async function fetchPlayerStatsFromSupabase(): Promise<
         : Array.isArray(t)
           ? (t[0]?.name ?? "")
           : (t.name ?? "");
+      const s = statsMap[p.player_id as string] ?? {
+        totalPoints: 0,
+        games: 0,
+        itmCount: 0,
+      };
+      const itmRate =
+        s.games > 0 ? Math.round((s.itmCount / s.games) * 100) : 0;
       return {
         playerId: p.player_id as string,
         playerName: (p.name as string) ?? "",
         teamId: p.team_id as string,
         teamName,
         leagueId: p.league_id as string,
-        goals: 0,
-        assists: 0,
-        games: 0,
+        goals: s.totalPoints, // 総獲得ポイント
+        assists: itmRate, // ITM率 (%)
+        games: s.games,
         mvpCount: 0,
       };
     });

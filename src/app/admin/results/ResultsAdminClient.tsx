@@ -378,6 +378,30 @@ export default function ResultsAdminClient({
       }
     }
 
+    // 選手個別ポイントを保存
+    const playerPayload = filled
+      .filter((p) => p.playerId)
+      .map((p) => ({
+        playerId: p.playerId,
+        playerName: p.playerName,
+        teamId: p.teamId,
+        teamName: roundTeams.find((t) => t.id === p.teamId)?.name ?? "",
+        rank: Number(p.rank) || null,
+        points: Number(p.points) || 0,
+      }));
+
+    if (playerPayload.length > 0) {
+      const prRes = await fetch("/api/admin/player-results", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          roundId: selectedRoundId,
+          players: playerPayload,
+        }),
+      });
+      if (!prRes.ok) ok = false;
+    }
+
     setSaving(false);
     if (ok) {
       setModal(null);
