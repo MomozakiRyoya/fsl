@@ -445,6 +445,19 @@ export default function ResultsAdminClient({
         }
       }
 
+      // チームポイント順で順位を自動計算（同点は同順位）
+      const sortedTeams = Object.values(byTeam).sort((a, b) => b.pts - a.pts);
+      const teamRankMap: Record<string, number> = {};
+      let currentRank = 1;
+      sortedTeams.forEach((t, i) => {
+        if (i > 0 && t.pts === sortedTeams[i - 1].pts) {
+          teamRankMap[t.teamId] = teamRankMap[sortedTeams[i - 1].teamId];
+        } else {
+          teamRankMap[t.teamId] = currentRank;
+        }
+        currentRank++;
+      });
+
       // 選手個別ポイントを保存（playerName があれば保存）
       const playerPayload = filled
         .filter((p) => p.playerName)
@@ -453,7 +466,7 @@ export default function ResultsAdminClient({
           playerName: p.playerName,
           teamId: p.teamId,
           teamName: roundTeams.find((t) => t.id === p.teamId)?.name ?? "",
-          rank: Number(p.rank) || null,
+          rank: teamRankMap[p.teamId] ?? null,
           points: Number(p.points) || 0,
         }));
 
@@ -529,6 +542,11 @@ export default function ResultsAdminClient({
         matches.map((m) => (m.id === target.id ? rawToMatch(raw) : m)),
       );
 
+      // このチームの順位を他チームのポイントと比較して自動計算
+      const otherMatches = matches.filter((m) => m.id !== target.id);
+      const rank =
+        otherMatches.filter((m) => (m.homeRoundPt ?? 0) > pts).length + 1;
+
       // 選手個別ポイントを保存
       const playerPayload = filled
         .filter((p) => p.playerName)
@@ -537,7 +555,7 @@ export default function ResultsAdminClient({
           playerName: p.playerName,
           teamId: p.teamId,
           teamName: roundTeams.find((t) => t.id === p.teamId)?.name ?? "",
-          rank: Number(p.rank) || null,
+          rank,
           points: Number(p.points) || 0,
         }));
 
