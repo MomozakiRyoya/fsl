@@ -5,7 +5,6 @@ import {
   getLeagues,
   getStandings,
   getRounds,
-  getPlayerStats,
   getTeams,
 } from "@/lib/data";
 import { NEWS_CATEGORY_COLORS } from "@/lib/constants";
@@ -38,16 +37,16 @@ export default async function HomePage() {
     leagues,
     standings,
     rounds,
-    playerStats,
     teams,
     latestVideo,
     { data: featuredData },
+    { data: playerResultsData },
+    { data: teamsForStats },
   ] = await Promise.all([
     getNews(),
     getLeagues(),
     getStandings(),
     getRounds(),
-    getPlayerStats(),
     getTeams(),
     getLatestYouTubeVideo(),
     supabaseAdmin
@@ -56,7 +55,60 @@ export default async function HomePage() {
       .eq("is_active", true)
       .order("order_num")
       .order("created_at"),
+    supabaseAdmin
+      .from("player_results")
+      .select("player_id, player_name, team_id, team_name, rank, points"),
+    supabaseAdmin.from("teams").select("team_id, league_id"),
   ]);
+
+  // player_results を直接集計して PlayerStats を構築
+  const teamLeagueMap: Record<string, string> = {};
+  for (const t of teamsForStats ?? []) {
+    teamLeagueMap[t.team_id as string] = t.league_id as string;
+  }
+  type StatEntry = {
+    playerName: string;
+    teamId: string;
+    teamName: string;
+    totalPoints: number;
+    games: number;
+    itmCount: number;
+  };
+  const statsMap: Record<string, StatEntry> = {};
+  for (const r of playerResultsData ?? []) {
+    const playerName = (r.player_name as string) ?? "";
+    const teamId = (r.team_id as string) ?? "";
+    if (!playerName.trim()) continue;
+    const key = `${playerName}::${teamId}`;
+    if (!statsMap[key]) {
+      statsMap[key] = {
+        playerName,
+        teamId,
+        teamName: (r.team_name as string) ?? "",
+        totalPoints: 0,
+        games: 0,
+        itmCount: 0,
+      };
+    }
+    statsMap[key].totalPoints += (r.points as number) || 0;
+    statsMap[key].games += 1;
+    const rank = r.rank as number | null;
+    if (rank !== null && rank <= 3) statsMap[key].itmCount += 1;
+  }
+  const playerStats = Object.values(statsMap)
+    .filter((s) => s.totalPoints > 0 || s.games > 0)
+    .map((s) => ({
+      playerId: `${s.playerName}::${s.teamId}`,
+      playerName: s.playerName,
+      teamId: s.teamId,
+      teamName: s.teamName,
+      leagueId: teamLeagueMap[s.teamId] ?? "",
+      goals: s.totalPoints,
+      assists: s.games > 0 ? Math.round((s.itmCount / s.games) * 100) : 0,
+      games: s.games,
+      mvpCount: 0,
+    }))
+    .sort((a, b) => b.goals - a.goals);
 
   const featuredPlayers = (featuredData ?? []).map((d) => ({
     id: d.id as string,
