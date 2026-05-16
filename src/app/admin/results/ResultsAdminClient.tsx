@@ -488,24 +488,71 @@ export default function ResultsAdminClient({
     const team = roundTeams.find((t) => t.id === teamId);
 
     setSaving(true);
-    const res = await fetch(`/api/admin/matches/${target.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        homeTeamId: teamId,
-        homeTeamName: team?.name ?? "",
-        homeRoundPt: pts,
-      }),
-    });
-    setSaving(false);
-    if (res.ok) {
+    try {
+      // チーム合計ポイントを更新
+      const res = await fetch(`/api/admin/matches/${target.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          homeTeamId: teamId,
+          homeTeamName: team?.name ?? "",
+          homeRoundPt: pts,
+        }),
+      });
+
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
+        showToast(`更新に失敗しました: ${errJson.error ?? res.status}`);
+        return;
+      }
+
       const raw = await res.json();
       setMatches(
         matches.map((m) => (m.id === target.id ? rawToMatch(raw) : m)),
       );
+
+      // 選手個別ポイントを保存
+      const playerPayload = filled
+        .filter((p) => p.playerName)
+        .map((p) => ({
+          playerId: p.playerId || "",
+          playerName: p.playerName,
+          teamId: p.teamId,
+          teamName: roundTeams.find((t) => t.id === p.teamId)?.name ?? "",
+          rank: Number(p.rank) || null,
+          points: Number(p.points) || 0,
+        }));
+
+      if (playerPayload.length > 0) {
+        const prRes = await fetch("/api/admin/player-results", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            roundId: target.roundId,
+            players: playerPayload,
+          }),
+        });
+        if (!prRes.ok) {
+          const errJson = await prRes.json().catch(() => ({}));
+          showToast(`選手保存エラー: ${errJson.error ?? prRes.status}`);
+          return;
+        }
+        // 選手結果一覧を更新
+        fetch(`/api/admin/player-results?roundId=${target.roundId}`)
+          .then((r) => r.json())
+          .then((data: PlayerResult[]) => setPlayerResults(data))
+          .catch(() => {});
+      }
+
       setModal(null);
-      showToast("更新しました");
-    } else showToast("更新に失敗しました");
+      showToast(`更新しました（選手${playerPayload.length}件）`);
+    } catch (e) {
+      showToast(
+        `予期しないエラー: ${e instanceof Error ? e.message : String(e)}`,
+      );
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleDelete = async () => {
