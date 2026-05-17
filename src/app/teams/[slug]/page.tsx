@@ -336,10 +336,10 @@ export default async function TeamDetailPage({ params }: Props) {
           </section>
         )}
 
-        {/* ディビジョン順位推移 */}
+        {/* 各試合順位推移 */}
         <section className="animate-fade-in animate-delay-300">
           <h2 className="text-xs font-semibold text-slate-400 mb-3 uppercase tracking-wider">
-            ディビジョン順位推移
+            各試合順位推移
           </h2>
           <RankChart
             leagueId={team.leagueId}
