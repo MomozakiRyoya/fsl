@@ -117,17 +117,21 @@ function StandingsTable({
         const rowStyle = {
           animationDelay: `${i * 35}ms`,
           background:
-            team.rank <= 4
-              ? "rgba(201,146,30,0.05)"
-              : team.rank >= 7
-                ? "rgba(239,68,68,0.04)"
-                : undefined,
+            team.rank === 1
+              ? "rgba(201,146,30,0.12)"
+              : team.rank === 2
+                ? "rgba(180,180,190,0.13)"
+                : team.rank >= 7
+                  ? "rgba(239,68,68,0.04)"
+                  : undefined,
           borderLeft:
-            team.rank <= 4
-              ? "3px solid rgba(201,146,30,0.35)"
-              : team.rank >= 7
-                ? "3px solid rgba(239,68,68,0.4)"
-                : "3px solid transparent",
+            team.rank === 1
+              ? "3px solid rgba(201,146,30,0.7)"
+              : team.rank === 2
+                ? "3px solid rgba(160,160,175,0.6)"
+                : team.rank >= 7
+                  ? "3px solid rgba(239,68,68,0.4)"
+                  : "3px solid transparent",
         };
 
         const rowClass =
