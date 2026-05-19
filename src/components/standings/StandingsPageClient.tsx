@@ -62,9 +62,11 @@ function getInitials(name: string): string {
 function StandingsTable({
   standings,
   leagueColor,
+  leagueId,
 }: {
   standings: TeamStanding[];
   leagueColor: string;
+  leagueId?: string;
 }) {
   return (
     <div className="bg-white rounded-2xl overflow-hidden shadow-native animate-spring-in">
@@ -114,24 +116,37 @@ function StandingsTable({
           </>
         );
 
-        const rowStyle = {
+        const isPremier = leagueId === "premier";
+
+        const rowStyle: React.CSSProperties = {
           animationDelay: `${i * 35}ms`,
-          background:
-            team.rank === 1
+          background: isPremier
+            ? team.rank === 1
               ? "rgba(201,146,30,0.12)"
-              : team.rank === 2
-                ? "rgba(180,180,190,0.13)"
-                : team.rank >= 7
-                  ? "rgba(239,68,68,0.04)"
-                  : undefined,
-          borderLeft:
-            team.rank === 1
+              : team.rank <= 3
+                ? "rgba(34,197,94,0.08)"
+                : team.rank === 6
+                  ? "rgba(239,68,68,0.07)"
+                  : undefined
+            : team.rank === 1
+              ? "rgba(201,146,30,0.12)"
+              : undefined,
+          borderLeft: isPremier
+            ? team.rank === 1
               ? "3px solid rgba(201,146,30,0.7)"
-              : team.rank === 2
-                ? "3px solid rgba(160,160,175,0.6)"
-                : team.rank >= 7
-                  ? "3px solid rgba(239,68,68,0.4)"
-                  : "3px solid transparent",
+              : team.rank <= 3
+                ? "3px solid rgba(34,197,94,0.5)"
+                : team.rank === 6
+                  ? "3px solid rgba(239,68,68,0.5)"
+                  : "3px solid transparent"
+            : team.rank === 1
+              ? "3px solid rgba(201,146,30,0.7)"
+              : "3px solid transparent",
+          // 3位と4位の間に赤いボーダー
+          borderBottom:
+            isPremier && team.rank === 3
+              ? "2px solid rgba(239,68,68,0.5)"
+              : undefined,
         };
 
         const rowClass =
@@ -250,6 +265,7 @@ export default function StandingsPageClient({ leagues, standings }: Props) {
             <StandingsTable
               standings={currentStandings}
               leagueColor={currentLeague?.color ?? "#2b70ef"}
+              leagueId={activeLeague}
             />
           </>
         )}
