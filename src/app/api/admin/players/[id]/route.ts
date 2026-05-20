@@ -36,6 +36,7 @@ export async function PATCH(
   if (body.number !== undefined) updates.number = body.number;
   if (body.position !== undefined) updates.position = body.position;
   if ("photoUrl" in body) updates.photo_url = body.photoUrl;
+  if ("imageUrl" in body) updates.image_url = body.imageUrl || null;
   if ("isCaptain" in body) updates.is_captain = body.isCaptain;
   if ("userEmail" in body) updates.user_email = body.userEmail || null;
 

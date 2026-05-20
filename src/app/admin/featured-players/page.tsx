@@ -22,7 +22,7 @@ export default async function AdminFeaturedPlayersPage() {
         .order("name"),
       admin
         .from("players")
-        .select("player_id, name, team_id")
+        .select("player_id, name, team_id, image_url")
         .order("team_id")
         .order("number"),
     ]);
@@ -46,6 +46,7 @@ export default async function AdminFeaturedPlayersPage() {
     id: p.player_id as string,
     name: p.name as string,
     teamId: p.team_id as string,
+    imageUrl: (p.image_url as string | null) ?? "",
   }));
 
   return (

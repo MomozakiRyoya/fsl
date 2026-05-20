@@ -21,6 +21,7 @@ interface PlayerItem {
   id: string;
   name: string;
   teamId: string;
+  imageUrl?: string;
 }
 
 type FormData = {
@@ -83,6 +84,7 @@ export default function FeaturedPlayersAdminClient({
   const [target, setTarget] = useState<FeaturedPlayer | null>(null);
   const [form, setForm] = useState<FormData>(defaultForm());
   const [selectedTeamId, setSelectedTeamId] = useState("");
+  const [selectedPlayerId, setSelectedPlayerId] = useState("");
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [toast, setToast] = useState("");
@@ -123,13 +125,18 @@ export default function FeaturedPlayersAdminClient({
   const openCreate = () => {
     setForm(defaultForm());
     setSelectedTeamId("");
+    setSelectedPlayerId("");
     setTarget(null);
     setModal("create");
   };
 
   const openEdit = (item: FeaturedPlayer) => {
     const team = teams.find((t) => t.name === item.teamName);
+    const player = players.find(
+      (p) => p.name === item.playerName && p.teamId === (team?.id ?? ""),
+    );
     setSelectedTeamId(team?.id ?? "");
+    setSelectedPlayerId(player?.id ?? "");
     setForm({
       imageUrl: item.imageUrl,
       playerName: item.playerName,
@@ -167,6 +174,14 @@ export default function FeaturedPlayersAdminClient({
         setItems(items.map((i) => (i.id === target!.id ? raw : i)));
       } else {
         setItems([...items, raw]);
+      }
+      // 選手の image_url に書き戻し
+      if (selectedPlayerId && form.imageUrl) {
+        await fetch(`/api/admin/players/${selectedPlayerId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ imageUrl: form.imageUrl }),
+        });
       }
       setModal(null);
       showToast(modal === "edit" ? "更新しました" : "作成しました");
@@ -354,22 +369,40 @@ export default function FeaturedPlayersAdminClient({
                   選手
                 </label>
                 <select
-                  value={form.playerName}
+                  value={selectedPlayerId}
                   disabled={!selectedTeamId}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, playerName: e.target.value }))
-                  }
+                  onChange={(e) => {
+                    const pid = e.target.value;
+                    setSelectedPlayerId(pid);
+                    const p = players.find((pl) => pl.id === pid);
+                    if (p) {
+                      setForm((f) => ({
+                        ...f,
+                        playerName: p.name,
+                        imageUrl:
+                          p.imageUrl && !f.imageUrl ? p.imageUrl : f.imageUrl,
+                      }));
+                    }
+                  }}
                   className="w-full px-3 py-2.5 text-sm rounded-lg border border-white/10 bg-[#060b14] text-white outline-none focus:border-amber-500/50 disabled:opacity-40"
                 >
                   <option value="">-- 選手を選択 --</option>
                   {players
                     .filter((p) => p.teamId === selectedTeamId)
                     .map((p) => (
-                      <option key={p.id} value={p.name}>
+                      <option key={p.id} value={p.id}>
                         {p.name}
+                        {p.imageUrl ? " ✓" : ""}
                       </option>
                     ))}
                 </select>
+                {selectedPlayerId &&
+                  players.find((p) => p.id === selectedPlayerId)?.imageUrl &&
+                  !form.imageUrl && (
+                    <p className="text-[11px] text-amber-400/70 mt-1">
+                      保存済み画像があります → 選手選択で自動反映
+                    </p>
+                  )}
               </div>
             </div>
             <div className="flex items-center justify-between">
