@@ -36,6 +36,13 @@ interface Structure {
   maxPlayers: number;
   format: string;
   levels: BlindLevel[];
+  pointTemplateId?: string | null;
+}
+
+interface PointTemplate {
+  id: string;
+  name: string;
+  points: { rank: number; pts: number }[];
 }
 
 interface RoundItem {
@@ -315,9 +322,11 @@ function LevelsEditor({
 export default function StructuresAdminClient({
   initialStructures,
   rounds: initialRounds = [],
+  pointTemplates = [],
 }: {
   initialStructures: Structure[];
   rounds?: RoundItem[];
+  pointTemplates?: PointTemplate[];
 }) {
   const [structures, setStructures] = useState(initialStructures);
   const [rounds, setRounds] = useState(initialRounds);
@@ -337,6 +346,7 @@ export default function StructuresAdminClient({
   const [createRoundId, setCreateRoundId] = useState("");
   const [createLeagueFilter, setCreateLeagueFilter] = useState("");
   const [assigning, setAssigning] = useState(false);
+  const [pointTemplateId, setPointTemplateId] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const showToast = (msg: string) => {
@@ -424,6 +434,7 @@ export default function StructuresAdminClient({
     setTarget(null);
     setCreateRoundId("");
     setCreateLeagueFilter("");
+    setPointTemplateId("");
     setModal("create");
   };
 
@@ -438,6 +449,7 @@ export default function StructuresAdminClient({
     setPasteText("");
     setParseError("");
     setInputTab("paste");
+    setPointTemplateId(s.pointTemplateId ?? "");
     setTarget(s);
     setModal("edit");
   };
@@ -451,6 +463,7 @@ export default function StructuresAdminClient({
       maxPlayers: Number(form.maxPlayers) || 9,
       format: form.format,
       levels: parsedLevels,
+      pointTemplateId: pointTemplateId || null,
     };
     const url =
       modal === "edit" && target
@@ -570,8 +583,27 @@ export default function StructuresAdminClient({
                     key={s.id}
                     className="border-b border-white/5 hover:bg-white/3 transition-colors"
                   >
-                    <td className="px-4 py-3 text-sm text-white font-semibold">
-                      {s.name}
+                    <td className="px-4 py-3">
+                      <p className="text-sm text-white font-semibold">
+                        {s.name}
+                      </p>
+                      {s.pointTemplateId &&
+                        (() => {
+                          const pt = pointTemplates.find(
+                            (p) => p.id === s.pointTemplateId,
+                          );
+                          return pt ? (
+                            <span
+                              className="text-[10px] px-1.5 py-0.5 rounded mt-0.5 inline-block"
+                              style={{
+                                background: "rgba(201,146,30,0.15)",
+                                color: "#e3c060",
+                              }}
+                            >
+                              🏆 {pt.name}
+                            </span>
+                          ) : null;
+                        })()}
                     </td>
                     <td className="px-4 py-3 text-sm text-white/60 hidden sm:table-cell">
                       {s.startingStack.toLocaleString("ja-JP")}
@@ -750,6 +782,45 @@ export default function StructuresAdminClient({
                   className="w-full px-3 py-2.5 text-sm rounded-lg border border-white/10 bg-white/5 text-white outline-none focus:border-amber-500/50"
                   placeholder="フリーズアウト NLH"
                 />
+              </div>
+              <div className="col-span-2">
+                <label className="block text-xs font-semibold text-white/50 uppercase tracking-wider mb-1.5">
+                  ポイントテンプレート
+                </label>
+                <select
+                  value={pointTemplateId}
+                  onChange={(e) => setPointTemplateId(e.target.value)}
+                  className="w-full px-3 py-2.5 text-sm rounded-lg border border-white/10 bg-[#060b14] text-white outline-none focus:border-amber-500/50"
+                >
+                  <option value="">-- テンプレートなし --</option>
+                  {pointTemplates.map((pt) => (
+                    <option key={pt.id} value={pt.id}>
+                      {pt.name}（{pt.points.length}順位）
+                    </option>
+                  ))}
+                </select>
+                {pointTemplateId &&
+                  (() => {
+                    const pt = pointTemplates.find(
+                      (p) => p.id === pointTemplateId,
+                    );
+                    return pt ? (
+                      <div className="flex flex-wrap gap-1 mt-1.5">
+                        {pt.points.map((p) => (
+                          <span
+                            key={p.rank}
+                            className="text-[10px] px-1.5 py-0.5 rounded"
+                            style={{
+                              background: "rgba(201,146,30,0.15)",
+                              color: "#e3c060",
+                            }}
+                          >
+                            {p.rank}位: {p.pts}pt
+                          </span>
+                        ))}
+                      </div>
+                    ) : null;
+                  })()}
               </div>
             </div>
 

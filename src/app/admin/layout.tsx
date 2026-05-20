@@ -14,6 +14,7 @@ const NAV = [
   { href: "/admin/players", label: "選手", icon: "◉" },
   { href: "/admin/feedback", label: "意見箱", icon: "📬" },
   { href: "/admin/structures", label: "ストラクチャー", icon: "🎰" },
+  { href: "/admin/point-templates", label: "ポイントテンプレ", icon: "🏆" },
   { href: "/admin/featured-players", label: "注目選手", icon: "⭐" },
 ];
 

@@ -33,6 +33,7 @@ function rawToStructure(d: Record<string, unknown>) {
     maxPlayers: (d.max_players as number) ?? 9,
     format: (d.format as string) ?? "",
     levels: (d.levels as unknown[]) ?? [],
+    pointTemplateId: (d.point_template_id as string | null) ?? null,
   };
 }
 
@@ -41,7 +42,8 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const user = await checkAdmin();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!user)
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id } = await params;
   const body = await request.json();
@@ -49,10 +51,13 @@ export async function PATCH(
 
   const updates: Record<string, unknown> = {};
   if (body.name !== undefined) updates.name = body.name;
-  if (body.startingStack !== undefined) updates.starting_stack = body.startingStack;
+  if (body.startingStack !== undefined)
+    updates.starting_stack = body.startingStack;
   if (body.maxPlayers !== undefined) updates.max_players = body.maxPlayers;
   if (body.format !== undefined) updates.format = body.format;
   if (body.levels !== undefined) updates.levels = body.levels;
+  if (body.pointTemplateId !== undefined)
+    updates.point_template_id = body.pointTemplateId || null;
 
   const { data, error } = await admin
     .from("structures")
@@ -72,7 +77,8 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const user = await checkAdmin();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!user)
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id } = await params;
   const admin = getAdmin();
