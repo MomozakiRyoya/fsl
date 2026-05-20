@@ -33,7 +33,7 @@ export default async function NewsDetailPage({ params }: Props) {
   return (
     <div className="max-w-lg mx-auto">
       {/* ヘッダー */}
-      <div className="px-4 pt-6 pb-5 border-b border-[#e8dfc0] animate-fade-in">
+      <div className="px-4 pt-14 pb-5 border-b border-[#e8dfc0] animate-fade-in">
         <Link
           href="/"
           className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-slate-700 transition-colors mb-4"
