@@ -119,7 +119,7 @@ export default async function TeamDetailPage({ params }: Props) {
               チーム一覧
             </Link>
             <a
-              href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`${team.name} | FSL Season 1`)}&url=${encodeURIComponent(`https://fsl-gilt.vercel.app/teams/${team.slug}`)}`}
+              href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`${team.name} | FSL Season 7`)}&url=${encodeURIComponent(`https://fsl-gilt.vercel.app/teams/${team.slug}`)}`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-600 hover:text-slate-900 bg-white/70 backdrop-blur-sm rounded-full px-3 py-1.5 border border-slate-200/70 transition-colors"

@@ -8,7 +8,7 @@ const ROUND4_RESULTS = [
 
 const RANK_MEDALS = ["🥇", "🥈", "🥉"];
 
-const SHARE_TEXT = `【FSL Season 1 Premier League 現在の順位】
+const SHARE_TEXT = `【FSL Season 7 Premier League 現在の順位】
 🥇 BON 187pt
 🥈 TRUMP 160pt
 🥉 SuperNova 136pt

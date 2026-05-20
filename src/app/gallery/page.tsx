@@ -51,7 +51,7 @@ export default function GalleryPage() {
         />
         <div className="relative flex items-center justify-between">
           <div>
-            <p className="text-white/50 text-xs tracking-[0.25em] uppercase mb-1">FSL Season 1</p>
+            <p className="text-white/50 text-xs tracking-[0.25em] uppercase mb-1">FSL Season 7</p>
             <h1 className="text-2xl font-black text-white tracking-widest">GALLERY</h1>
           </div>
           <span

@@ -216,7 +216,7 @@ export default function StandingsPageClient({ leagues, standings }: Props) {
         }}
       >
         <p className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] mb-1">
-          Season 1
+          Season 7
         </p>
         <h1 className="text-2xl font-black text-white tracking-tight">
           LEAGUE STANDINGS

@@ -22,7 +22,7 @@ function getBotResponse(input: string): string {
   if (q.includes("博多キングス") || q.includes("hakata"))
     return "博多キングスはDivision 1首位のチームです（52pt）。キャプテンは田中海斗選手。今シーズンの得点王・加藤蓮選手を擁する優勝最有力候補です。";
   if (q.includes("チーム") && q.includes("数"))
-    return "FSL Season 1には全48チームが参加しています。Division 1〜6の6つのディビジョンに分かれ、各8チームが戦います。";
+    return "FSL Season 7には全48チームが参加しています。Division 1〜6の6つのディビジョンに分かれ、各8チームが戦います。";
   if (q.includes("場所") || q.includes("会場"))
     return "メイン会場はフットサルポイント福岡MEGAです。会場情報ページでアクセス方法やGoogleマップへのリンクをご確認いただけます。";
   if (q.includes("ルール") || q.includes("形式"))

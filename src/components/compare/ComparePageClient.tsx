@@ -144,7 +144,7 @@ export default function ComparePageClient({ playerStats, standings }: Props) {
         />
         <div className="relative">
           <p className="text-white/50 text-xs tracking-[0.25em] uppercase mb-1">
-            FSL Season 1
+            FSL Season 7
           </p>
           <h1 className="text-2xl font-black text-white tracking-widest">
             COMPARE

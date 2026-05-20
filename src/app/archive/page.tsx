@@ -35,7 +35,7 @@ export default function ArchivePage() {
           >
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-base font-bold text-white">FSL Season 1</h2>
+                <h2 className="text-base font-bold text-white">FSL Season 7</h2>
                 <p className="text-xs mt-0.5" style={{ color: "#e3c060" }}>
                   2026年 開催中
                 </p>
@@ -125,7 +125,7 @@ export default function ArchivePage() {
             まだ記録がありません
           </p>
           <p className="text-xs text-slate-400">
-            Season 1終了後に歴代記録が追加されます
+            Season 7終了後に歴代記録が追加されます
           </p>
         </div>
       </section>

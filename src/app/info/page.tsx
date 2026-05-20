@@ -60,7 +60,7 @@ export default function InfoPage() {
               複数のディビジョン・チームが年間を通じて競い合う、福岡最大級のポーカーリーグ戦。
             </p>
             <p className="text-sm text-body leading-relaxed mt-3">
-              Season 1
+              Season 7
               は2026年3月に開幕。6ディビジョン・48チームが参加し、毎週末に白熱した対戦を繰り広げています。
               レギュラーシーズン全22節を経て、上位チームがプレーオフで頂点を争います。
             </p>

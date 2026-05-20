@@ -211,7 +211,7 @@ export default function TeamsPageClient({ teams, leagues, standings }: Props) {
         }}
       >
         <p className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] mb-1">
-          Season 1
+          Season 7
         </p>
         <h1 className="text-2xl font-black text-white tracking-tight">TEAMS</h1>
         <div className="flex items-center gap-3 mt-1.5">

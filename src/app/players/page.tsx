@@ -24,7 +24,7 @@ export default async function PlayersPage() {
         <div className="absolute top-0 right-0 w-40 h-40 rounded-full bg-amber-400/10 -translate-y-1/2 translate-x-1/2" />
         <div className="relative">
           <p className="text-xs font-semibold text-amber-400 tracking-widest uppercase mb-1">
-            FSL Season 1
+            FSL Season 7
           </p>
           <h1 className="text-3xl font-black text-white tracking-tight">
             PLAYERS
