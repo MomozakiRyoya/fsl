@@ -42,11 +42,24 @@ export default async function AdminFeaturedPlayersPage() {
     leagueId: t.league_id as string,
   }));
 
+  // featured_players の既存データから playerName → imageUrl のマップを作成（fallback用）
+  const featuredImageMap = new Map<string, string>();
+  for (const d of data ?? []) {
+    const pname = d.player_name as string;
+    const img = d.image_url as string;
+    if (pname && img && !featuredImageMap.has(pname)) {
+      featuredImageMap.set(pname, img);
+    }
+  }
+
   const players = (playersData ?? []).map((p) => ({
     id: p.player_id as string,
     name: p.name as string,
     teamId: p.team_id as string,
-    imageUrl: (p.image_url as string | null) ?? "",
+    imageUrl:
+      (p.image_url as string | null) ||
+      featuredImageMap.get(p.name as string) ||
+      "",
   }));
 
   return (
