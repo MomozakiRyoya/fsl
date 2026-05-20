@@ -1,9 +1,16 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getRounds, getMatchResults } from "@/lib/data";
-import { createClient } from "@/lib/supabase/server";
+import { createClient as createAdmin } from "@supabase/supabase-js";
 import type { Structure, BlindLevel } from "@/lib/types/app";
 import { formatRoundDateTime } from "@/lib/start-time";
+
+function getAdminClient() {
+  return createAdmin(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+}
 
 export const dynamic = "force-dynamic";
 
@@ -194,10 +201,10 @@ export default async function RoundDetailPage({ params }: Props) {
   let structure: Structure | null = null;
   let pointTemplate: PointTemplate | null = null;
   if (round.structureId) {
-    const supabase = await createClient();
-    const { data } = await supabase
+    const admin = getAdminClient();
+    const { data } = await admin
       .from("structures")
-      .select("*, point_templates(*)")
+      .select("*")
       .eq("id", round.structureId)
       .single();
     if (data) {
@@ -209,13 +216,20 @@ export default async function RoundDetailPage({ params }: Props) {
         format: data.format as string,
         levels: data.levels as BlindLevel[],
       };
-      const pt = data.point_templates as Record<string, unknown> | null;
-      if (pt) {
-        pointTemplate = {
-          name: pt.name as string,
-          description: (pt.description as string) ?? "",
-          points: (pt.points as { rank: number; pts: number }[]) ?? [],
-        };
+      const ptId = data.point_template_id as string | null;
+      if (ptId) {
+        const { data: ptData } = await admin
+          .from("point_templates")
+          .select("*")
+          .eq("id", ptId)
+          .single();
+        if (ptData) {
+          pointTemplate = {
+            name: ptData.name as string,
+            description: (ptData.description as string) ?? "",
+            points: (ptData.points as { rank: number; pts: number }[]) ?? [],
+          };
+        }
       }
     }
   }
