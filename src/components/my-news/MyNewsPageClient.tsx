@@ -1,9 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useFollowedTeams } from "@/hooks/useFollowedTeams";
 import { NEWS_CATEGORY_COLORS } from "@/lib/constants";
 import type { Team, NewsItem, NewsCategory } from "@/lib/types/app";
+import NewsModal from "@/components/news/NewsModal";
 
 interface Props {
   teams: Team[];
@@ -12,6 +14,7 @@ interface Props {
 
 export default function MyNewsPageClient({ teams, news }: Props) {
   const { followedTeams, mounted } = useFollowedTeams();
+  const [selected, setSelected] = useState<NewsItem | null>(null);
 
   if (!mounted) {
     return (
@@ -128,10 +131,10 @@ export default function MyNewsPageClient({ teams, news }: Props) {
       ) : (
         <div className="divide-y divide-slate-50">
           {myNews.map((item) => (
-            <Link
+            <button
               key={item.id}
-              href={`/news/${item.slug}`}
-              className="flex items-start gap-3 px-4 py-4 active:bg-slate-50 transition-colors relative overflow-hidden"
+              onClick={() => setSelected(item)}
+              className="w-full text-left flex items-start gap-3 px-4 py-4 active:bg-slate-50 transition-colors relative overflow-hidden"
             >
               {/* カテゴリカラー左ボーダー */}
               <div
@@ -173,10 +176,12 @@ export default function MyNewsPageClient({ teams, news }: Props) {
                   d="M8.25 4.5l7.5 7.5-7.5 7.5"
                 />
               </svg>
-            </Link>
+            </button>
           ))}
         </div>
       )}
+
+      <NewsModal item={selected} onClose={() => setSelected(null)} />
     </div>
   );
 }
