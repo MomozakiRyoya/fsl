@@ -1,9 +1,6 @@
-"use client";
-
-import { useState } from "react";
+import Link from "next/link";
 import type { NewsItem, NewsCategory } from "@/lib/types/app";
 import { NEWS_CATEGORY_COLORS } from "@/lib/constants";
-import NewsModal from "@/components/news/NewsModal";
 
 const CATEGORY_BORDER: Record<string, string> = {
   結果: "#2255a0",
@@ -14,8 +11,6 @@ function categoryBorder(cat: string) {
 }
 
 export default function HomeNewsSection({ news }: { news: NewsItem[] }) {
-  const [selected, setSelected] = useState<NewsItem | null>(null);
-
   if (news.length === 0) return null;
 
   return (
@@ -23,10 +18,10 @@ export default function HomeNewsSection({ news }: { news: NewsItem[] }) {
       {/* デスクトップ */}
       <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
         {news.map((item, i) => (
-          <button
+          <Link
             key={item.id + "-grid"}
-            onClick={() => setSelected(item)}
-            className="card-native p-4 touch-active animate-spring-in relative overflow-hidden text-left w-full"
+            href={`/news/${item.slug}`}
+            className="card-native p-4 touch-active animate-spring-in relative overflow-hidden block"
             style={{ animationDelay: `${i * 60}ms` }}
           >
             <div
@@ -43,17 +38,17 @@ export default function HomeNewsSection({ news }: { news: NewsItem[] }) {
             <p className="text-sm font-semibold text-slate-900 leading-snug line-clamp-2 pl-1">
               {item.title}
             </p>
-          </button>
+          </Link>
         ))}
       </div>
 
       {/* モバイル */}
       <div className="flex flex-col gap-3 md:hidden">
         {news.map((item, i) => (
-          <button
+          <Link
             key={item.id}
-            onClick={() => setSelected(item)}
-            className="card-native p-4 touch-active relative overflow-hidden text-left w-full"
+            href={`/news/${item.slug}`}
+            className="card-native p-4 touch-active relative overflow-hidden block"
           >
             <div
               className="absolute left-0 top-0 bottom-0 w-1 rounded-l-[20px]"
@@ -69,11 +64,9 @@ export default function HomeNewsSection({ news }: { news: NewsItem[] }) {
             <p className="text-sm font-semibold text-slate-900 leading-snug line-clamp-2 pl-1">
               {item.title}
             </p>
-          </button>
+          </Link>
         ))}
       </div>
-
-      <NewsModal item={selected} onClose={() => setSelected(null)} />
     </>
   );
 }
