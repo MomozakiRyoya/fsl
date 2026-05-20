@@ -68,54 +68,51 @@ function StandingsTable({
   leagueColor: string;
   leagueId?: string;
 }) {
+  // 直近3節を動的に算出
+  const allRoundNums = new Set<number>();
+  for (const team of standings) {
+    for (const r of Object.keys(team.roundPoints)) {
+      allRoundNums.add(Number(r));
+    }
+  }
+  const lastRounds = [...allRoundNums]
+    .sort((a, b) => b - a)
+    .slice(0, 3)
+    .reverse();
+  const hasRounds = lastRounds.length > 0;
+
+  const gridStyle: React.CSSProperties = {
+    display: "grid",
+    gridTemplateColumns: hasRounds
+      ? `2rem 1fr ${lastRounds.map(() => "2.5rem").join(" ")} 3rem`
+      : "2rem 1fr 3rem",
+    gap: "0.25rem",
+  };
+
   return (
     <div className="bg-white rounded-2xl overflow-hidden shadow-native animate-spring-in">
       <div
-        className="grid grid-cols-[2rem_1fr_3rem] gap-1 px-3 py-2.5 border-b border-white/10"
-        style={{ background: "#0c1e42" }}
+        className="px-3 py-2.5 border-b border-white/10"
+        style={{ ...gridStyle, background: "#0c1e42" }}
       >
         <span className="text-[11px] font-bold text-white/50 text-center">
           #
         </span>
         <span className="text-[11px] font-bold text-white/50">チーム</span>
+        {hasRounds &&
+          lastRounds.map((r) => (
+            <span
+              key={r}
+              className="text-[11px] font-bold text-white/40 text-center"
+            >
+              R{r}
+            </span>
+          ))}
         <span className="text-[11px] font-bold text-white/50 text-right">
           合計
         </span>
       </div>
       {standings.map((team, i) => {
-        const rowContent = (
-          <>
-            <div className="flex justify-center">
-              <RankBadge rank={team.rank} />
-            </div>
-            <div className="flex items-center gap-2 min-w-0">
-              {team.teamLogoUrl ? (
-                <img
-                  src={team.teamLogoUrl}
-                  alt={team.teamName}
-                  className="w-7 h-7 rounded-full object-cover flex-shrink-0 shadow-sm"
-                />
-              ) : (
-                <div
-                  className="w-7 h-7 rounded-full flex items-center justify-center text-[9px] font-black text-white flex-shrink-0 shadow-sm"
-                  style={{ backgroundColor: leagueColor }}
-                >
-                  {getInitials(team.teamName)}
-                </div>
-              )}
-              <span className="text-sm font-semibold text-slate-900 truncate">
-                {team.teamName}
-              </span>
-            </div>
-            <span
-              className="text-sm font-black tabular-nums text-right"
-              style={{ color: team.rank <= 3 ? leagueColor : "#334155" }}
-            >
-              {team.totalPoints}
-            </span>
-          </>
-        );
-
         const isPremier = leagueId === "premier";
 
         const rowStyle: React.CSSProperties = {
@@ -142,7 +139,6 @@ function StandingsTable({
             : team.rank === 1
               ? "3px solid rgba(201,146,30,0.7)"
               : "3px solid transparent",
-          // 3位と4位の間に赤いボーダー
           borderBottom:
             isPremier && team.rank === 3
               ? "2px solid rgba(239,68,68,0.5)"
@@ -150,7 +146,57 @@ function StandingsTable({
         };
 
         const rowClass =
-          "grid grid-cols-[2rem_1fr_3rem] gap-1 px-3 py-3 items-center border-b border-slate-100 last:border-0 hover:bg-amber-50/40 transition-colors animate-spring-in";
+          "px-3 py-3 items-center border-b border-slate-100 last:border-0 hover:bg-amber-50/40 transition-colors animate-spring-in";
+
+        const rowContent = (
+          <>
+            <div className="flex justify-center">
+              <RankBadge rank={team.rank} />
+            </div>
+            <div className="flex items-center gap-2 min-w-0">
+              {team.teamLogoUrl ? (
+                <img
+                  src={team.teamLogoUrl}
+                  alt={team.teamName}
+                  className="w-7 h-7 rounded-full object-cover flex-shrink-0 shadow-sm"
+                />
+              ) : (
+                <div
+                  className="w-7 h-7 rounded-full flex items-center justify-center text-[9px] font-black text-white flex-shrink-0 shadow-sm"
+                  style={{ backgroundColor: leagueColor }}
+                >
+                  {getInitials(team.teamName)}
+                </div>
+              )}
+              <span className="text-sm font-semibold text-slate-900 truncate">
+                {team.teamName}
+              </span>
+            </div>
+            {hasRounds &&
+              lastRounds.map((r) => {
+                const pts = team.roundPoints[r];
+                return (
+                  <span
+                    key={r}
+                    className="text-xs tabular-nums text-center font-medium"
+                    style={{
+                      color: pts != null ? "#334155" : "rgba(148,163,184,0.5)",
+                    }}
+                  >
+                    {pts != null ? pts : "—"}
+                  </span>
+                );
+              })}
+            <span
+              className="text-sm font-black tabular-nums text-right"
+              style={{ color: team.rank <= 3 ? leagueColor : "#334155" }}
+            >
+              {team.totalPoints}
+            </span>
+          </>
+        );
+
+        const mergedStyle = { ...gridStyle, ...rowStyle };
 
         if (team.teamSlug) {
           return (
@@ -158,14 +204,14 @@ function StandingsTable({
               key={team.teamId}
               href={`/teams/${team.teamSlug}`}
               className={rowClass}
-              style={rowStyle}
+              style={mergedStyle}
             >
               {rowContent}
             </Link>
           );
         }
         return (
-          <div key={team.teamId} className={rowClass} style={rowStyle}>
+          <div key={team.teamId} className={rowClass} style={mergedStyle}>
             {rowContent}
           </div>
         );
