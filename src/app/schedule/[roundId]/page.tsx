@@ -21,6 +21,70 @@ function formatNum(n: number) {
   return n.toLocaleString("ja-JP");
 }
 
+interface PointTemplate {
+  name: string;
+  description: string;
+  points: { rank: number; pts: number }[];
+}
+
+function PointsTable({ template }: { template: PointTemplate }) {
+  return (
+    <section className="animate-fade-in">
+      <h2 className="text-sm font-bold text-slate-700 mb-3">獲得ポイント</h2>
+      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+        <div
+          className="px-4 py-2.5 border-b border-slate-200 flex items-center gap-2"
+          style={{ background: "#0c1e42" }}
+        >
+          <span className="text-xs font-bold text-white">
+            🏆 {template.name}
+          </span>
+        </div>
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-slate-100 bg-slate-50">
+              <th className="px-4 py-2 text-left text-xs font-semibold text-slate-500">
+                順位
+              </th>
+              <th className="px-4 py-2 text-right text-xs font-semibold text-slate-500">
+                獲得ポイント
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {template.points
+              .slice()
+              .sort((a, b) => a.rank - b.rank)
+              .map((p) => (
+                <tr
+                  key={p.rank}
+                  className="border-b border-slate-50 last:border-0 hover:bg-slate-50"
+                >
+                  <td className="px-4 py-2.5 text-slate-700 font-medium">
+                    {p.rank}位
+                  </td>
+                  <td
+                    className="px-4 py-2.5 text-right font-black"
+                    style={{ color: p.rank <= 3 ? "#c9921e" : "#0c1e42" }}
+                  >
+                    {p.pts} pt
+                  </td>
+                </tr>
+              ))}
+          </tbody>
+        </table>
+        {template.description && (
+          <div className="px-4 py-3 border-t border-slate-100 bg-amber-50/50">
+            <p className="text-xs text-slate-600 leading-relaxed whitespace-pre-wrap">
+              {template.description}
+            </p>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
 function StructureTable({ structure }: { structure: Structure }) {
   return (
     <section className="animate-fade-in">
@@ -128,11 +192,12 @@ export default async function RoundDetailPage({ params }: Props) {
 
   // ストラクチャー取得
   let structure: Structure | null = null;
+  let pointTemplate: PointTemplate | null = null;
   if (round.structureId) {
     const supabase = await createClient();
     const { data } = await supabase
       .from("structures")
-      .select("*")
+      .select("*, point_templates(*)")
       .eq("id", round.structureId)
       .single();
     if (data) {
@@ -144,6 +209,14 @@ export default async function RoundDetailPage({ params }: Props) {
         format: data.format as string,
         levels: data.levels as BlindLevel[],
       };
+      const pt = data.point_templates as Record<string, unknown> | null;
+      if (pt) {
+        pointTemplate = {
+          name: pt.name as string,
+          description: (pt.description as string) ?? "",
+          points: (pt.points as { rank: number; pts: number }[]) ?? [],
+        };
+      }
     }
   }
 
@@ -383,6 +456,11 @@ export default async function RoundDetailPage({ params }: Props) {
 
         {/* ストラクチャー */}
         {structure && <StructureTable structure={structure} />}
+
+        {/* ポイントテンプレート */}
+        {pointTemplate && pointTemplate.points.length > 0 && (
+          <PointsTable template={pointTemplate} />
+        )}
 
         {/* シェアボタン */}
         <div className="animate-fade-in animate-delay-200">
