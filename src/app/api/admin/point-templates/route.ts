@@ -11,7 +11,9 @@ function isAdmin(email: string) {
 }
 async function checkAdmin() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user || !isAdmin(user.email ?? "")) return null;
   return user;
 }
@@ -38,16 +40,19 @@ export async function GET() {
     .from("point_templates")
     .select("*")
     .order("created_at", { ascending: false });
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error)
+    return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json((data ?? []).map(rawToTemplate));
 }
 
 export async function POST(request: Request) {
   const user = await checkAdmin();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!user)
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await request.json();
-  if (!body.name) return NextResponse.json({ error: "name is required" }, { status: 400 });
+  if (!body.name)
+    return NextResponse.json({ error: "name is required" }, { status: 400 });
 
   const admin = getAdmin();
   const { data, error } = await admin
@@ -62,8 +67,12 @@ export async function POST(request: Request) {
     .single();
 
   if (error || !data)
-    return NextResponse.json({ error: error?.message ?? "作成失敗" }, { status: 500 });
+    return NextResponse.json(
+      { error: error?.message ?? "作成失敗" },
+      { status: 500 },
+    );
 
   revalidatePath("/schedule");
+  revalidatePath("/admin/point-templates");
   return NextResponse.json(rawToTemplate(data as Record<string, unknown>));
 }

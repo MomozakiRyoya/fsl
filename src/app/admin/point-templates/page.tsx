@@ -1,6 +1,8 @@
 import { createClient as createAdmin } from "@supabase/supabase-js";
 import PointTemplatesAdminClient from "./PointTemplatesAdminClient";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminPointTemplatesPage() {
   const admin = createAdmin(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
