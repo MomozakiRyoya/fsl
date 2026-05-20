@@ -105,7 +105,7 @@ function StandingsTable({
               key={r}
               className="text-[11px] font-bold text-white/40 text-center"
             >
-              R{r}
+              {r}節
             </span>
           ))}
         <span className="text-[11px] font-bold text-white/50 text-right">
