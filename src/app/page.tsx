@@ -7,14 +7,13 @@ import {
   getRounds,
   getTeams,
 } from "@/lib/data";
-import { NEWS_CATEGORY_COLORS } from "@/lib/constants";
-import type { NewsCategory } from "@/lib/types/app";
 import AutoScroll from "@/components/ui/AutoScroll";
 import { getLatestYouTubeVideo } from "@/lib/youtube";
 import CountUp from "@/components/ui/CountUp";
 import ScrollReveal from "@/components/ui/ScrollReveal";
 import MyTeamsSection from "@/components/home/MyTeamsSection";
 import TopScorers from "@/components/home/TopScorers";
+import HomeNewsSection from "@/components/home/HomeNewsSection";
 import MatchCountdown from "@/components/home/MatchCountdown";
 import SponsorBanner from "@/components/home/SponsorBanner";
 import StandingsSection from "@/components/home/StandingsSection";
@@ -266,80 +265,7 @@ export default async function HomePage() {
             <div className="flex items-center justify-between mb-3">
               <p className="section-title">ニュース</p>
             </div>
-            <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
-              {news.map((item, i) => (
-                <div
-                  key={item.id + "-grid"}
-                  className="card-native p-4 touch-active animate-spring-in relative overflow-hidden"
-                  style={{ animationDelay: `${i * 60}ms` }}
-                >
-                  {/* カテゴリカラー左ボーダー */}
-                  <div
-                    className="absolute left-0 top-0 bottom-0 w-1 rounded-l-[20px]"
-                    style={{
-                      background:
-                        item.category === "結果"
-                          ? "#2255a0"
-                          : item.category === "イベント"
-                            ? "#c9921e"
-                            : "#10b981",
-                    }}
-                  />
-                  <div className="flex items-center gap-2 mb-2 pl-1">
-                    <span
-                      className={`pill ${NEWS_CATEGORY_COLORS[item.category as NewsCategory]}`}
-                    >
-                      {item.category}
-                    </span>
-                    {i < 2 && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0" />
-                    )}
-                    <span className="text-xs text-slate-400 ml-auto">
-                      {item.publishedAt}
-                    </span>
-                  </div>
-                  <p className="text-sm font-semibold text-slate-900 leading-snug line-clamp-2 pl-1">
-                    {item.title}
-                  </p>
-                </div>
-              ))}
-            </div>
-            <div className="flex flex-col gap-3 md:hidden">
-              {news.map((item, i) => (
-                <div
-                  key={item.id}
-                  className="card-native p-4 touch-active relative overflow-hidden"
-                >
-                  <div
-                    className="absolute left-0 top-0 bottom-0 w-1 rounded-l-[20px]"
-                    style={{
-                      background:
-                        item.category === "結果"
-                          ? "#2255a0"
-                          : item.category === "イベント"
-                            ? "#c9921e"
-                            : "#10b981",
-                    }}
-                  />
-                  <div className="flex items-center gap-2 mb-2 pl-1">
-                    <span
-                      className={`pill ${NEWS_CATEGORY_COLORS[item.category as NewsCategory]}`}
-                    >
-                      {item.category}
-                    </span>
-                    {i < 2 && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0" />
-                    )}
-                    <span className="text-xs text-slate-400 ml-auto">
-                      {item.publishedAt}
-                    </span>
-                  </div>
-                  <p className="text-sm font-semibold text-slate-900 leading-snug line-clamp-2 pl-1">
-                    {item.title}
-                  </p>
-                </div>
-              ))}
-            </div>
+            <HomeNewsSection news={news} />
           </section>
         </ScrollReveal>
 
