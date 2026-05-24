@@ -1,9 +1,43 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+
+const ADMIN_MANIFEST = "/admin/manifest.webmanifest";
+const ADMIN_THEME_COLOR = "#0c1e42";
+
+function useAdminPwaManifest(active: boolean) {
+  useEffect(() => {
+    if (!active) return;
+    const linkEl = document.querySelector<HTMLLinkElement>(
+      'link[rel="manifest"]',
+    );
+    const themeEl = document.querySelector<HTMLMetaElement>(
+      'meta[name="theme-color"]',
+    );
+    const titleEl = document.querySelector<HTMLMetaElement>(
+      'meta[name="apple-mobile-web-app-title"]',
+    );
+    const originalManifest = linkEl?.getAttribute("href") ?? null;
+    const originalTheme = themeEl?.getAttribute("content") ?? null;
+    const originalTitle = titleEl?.getAttribute("content") ?? null;
+
+    if (linkEl) linkEl.setAttribute("href", ADMIN_MANIFEST);
+    if (themeEl) themeEl.setAttribute("content", ADMIN_THEME_COLOR);
+    if (titleEl) titleEl.setAttribute("content", "FSL Admin");
+
+    return () => {
+      if (linkEl && originalManifest)
+        linkEl.setAttribute("href", originalManifest);
+      if (themeEl && originalTheme)
+        themeEl.setAttribute("content", originalTheme);
+      if (titleEl && originalTitle)
+        titleEl.setAttribute("content", originalTitle);
+    };
+  }, [active]);
+}
 
 const NAV = [
   { href: "/admin/roster", label: "出場選手", icon: "📋" },
@@ -81,6 +115,9 @@ export default function AdminLayout({
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
+
+  // 管理画面では PWA を「FSL Admin」として別アプリ扱いで表示する
+  useAdminPwaManifest(pathname.startsWith("/admin"));
 
   const handleLogout = async () => {
     const supabase = createClient();
