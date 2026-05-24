@@ -48,13 +48,19 @@ export async function POST(request: Request) {
 
   const admin = getAdmin();
 
-  // 既存の選手結果を削除してから再登録
-  const { error: delError } = await admin
-    .from("player_results")
-    .delete()
-    .eq("round_id", roundId);
-  if (delError)
-    return NextResponse.json({ error: delError.message }, { status: 500 });
+  // 保存対象チーム分の既存データだけ削除して再登録（他チームは保護）
+  const teamIds = Array.from(
+    new Set(players.map((p) => p.teamId).filter(Boolean)),
+  );
+  if (teamIds.length > 0) {
+    const { error: delError } = await admin
+      .from("player_results")
+      .delete()
+      .eq("round_id", roundId)
+      .in("team_id", teamIds);
+    if (delError)
+      return NextResponse.json({ error: delError.message }, { status: 500 });
+  }
 
   const rows = players.map((p) => ({
     round_id: roundId,
