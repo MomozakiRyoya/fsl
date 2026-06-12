@@ -418,7 +418,7 @@ export default function StandingsDownloadClient({ leagues, standings }: Props) {
             <img
               src={previewUrl}
               alt="順位表プレビュー"
-              className="w-full rounded-lg"
+              className="w-64 rounded-lg"
               style={{ imageRendering: "auto" }}
             />
           </div>
