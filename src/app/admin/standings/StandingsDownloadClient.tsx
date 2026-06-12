@@ -15,6 +15,9 @@ const CANVAS_WIDTH = 750;
 const ROW_HEIGHT = 64;
 const HEADER_HEIGHT = 120;
 const FOOTER_HEIGHT = 40;
+const POINTS_X = 500; // ポイント列の右揃え基準X座標
+const TEAM_NAME_X = 132; // チーム名の描画開始X座標
+const TEAM_NAME_MAX_W = POINTS_X - TEAM_NAME_X - 20; // チーム名の最大描画幅
 
 function rankColor(rank: number): string {
   if (rank === 1) return "#c9921e";
@@ -108,7 +111,7 @@ async function drawStandingsToCanvas(
   ctx.textAlign = "left";
   ctx.fillText("チーム", 110, tableTop + 23);
   ctx.textAlign = "right";
-  ctx.fillText("TOTAL PT", CANVAS_WIDTH - 36, tableTop + 23);
+  ctx.fillText("TOTAL PT", POINTS_X, tableTop + 23);
   ctx.textAlign = "left";
 
   // --- ロゴ画像を並列プリロード ---
@@ -233,22 +236,23 @@ async function drawStandingsToCanvas(
     // チーム名
     ctx.font = `${team.rank <= 3 ? "bold" : "normal"} 16px 'Helvetica Neue', Arial, sans-serif`;
     ctx.fillStyle = team.rank === 1 ? "#f0c55a" : "#e2e8f0";
-    ctx.fillText(team.teamName, 132, y + ROW_HEIGHT / 2 + 6);
+    ctx.fillText(
+      team.teamName,
+      TEAM_NAME_X,
+      y + ROW_HEIGHT / 2 + 6,
+      TEAM_NAME_MAX_W,
+    );
 
     // ポイント
     ctx.font = "bold 20px 'Helvetica Neue', Arial, sans-serif";
     ctx.fillStyle = team.rank <= 3 ? rankColor(team.rank) : "#94a3b8";
     ctx.textAlign = "right";
-    ctx.fillText(
-      String(team.totalPoints),
-      CANVAS_WIDTH - 36,
-      y + ROW_HEIGHT / 2 + 7,
-    );
+    ctx.fillText(String(team.totalPoints), POINTS_X, y + ROW_HEIGHT / 2 + 7);
 
     // "PT" ラベル
     ctx.font = "10px 'Helvetica Neue', Arial, sans-serif";
     ctx.fillStyle = "rgba(255,255,255,0.25)";
-    ctx.fillText("PT", CANVAS_WIDTH - 36, y + ROW_HEIGHT / 2 + 19);
+    ctx.fillText("PT", POINTS_X, y + ROW_HEIGHT / 2 + 19);
     ctx.textAlign = "left";
   }
 
