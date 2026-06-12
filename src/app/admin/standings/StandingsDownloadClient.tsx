@@ -412,7 +412,7 @@ export default function StandingsDownloadClient({ leagues, standings }: Props) {
         >
           <div className="px-4 py-3 border-b border-white/8 flex items-center justify-between">
             <p className="text-xs font-semibold text-white/60">プレビュー</p>
-            <p className="text-xs text-white/30">750px 幅</p>
+            <p className="text-xs text-white/30">{CANVAS_WIDTH}px 幅</p>
           </div>
           <div className="p-4">
             <img
