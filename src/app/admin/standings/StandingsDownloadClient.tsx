@@ -11,13 +11,13 @@ const LEAGUE_SHORT: Record<string, string> = {
   club: "クローバーリーグ",
 };
 
-const CANVAS_WIDTH = 750;
+const CANVAS_WIDTH = 540;
 const ROW_HEIGHT = 64;
 const HEADER_HEIGHT = 120;
 const FOOTER_HEIGHT = 40;
-const POINTS_X = 500; // ポイント列の右揃え基準X座標
+const POINTS_X = 390; // ポイント列の右揃え基準X座標
 const TEAM_NAME_X = 132; // チーム名の描画開始X座標
-const TEAM_NAME_MAX_W = POINTS_X - TEAM_NAME_X - 20; // チーム名の最大描画幅
+const TEAM_NAME_MAX_W = POINTS_X - TEAM_NAME_X - 16; // チーム名の最大描画幅
 
 function rankColor(rank: number): string {
   if (rank === 1) return "#c9921e";
