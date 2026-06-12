@@ -11,11 +11,11 @@ const LEAGUE_SHORT: Record<string, string> = {
   club: "クローバーリーグ",
 };
 
-const CANVAS_WIDTH = 540;
+const CANVAS_WIDTH = 420;
 const ROW_HEIGHT = 64;
 const HEADER_HEIGHT = 120;
 const FOOTER_HEIGHT = 24;
-const POINTS_X = 390; // ポイント列の右揃え基準X座標
+const POINTS_X = CANVAS_WIDTH - 40; // ポイント列の右揃え基準X座標（右端から40px）
 const TEAM_NAME_X = 132; // チーム名の描画開始X座標
 const TEAM_NAME_MAX_W = POINTS_X - TEAM_NAME_X - 16; // チーム名の最大描画幅
 
