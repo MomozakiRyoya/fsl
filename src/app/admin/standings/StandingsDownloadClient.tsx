@@ -14,7 +14,7 @@ const LEAGUE_SHORT: Record<string, string> = {
 const CANVAS_WIDTH = 540;
 const ROW_HEIGHT = 64;
 const HEADER_HEIGHT = 120;
-const FOOTER_HEIGHT = 40;
+const FOOTER_HEIGHT = 24;
 const POINTS_X = 390; // ポイント列の右揃え基準X座標
 const TEAM_NAME_X = 132; // チーム名の描画開始X座標
 const TEAM_NAME_MAX_W = POINTS_X - TEAM_NAME_X - 16; // チーム名の最大描画幅
@@ -43,7 +43,7 @@ async function drawStandingsToCanvas(
   leagueColor: string,
 ): Promise<void> {
   const canvasHeight =
-    HEADER_HEIGHT + ROW_HEIGHT * standings.length + FOOTER_HEIGHT + 24;
+    HEADER_HEIGHT + ROW_HEIGHT * standings.length + FOOTER_HEIGHT + 8;
   canvas.width = CANVAS_WIDTH;
   canvas.height = canvasHeight;
 
