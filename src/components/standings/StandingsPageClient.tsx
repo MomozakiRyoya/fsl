@@ -267,9 +267,6 @@ export default function StandingsPageClient({ leagues, standings }: Props) {
         <h1 className="text-2xl font-black text-white tracking-tight">
           LEAGUE STANDINGS
         </h1>
-        <p className="text-xs text-white/50 mt-1">
-          福岡スーパーリーグ 第1シーズン
-        </p>
       </div>
 
       <div className="px-4 py-4">
