@@ -1,142 +1,173 @@
-'use client'
+"use client";
+
+import {
+  X_END,
+  X_START,
+  chartHeight,
+  rankY,
+  roundX,
+  showRoundLabel,
+} from "./rank-chart-layout";
 
 interface TeamRankHistory {
-  teamId: string
-  teamName: string
-  color: string
-  ranks: number[] // ラウンドごとの順位 [R1rank, R2rank, R3rank, R4rank]
+  teamId: string;
+  teamName: string;
+  color: string;
+  ranks: number[]; // ラウンドごとの順位 [R1rank, R2rank, R3rank, R4rank]
 }
 
 interface Props {
-  leagueId: string
-  teams: TeamRankHistory[]
-  rounds: number[]
+  leagueId: string;
+  teams: TeamRankHistory[];
+  rounds: number[];
+  /** 色を付けて前に出すチーム。ほかのチームは薄い線だけで描く */
+  focusTeamId: string;
 }
 
-export default function RankChart({ teams, rounds }: Props) {
-  const totalTeams = 8
-  const width = 280
-  const height = 160
-  const paddingLeft = 28
-  const paddingRight = 12
-  const paddingTop = 12
-  const paddingBottom = 24
+/** プレーオフ進出ライン（2 位と 3 位の間） */
+const PLAYOFF_LINE = 2.5;
 
-  const innerWidth = width - paddingLeft - paddingRight
-  const innerHeight = height - paddingTop - paddingBottom
-
-  // x座標: ラウンドインデックス → ピクセル
-  const xForRound = (i: number) =>
-    paddingLeft + (i / (rounds.length - 1)) * innerWidth
-
-  // y座標: 順位 → ピクセル（1位が上）
-  const yForRank = (rank: number) =>
-    paddingTop + ((rank - 1) / (totalTeams - 1)) * innerHeight
-
-  // ポリライン用のポイント文字列
-  const toPoints = (ranks: number[]) =>
-    ranks
-      .map((rank, i) => `${xForRound(i)},${yForRank(rank)}`)
-      .join(' ')
+// 線・段・文字は currentColor（text-slate-500）で描き、ダークでは .dark .text-slate-500 の色に替わる
+export default function RankChart({ teams, rounds, focusTeamId }: Props) {
+  const totalTeams = Math.max(2, teams.length);
+  const height = chartHeight(totalTeams);
+  const x = (i: number) => `${roundX(i, rounds.length)}%`;
+  const focus = teams.find((t) => t.teamId === focusTeamId);
+  // 自チームを最後に描いて、ほかのチームの線より上に出す
+  const ordered = [
+    ...teams.filter((t) => t !== focus),
+    ...(focus ? [focus] : []),
+  ];
+  const label = focus
+    ? `${focus.teamName}の順位推移（${rounds
+        .map((r, i) => `R${r} ${focus.ranks[i]}位`)
+        .join("、")}）`
+    : "順位推移グラフ";
 
   return (
-    <div className="bg-white rounded-xl border border-[#e8dfc0] p-4 overflow-hidden">
-      <h3 className="text-xs font-bold text-slate-700 mb-3">順位推移</h3>
-      <div className="overflow-x-auto">
-        <svg
-          width={width}
-          height={height}
-          className="block"
-          role="img"
-          aria-label="順位推移グラフ"
-        >
-          {/* グリッドライン（各順位） */}
-          {Array.from({ length: totalTeams }, (_, i) => i + 1).map((rank) => (
-            <g key={rank}>
-              <line
-                x1={paddingLeft}
-                y1={yForRank(rank)}
-                x2={width - paddingRight}
-                y2={yForRank(rank)}
-                stroke={rank <= 2 ? 'rgba(201,146,30,0.15)' : rank >= 7 ? 'rgba(239,68,68,0.1)' : '#f1f5f9'}
-                strokeWidth={1}
-              />
-              <text
-                x={paddingLeft - 4}
-                y={yForRank(rank) + 4}
-                textAnchor="end"
-                fontSize={8}
-                fill="#94a3b8"
-              >
-                {rank}
-              </text>
-            </g>
-          ))}
+    <div className="card-native p-4">
+      <svg
+        width="100%"
+        height={height}
+        className="block text-slate-500"
+        role="img"
+        aria-label={label}
+      >
+        {/* 順位の段 */}
+        {Array.from({ length: totalTeams }, (_, i) => i + 1).map((rank) => (
+          <g key={rank}>
+            <line
+              x1={`${X_START - 2}%`}
+              x2={`${X_END + 2}%`}
+              y1={rankY(rank)}
+              y2={rankY(rank)}
+              stroke="currentColor"
+              strokeOpacity={0.15}
+            />
+            <text
+              x={`${X_START - 4}%`}
+              y={rankY(rank)}
+              dy="0.35em"
+              textAnchor="end"
+              fontSize={10}
+              fill="currentColor"
+            >
+              {rank}
+            </text>
+          </g>
+        ))}
 
-          {/* ラウンドラベル */}
-          {rounds.map((r, i) => (
+        {/* 節のラベル。多いときは間引く */}
+        {rounds.map((r, i) =>
+          showRoundLabel(i, rounds.length) ? (
             <text
               key={r}
-              x={xForRound(i)}
-              y={height - 4}
+              x={x(i)}
+              y={height - 6}
               textAnchor="middle"
-              fontSize={9}
-              fill="#94a3b8"
+              fontSize={10}
+              fill="currentColor"
             >
               R{r}
             </text>
-          ))}
+          ) : null,
+        )}
 
-          {/* 各チームのライン */}
-          {teams.map((team) => (
-            <g key={team.teamId}>
-              <polyline
-                points={toPoints(team.ranks)}
-                fill="none"
-                stroke={team.color}
-                strokeWidth={2}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                opacity={0.85}
-              />
-              {/* ドット */}
-              {team.ranks.map((rank, i) => (
-                <circle
+        {totalTeams > PLAYOFF_LINE && (
+          <line
+            x1={`${X_START - 2}%`}
+            x2={`${X_END + 2}%`}
+            y1={rankY(PLAYOFF_LINE)}
+            y2={rankY(PLAYOFF_LINE)}
+            stroke="currentColor"
+            strokeOpacity={0.7}
+            strokeDasharray="4 3"
+          />
+        )}
+
+        {/* 各チームの線。区間ごとに引く（% の座標は polyline の points に書けない） */}
+        {ordered.map((team) => {
+          const isFocus = team === focus;
+          return (
+            <g
+              key={team.teamId}
+              stroke={isFocus ? team.color : "currentColor"}
+              strokeOpacity={isFocus ? 1 : 0.3}
+              strokeWidth={isFocus ? 2.5 : 1.5}
+              strokeLinecap="round"
+            >
+              {team.ranks.slice(1).map((rank, i) => (
+                <line
                   key={i}
-                  cx={xForRound(i)}
-                  cy={yForRank(rank)}
-                  r={3}
-                  fill={team.color}
-                  stroke="white"
-                  strokeWidth={1.5}
+                  x1={x(i)}
+                  y1={rankY(team.ranks[i])}
+                  x2={x(i + 1)}
+                  y2={rankY(rank)}
                 />
               ))}
+              {isFocus &&
+                team.ranks.map((rank, i) => (
+                  <circle
+                    key={i}
+                    cx={x(i)}
+                    cy={rankY(rank)}
+                    r={3.5}
+                    fill={team.color}
+                    stroke="none"
+                  />
+                ))}
             </g>
-          ))}
+          );
+        })}
+      </svg>
 
-          {/* プレーオフ進出ライン */}
-          <line
-            x1={paddingLeft}
-            y1={yForRank(2.5)}
-            x2={width - paddingRight}
-            y2={yForRank(2.5)}
-            stroke="rgba(201,146,30,0.4)"
-            strokeWidth={1}
-            strokeDasharray="4,3"
-          />
-          <text x={width - paddingRight + 2} y={yForRank(2.5) + 3} fontSize={7} fill="rgba(201,146,30,0.8)">PO</text>
-        </svg>
-      </div>
-
-      {/* 凡例 */}
-      <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
-        {teams.map((team) => (
-          <div key={team.teamId} className="flex items-center gap-1">
-            <span className="w-4 h-0.5 rounded-full flex-shrink-0" style={{ background: team.color }} />
-            <span className="text-[10px] text-slate-500 truncate max-w-[6rem]">{team.teamName}</span>
-          </div>
-        ))}
-      </div>
+      <ul className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11px] leading-none text-slate-500">
+        {focus && (
+          <li className="flex min-w-0 items-center gap-1.5">
+            <span
+              aria-hidden="true"
+              className="h-[3px] w-4 flex-shrink-0 rounded-full"
+              style={{ background: focus.color }}
+            />
+            <span className="truncate font-bold text-slate-700">
+              {focus.teamName}
+            </span>
+          </li>
+        )}
+        <li className="flex items-center gap-1.5">
+          <span aria-hidden="true" className="h-px w-4 bg-current opacity-40" />
+          ほかのチーム
+        </li>
+        {totalTeams > PLAYOFF_LINE && (
+          <li className="flex items-center gap-1.5">
+            <span
+              aria-hidden="true"
+              className="w-4 border-t border-dashed border-current"
+            />
+            PO ライン
+          </li>
+        )}
+      </ul>
     </div>
-  )
+  );
 }

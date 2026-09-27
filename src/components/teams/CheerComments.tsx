@@ -81,16 +81,16 @@ export default function CheerComments({ teamId, teamName }: Props) {
   if (!mounted) return null
 
   return (
-    <section>
-      <h2 className="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
-        <span className="w-1 h-4 rounded-full inline-block" style={{ background: 'linear-gradient(180deg, #c9921e, #e3c060)' }} />
-        応援メッセージ
-        <span className="text-xs font-normal text-slate-400">({comments.length}件)</span>
-      </h2>
+    <>
+      <div className="section-head">
+        <h2 className="section-title">応援メッセージ</h2>
+        {/* 地の色の上に載るので slate-500 では薄すぎる（4.5 に届かない） */}
+        <span className="text-xs tabular-nums text-slate-700">{comments.length}件</span>
+      </div>
 
       {/* 投稿フォーム */}
-      <div className="bg-white rounded-xl border border-[#e8dfc0] p-4 mb-3">
-        <p className="text-xs font-medium text-slate-700 mb-2">{teamName} へ応援メッセージ</p>
+      <div className="card-native p-4 mb-3">
+        <p className="text-xs font-bold text-slate-700 mb-2">{teamName} へ応援メッセージ</p>
         <input
           type="text"
           value={nickname}
@@ -110,16 +110,16 @@ export default function CheerComments({ teamId, teamName }: Props) {
           style={{ '--tw-ring-color': 'rgba(201,146,30,0.4)' } as React.CSSProperties}
         />
         <div className="flex items-center justify-between">
-          <span className="text-xs text-slate-400">{text.length}/100</span>
+          <span className="text-xs text-slate-500 tabular-nums">{text.length}/100</span>
           <button
+            type="button"
             onClick={handleSubmit}
             disabled={!text.trim()}
-            className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-sm font-medium transition-all active:scale-95 disabled:opacity-40"
-            style={{ background: 'linear-gradient(135deg, #c9921e, #e3c060)', color: '#0c1e42' }}
+            className="touch-active inline-flex items-center gap-1.5 h-9 px-4 rounded-lg text-sm font-bold bg-butter text-on-block disabled:opacity-40"
           >
             {submitted ? (
               <>
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                 </svg>
                 送信済み
@@ -131,30 +131,32 @@ export default function CheerComments({ teamId, teamName }: Props) {
 
       {/* コメント一覧 */}
       {comments.length > 0 ? (
-        <div className="space-y-2">
-          {comments.slice(0, 5).map((comment, i) => (
-            <div
-              key={comment.id}
-              className="bg-white rounded-xl border border-[#e8dfc0] px-4 py-3 animate-slide-up"
-              style={{ animationDelay: `${i * 50}ms` }}
-            >
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-xs font-semibold text-slate-700">{comment.nickname}</span>
-                <span className="text-[10px] text-slate-400">{comment.createdAt}</span>
-              </div>
-              <p className="text-sm text-body leading-relaxed">{comment.text}</p>
-            </div>
-          ))}
+        <>
+          <ul className="space-y-2">
+            {comments.slice(0, 5).map((comment, i) => (
+              <li
+                key={comment.id}
+                className="card-native px-4 py-3 animate-slide-up"
+                style={{ animationDelay: `${i * 50}ms` }}
+              >
+                <div className="flex items-center justify-between gap-3 mb-1">
+                  <span className="min-w-0 truncate text-xs font-bold text-slate-700">{comment.nickname}</span>
+                  <span className="flex-shrink-0 text-[11px] tabular-nums text-slate-500">{comment.createdAt}</span>
+                </div>
+                <p className="text-sm text-slate-700 leading-relaxed [word-break:keep-all] break-words">{comment.text}</p>
+              </li>
+            ))}
+          </ul>
           {comments.length > 5 && (
-            <p className="text-xs text-center text-slate-400 py-1">他 {comments.length - 5} 件</p>
+            <p className="text-xs text-center text-slate-700 pt-3">他 {comments.length - 5} 件</p>
           )}
-        </div>
+        </>
       ) : (
-        <div className="bg-gray-50 rounded-xl border border-[#e8dfc0] p-6 text-center">
-          <p className="text-sm text-slate-400">まだメッセージがありません</p>
-          <p className="text-xs text-slate-300 mt-0.5">最初の応援メッセージを送ろう！</p>
+        <div className="card-native p-6 text-center">
+          <p className="text-sm text-slate-700">まだメッセージがありません</p>
+          <p className="text-xs text-slate-500 mt-1">最初の応援メッセージを送ろう</p>
         </div>
       )}
-    </section>
+    </>
   )
 }

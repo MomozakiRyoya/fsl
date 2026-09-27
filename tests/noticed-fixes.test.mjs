@@ -38,9 +38,10 @@ test("フォローボタン: 文字の★を使わず、読み込み前も高さ
   assert.doesNotMatch(src, /boxShadow|shadow-/);
   // フォロー中は順位表の 1 位・次節と同じ butter の面
   assert.match(src, /\bbg-butter text-on-block\b/);
-  // ink は文字色の決めでダークでは明るくなる。面に使うと白い文字が薄灰の上に載って読めない
-  assert.match(src, /bg-\[#0c1e42\] text-white/);
-  assert.doesNotMatch(src, /\bbg-ink\b/);
+  // フォロー前は紺の帯の上に置くので白の面に紺の文字。色は直に書く
+  // （ink は文字色の決めでダークでは明るくなる。紺の文字が白地の上で薄灰になって読めない）
+  assert.match(src, /bg-white text-\[#0c1e42\]/);
+  assert.doesNotMatch(src, /\b(bg|text)-ink\b/);
   assert.match(src, /aria-hidden="true"/, "ハートのアイコンが読み上げに乗る");
 });
 
