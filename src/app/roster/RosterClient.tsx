@@ -186,7 +186,7 @@ export default function RosterClient({ myTeam, leagues, teams, rounds }: Props) 
       </div>
 
       {toast && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 px-5 py-3 rounded-xl text-sm font-semibold text-white shadow-lg z-50"
+        <div className="fixed bottom-[calc(var(--fsl-tabbar-space)_+_1rem)] left-1/2 -translate-x-1/2 px-5 py-3 rounded-xl text-sm font-semibold text-white shadow-lg z-50"
           style={{ background: "#0c1e42", border: "1px solid rgba(255,255,255,0.1)" }}>
           {toast}
         </div>

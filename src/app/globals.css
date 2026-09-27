@@ -464,3 +464,288 @@ html { scroll-behavior: smooth; }
   50%       { text-shadow: 0 0 12px rgba(201,146,30,0.6); }
 }
 .animate-number-glow { animation: numberGlow 1.5s ease-in-out; }
+
+/* ===== 下部タブバー（浮いたガラスのピル） ===== */
+/* FST のタブバーと同じ作り。画面の端から離して浮かせた板をガラスにし、
+   現在地の印を 1 枚だけ隣へ滑らせる（BottomNav.tsx）。
+   このファイルは @layer を使っていないので、ここに書いた値は Tailwind の
+   ユーティリティより強い。表示の切り替え（lg:hidden）・重なり（z-50）・
+   幅と中央寄せ（mx-auto max-w-lg）は JSX 側に残し、ここでは持たない。
+   約束事は tests/tabbar-glass.test.mjs が縛っている。 */
+:root {
+  /* 板を画面の左右と下から離す余白。この余白ごしに背後が見えることで浮いて見える。 */
+  --fsl-tabbar-inset: 0.625rem;
+  /* 板の丈ぶんの逃げ場。内訳はタブ本体（.fsl-tabbar-link の min-height）
+     ＋板の内側の余白（上下 0.25rem）＋縁（上下 1px）＋下の余白＋ホームバー。
+     本文・チャット・モーダル・トーストはこの 1 つを読む。58px のような
+     決め打ちを各所に書くと、板の寸法を変えたときに 1 か所だけ取り残される。 */
+  --fsl-tabbar-space: calc(
+    3.5rem + 0.5rem + 2px + var(--fsl-tabbar-inset) +
+      env(safe-area-inset-bottom, 0px)
+  );
+  /* ガラスが効かない環境と「透明度を下げる」を選んだ人に返す不透明の面。
+     ダークのカード（.dark .card-native）と同じ紺。 */
+  --fsl-tabbar-panel: #0f1a35;
+  /* ガラスは明暗どちらのテーマでも紺で通す。明るい地（#f5f3ee）に白っぽい
+     ガラスを載せても地と区別が付かず、板が浮かない。元のフッターも
+     上のヘッダーも紺なので、画面の上下で色の並びも変わらない。 */
+  --fsl-glass: rgba(10, 15, 35, 0.6);
+  --fsl-glass-blur: 14px;
+  /* 背後を半分の明るさに落としてから紺を重ねる。背後が真っ白でも
+     タブの文字が 4.5:1 を切らない濃さはここで決まる。 */
+  --fsl-glass-brightness: 0.5;
+  /* 金の細い縁。暗い地（#0a0f1e）では紺の板が地に溶けるので、形は縁で見せる。
+     0.5 では地との差が 2.5:1 しか取れず、3:1 に届く 0.6 にしてある。 */
+  --fsl-glass-rim: rgba(201, 146, 30, 0.6);
+  /* 厚みは上辺に乗る 1px の光と、それを面へ落とす光沢で出す。
+     光沢を 0.05 まで上げると、背後が白いときに文字が 4.5:1 を切る。 */
+  --fsl-glass-sheen: rgba(255, 255, 255, 0.2);
+  --fsl-glass-gloss: rgba(255, 255, 255, 0.02);
+  /* 明るい地から板を持ち上げる影。 */
+  --fsl-glass-shadow: 0 8px 24px rgba(10, 15, 35, 0.22);
+  --fsl-tab-active: rgba(201, 146, 30, 0.18);
+  /* 現在地は --gold-light と同じ金（元のフッターと同じ）。--gold（#c9921e）では
+     紺のガラスの上で 4.5:1 に届かない。ほかのタブは元の白 38% では
+     3:1 台しか取れなかったので、読める濃さまで上げてある。 */
+  --fsl-tab-current: #e3c060;
+  --fsl-tab-idle: #aab4c3;
+  --fsl-dur-tab: 0.22s;
+  --fsl-ease-deal: cubic-bezier(0.16, 0.84, 0.28, 1);
+}
+
+/* 板を置くための入れ物。面は持たない。左右と下に余白を作り、その余白ごしに
+   背後が見えることで板が浮いて見える。下端いっぱいの帯のままだと、どれだけ
+   ぼかしても地の色の帯と区別が付かない。
+   iOS のホームバーの下に潜り込ませない（未対応なら 0）。 */
+.fsl-tabbar {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  padding: 0 var(--fsl-tabbar-inset)
+    calc(env(safe-area-inset-bottom, 0px) + var(--fsl-tabbar-inset));
+  /* 余白は押せない。ここを通した押下は背後の本文へ届かせる。 */
+  pointer-events: none;
+}
+
+/* ガラスの板そのもの。全周が丸い。
+   ここは素の面で、ぼかしに対応していないブラウザではここで止まる。
+   半透明のまま残すと背後の本文が透けて文字と重なるので、必ず不透明にする。
+   ガラスは下の @supports が後から上書きする。 */
+.fsl-tabbar-panel {
+  position: relative;
+  padding: 0.25rem;
+  border: 1px solid var(--fsl-glass-rim);
+  border-radius: 9999px;
+  background-color: var(--fsl-tabbar-panel);
+  box-shadow: var(--fsl-glass-shadow);
+  pointer-events: auto;
+}
+
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .fsl-tabbar-panel {
+    background-color: var(--fsl-glass);
+    /* 上辺の光を面へ落とす。1px の光だけだと線にしか見えず、板の厚みが消える。
+       58% より下は素通しにして、透けている面であることを残す。 */
+    background-image: linear-gradient(
+      to bottom,
+      var(--fsl-glass-gloss),
+      transparent 58%
+    );
+    /* Safari には接頭辞つきしか解釈しない版がある。アプリ（iOS）で見る人が
+       多いので、これを落とすと当のガラスが本番でだけ効かない。
+       彩度は素通し（100%）。上げると背後の写真やバナーの色が増幅されて板に乗り、
+       下げると板の下を通った色が灰色に寄って、通ったことが分からなくなる。 */
+    -webkit-backdrop-filter: blur(var(--fsl-glass-blur)) saturate(100%)
+      brightness(var(--fsl-glass-brightness));
+    backdrop-filter: blur(var(--fsl-glass-blur)) saturate(100%)
+      brightness(var(--fsl-glass-brightness));
+    box-shadow: inset 0 1px 0 var(--fsl-glass-sheen), var(--fsl-glass-shadow);
+  }
+}
+
+/* OS で「透明度を下げる」を選んでいる人。ぼかしごと外して不透明の面に戻す。
+   @supports の中より後に置いて上書きする（詳細度が同じなので順序で決まる）。
+   影は残す。FST と違ってこちらは明るい地の上にも置くので、影を外すと
+   板が地に張り付いて見える。 */
+@media (prefers-reduced-transparency: reduce) {
+  .fsl-tabbar-panel {
+    background-color: var(--fsl-tabbar-panel);
+    background-image: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    box-shadow: var(--fsl-glass-shadow);
+  }
+}
+
+/* position: relative は、現在地の面（絶対配置で DOM では先に置く）より
+   上に文字とアイコンを重ねるため。外すと面が文字の上に乗る。 */
+.fsl-tabbar-link {
+  position: relative;
+  display: flex;
+  min-height: 3.5rem;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  padding-block: 0.375rem;
+  border-radius: 9999px;
+  color: var(--fsl-tab-idle);
+  transition: color 0.2s ease, transform 0.12s ease;
+}
+
+/* 現在地の面は .fsl-tabbar-indicator が持つので、ここは文字とアイコンの色だけ。 */
+.fsl-tabbar-link[aria-current="page"] {
+  color: var(--fsl-tab-current);
+}
+
+/* 触れている間の返しも色で出す。指で触る端末では :hover が押した後まで
+   残り、別のタブが現在地に見えるので、マウスのある環境に限る。 */
+@media (hover: hover) {
+  .fsl-tabbar-link:hover {
+    color: var(--fsl-tab-current);
+  }
+}
+
+/* キーボードで移ってきたときの印。板の内側に引く（外に出すと縁と重なる）。 */
+.fsl-tabbar-link:focus-visible {
+  color: var(--fsl-tab-current);
+  outline: 2px solid var(--fsl-tab-current);
+  outline-offset: -2px;
+}
+
+/* 押した手応え。元のフッターの active:scale-90 を少し控えめにして引き継ぐ。 */
+.fsl-tabbar-link:active {
+  transform: scale(0.92);
+}
+
+/* ラベルは 1 行に収める。1 タブの取り分は
+   (画面幅 − 左右の余白・縁・板の内側の余白 30px) / 5 で、和文は 1 文字が
+   font-size とほぼ同じ幅を取る。最長は「マイページ」の 5 文字。
+     360px: 取り分 66px。11px × 5 文字 ＝ 55px で収まる
+     320px: 取り分 58px。11px でも計算上は収まるが余りが 2px しかなく、
+            書体の違いで折り返しうるので 10px に落とす
+   タブやラベルを増やすときは、この計算をやり直す（テストも同じ計算をしている）。 */
+.fsl-tabbar-label {
+  font-size: 0.625rem;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+@media (min-width: 22.5rem) {
+  .fsl-tabbar-label {
+    font-size: 0.6875rem;
+  }
+}
+
+.fsl-tabbar-link[aria-current="page"] .fsl-tabbar-label {
+  font-weight: 700;
+}
+
+/* 現在地の面。タブごとに持たせず、板に 1 枚だけ置いて隣へ滑らせる。
+   消えて隣に現れる作りだと、5 つのうちどれからどれへ移ったのかを目で追えない。
+   位置は板の内側の余白（0.25rem）を差し引いて数える。タブは 5 つなので
+   1 つぶんは (板の内寸) / 5。数を変えたらここも変える。 */
+.fsl-tabbar-indicator {
+  position: absolute;
+  top: 0.25rem;
+  bottom: 0.25rem;
+  left: 0.25rem;
+  width: calc((100% - 0.5rem) / 5);
+  /* 外側は位置だけを持つ。面と伸びは ::before が持つ。
+     1 つの transform に translateX と scaleX をまとめると、伸びの原点
+     （transform-origin）が移動にも掛かり、着地の位置がずれる。 */
+  transform: translateX(calc(var(--fsl-tab-index, 0) * 100%));
+  pointer-events: none;
+}
+
+.fsl-tabbar-indicator::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background-color: var(--fsl-tab-active);
+}
+
+/* 隣へ移るときだけ走らせる。data-dir はタブをまたいだときにしか付かない
+   （同じタブの中で階層を下りても付かない）。
+   「視差効果を減らす」を選んでいる人には動きそのものを付けない。 */
+@media (prefers-reduced-motion: no-preference) {
+  .fsl-tabbar-indicator[data-dir] {
+    animation: fsl-tab-travel var(--fsl-dur-tab) var(--fsl-ease-deal) both;
+  }
+
+  .fsl-tabbar-indicator[data-dir]::before {
+    animation: fsl-tab-stretch var(--fsl-dur-tab) linear both;
+  }
+
+  /* 伸びの原点は進む側の縁に置く。そちらの縁を固定して、後ろの縁だけを
+     遅らせる。これが「伸びて追いつく」形の正体になる。原点が中央のままだと
+     両端が同じだけ張り出し、着く側の縁が行き過ぎてから戻るので跳ねて見える。 */
+  .fsl-tabbar-indicator[data-dir="forward"]::before {
+    transform-origin: right;
+  }
+
+  .fsl-tabbar-indicator[data-dir="backward"]::before {
+    transform-origin: left;
+  }
+}
+
+/* 出発点から着地まで通しで動く。出発点（--fsl-tab-from）は BottomNav が
+   直前の位置を覚えて渡す。 */
+@keyframes fsl-tab-travel {
+  from {
+    transform: translateX(calc(var(--fsl-tab-from, 0) * 100%));
+  }
+  to {
+    transform: translateX(calc(var(--fsl-tab-index, 0) * 100%));
+  }
+}
+
+/* 移動の途中だけ横へ伸ばす。伸びる量（--fsl-tab-stretch）は動いた枚数で決まる。
+   段の値は FST のタブバーで実測から詰めたものをそのまま使う。前半の段が
+   細かいのは、伸びが移動より速く立ち上がると後ろの縁が出発したタブより
+   後ろへ膨らみ、一度戻ったように見えるため。段の間は直線でつなぐ
+   （animation が linear）。終わりは必ず 1 に戻す（戻さないと伸びたまま残る）。 */
+@keyframes fsl-tab-stretch {
+  0% {
+    transform: scaleX(1);
+  }
+  3% {
+    transform: scaleX(calc(1 + (var(--fsl-tab-stretch, 1) - 1) * 0.186));
+  }
+  6% {
+    transform: scaleX(calc(1 + (var(--fsl-tab-stretch, 1) - 1) * 0.352));
+  }
+  9% {
+    transform: scaleX(calc(1 + (var(--fsl-tab-stretch, 1) - 1) * 0.497));
+  }
+  13% {
+    transform: scaleX(calc(1 + (var(--fsl-tab-stretch, 1) - 1) * 0.654));
+  }
+  17% {
+    transform: scaleX(calc(1 + (var(--fsl-tab-stretch, 1) - 1) * 0.776));
+  }
+  21% {
+    transform: scaleX(calc(1 + (var(--fsl-tab-stretch, 1) - 1) * 0.871));
+  }
+  25% {
+    transform: scaleX(calc(1 + (var(--fsl-tab-stretch, 1) - 1) * 0.944));
+  }
+  30% {
+    transform: scaleX(var(--fsl-tab-stretch, 1));
+  }
+  44% {
+    transform: scaleX(calc(1 + (var(--fsl-tab-stretch, 1) - 1) * 0.8));
+  }
+  60% {
+    transform: scaleX(calc(1 + (var(--fsl-tab-stretch, 1) - 1) * 0.55));
+  }
+  78% {
+    transform: scaleX(calc(1 + (var(--fsl-tab-stretch, 1) - 1) * 0.27));
+  }
+  100% {
+    transform: scaleX(1);
+  }
+}

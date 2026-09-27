@@ -91,7 +91,7 @@ export default function SponsorBanner() {
       {/* 詳細モーダル */}
       {selected && (
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 px-0 pb-[58px]"
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 px-0 pb-[var(--fsl-tabbar-space)]"
           onClick={() => setSelected(null)}
         >
           <div

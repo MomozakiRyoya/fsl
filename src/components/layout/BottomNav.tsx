@@ -1,7 +1,10 @@
 "use client";
 
-import { usePathname } from "next/navigation";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import type { CSSProperties } from "react";
+import { useEffect, useState } from "react";
+import { isCurrentTab, originOf, travelOf, type TabMove } from "./tabbar";
 
 const NAV_ITEMS = [
   {
@@ -106,62 +109,84 @@ const NAV_ITEMS = [
   },
 ];
 
+// 最後に居たタブ。部品が作り直されても、次の移動の出発点に使う。
+// 書くのは画面の上（useEffect）だけなので、サーバーでは常に null のまま。
+let lastTabIndex: number | null = null;
+
+/**
+ * スマホの下部タブバー。見た目（浮いたガラスの板・金の縁・現在地の面の動き）は
+ * globals.css の .fsl-tabbar 以下が持つ。ガラスをここにインラインで書くと、
+ * ガラスが効かない環境と「透明度を下げる」の受け皿が上書きできなくなる。
+ */
 export default function BottomNav() {
   const pathname = usePathname();
+  const activeIndex = NAV_ITEMS.findIndex((item) =>
+    isCurrentTab(pathname, item.href),
+  );
 
+  // 直前に描いた位置を覚えておき、タブが変わった回の描画で出発点に回す。
+  // 描画中に state を更新するのは、前回の描画の値を持ち越す React の定石
+  // （同じ部品の中なら、画面に出る前にやり直しの描画が 1 回入るだけ）。
+  const [move, setMove] = useState<TabMove>(() => ({
+    to: activeIndex,
+    from: lastTabIndex,
+  }));
+  const fromIndex = originOf(move, activeIndex);
+  if (move.to !== activeIndex) {
+    setMove({ to: activeIndex, from: fromIndex });
+  }
+
+  useEffect(() => {
+    if (activeIndex >= 0) {
+      lastTabIndex = activeIndex;
+    }
+  }, [activeIndex]);
+
+  // フックはすべてこれより上に置く（ログイン画面でも呼ぶ回数を変えない）。
   if (pathname.startsWith("/auth/")) return null;
+
+  const travel = travelOf(fromIndex, activeIndex);
 
   return (
     <nav
-      className="lg:hidden fixed bottom-0 left-0 right-0 z-50 safe-area-pb"
-      style={{
-        background: "rgba(10, 15, 35, 0.92)",
-        backdropFilter: "blur(20px)",
-        WebkitBackdropFilter: "blur(20px)",
-        borderTop: "1px solid rgba(255,255,255,0.06)",
-      }}
       aria-label="メインナビゲーション"
+      className="lg:hidden fsl-tabbar z-50"
     >
-      <div className="flex max-w-lg mx-auto h-[58px]">
-        {NAV_ITEMS.map((item) => {
-          const isActive =
-            pathname === item.href ||
-            (item.href !== "/" && pathname.startsWith(item.href));
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="flex-1 flex flex-col items-center justify-center gap-[3px] transition-all duration-150 active:scale-90 relative"
-              style={{ color: isActive ? "#e3c060" : "rgba(255,255,255,0.38)" }}
-              aria-current={isActive ? "page" : undefined}
-            >
-              {/* アクティブ ピル背景 */}
-              {isActive && (
-                <span
-                  className="absolute inset-x-1.5 inset-y-1 rounded-xl"
-                  style={{ background: "rgba(201,146,30,0.12)" }}
-                />
-              )}
-              <span className="relative z-10">
-                {item.icon(isActive)}
-                {/* 速報タブの試合中バッジ */}
-                {item.href === "/live" && (
-                  <span className="absolute top-0 right-0 w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                )}
-              </span>
-              <span
-                className="relative z-10 leading-none"
-                style={{
-                  fontSize: "10px",
-                  fontWeight: isActive ? 700 : 500,
-                  letterSpacing: "0.02em",
-                }}
-              >
-                {item.label}
-              </span>
-            </Link>
-          );
-        })}
+      <div className="fsl-tabbar-panel mx-auto max-w-lg">
+        {/* 現在地の面は 1 枚だけ。key でタブが変わるたびに作り直し、
+            動きを頭から流す。タブに属さない画面（ニュースなど）では出さない。 */}
+        {activeIndex >= 0 ? (
+          <span
+            key={activeIndex}
+            className="fsl-tabbar-indicator"
+            data-dir={travel?.dir}
+            style={
+              {
+                "--fsl-tab-index": activeIndex,
+                "--fsl-tab-from": travel?.from ?? activeIndex,
+                "--fsl-tab-stretch": travel?.stretch ?? 1,
+              } as CSSProperties
+            }
+            aria-hidden="true"
+          />
+        ) : null}
+        <ul className="grid grid-cols-5">
+          {NAV_ITEMS.map((item, index) => {
+            const active = index === activeIndex;
+            return (
+              <li key={item.href}>
+                <Link
+                  href={item.href}
+                  className="fsl-tabbar-link"
+                  aria-current={active ? "page" : undefined}
+                >
+                  {item.icon(active)}
+                  <span className="fsl-tabbar-label">{item.label}</span>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
       </div>
     </nav>
   );

@@ -95,7 +95,7 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="fixed inset-0 bottom-[58px] flex flex-col max-w-lg mx-auto lg:static lg:h-screen lg:bottom-auto">
+    <div className="fixed inset-0 bottom-[var(--fsl-tabbar-space)] flex flex-col max-w-lg mx-auto lg:static lg:h-screen lg:bottom-auto">
       {/* ヘッダー */}
       <div
         className="px-4 py-4 flex-shrink-0"

@@ -22,7 +22,7 @@ export default function ClientLayoutWrapper({
     <div className="min-h-screen lg:flex">
       <Sidebar />
       <TopBar />
-      <main className="flex-1 pt-11 lg:pt-0 pb-20 lg:pb-0 lg:ml-56 min-w-0">
+      <main className="flex-1 pt-11 lg:pt-0 pb-[calc(var(--fsl-tabbar-space)_+_1rem)] lg:pb-0 lg:ml-56 min-w-0">
         <div className="max-w-screen-xl mx-auto">{children}</div>
       </main>
       <FloatingButtons />
