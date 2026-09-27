@@ -6,6 +6,7 @@ import { useFollowedTeams } from "@/hooks/useFollowedTeams";
 import type { Team, League, TeamStanding } from "@/lib/types/app";
 import GlideTabs from "@/components/ui/GlideTabs";
 import BreakableName from "@/components/ui/BreakableName";
+import { sortTeamsByPoints } from "./team-order";
 
 function getInitials(name: string): string {
   const stripped = name.replace(/\s+/g, "");
@@ -118,7 +119,7 @@ function LeagueSection({
 }) {
   const [isOpen, setIsOpen] = useState(defaultOpen ?? league.id === "premier");
 
-  const teamsWithRank = teams.map((t) => {
+  const teamsWithRank = sortTeamsByPoints(teams, standings).map((t) => {
     const standing = standings.find((s) => s.teamId === t.id);
     return { ...t, rank: standing?.rank, points: standing?.totalPoints };
   });

@@ -72,7 +72,7 @@ export default function InstallGuide() {
           {/* タイトル */}
           <div className="mb-4">
             <h2 className="text-base font-bold text-slate-900">
-              アプリとして使おう 📱
+              アプリとして使おう
             </h2>
             <p className="text-sm text-slate-500 mt-0.5">
               ホーム画面に追加するともっと便利！

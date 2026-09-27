@@ -36,6 +36,7 @@ import {
   fetchMatchResultsFromSupabase,
   fetchPlayerStatsFromSupabase,
 } from "./supabase/queries";
+import { stripEmoji } from "./strip-emoji";
 
 async function safe<T>(fn: () => Promise<T>, fallback: T): Promise<T> {
   try {
@@ -58,7 +59,10 @@ export async function getTeams(): Promise<Team[]> {
 
 export async function getRounds(): Promise<Round[]> {
   try {
-    return await fetchRoundsFromSupabase();
+    const rounds = await fetchRoundsFromSupabase();
+    // 節名に入っている絵文字（DB の節名の先頭にある星）は表示に出さない。
+    // 名前が空の節があっても一覧ごと消えないよう、null は空文字として扱う
+    return rounds.map((r) => ({ ...r, name: stripEmoji(r.name ?? "") }));
   } catch {
     return [];
   }

@@ -181,6 +181,10 @@ export default async function TeamDetailPage({ params }: Props) {
               </div>
             </div>
           </div>
+          {/* フォローボタン（独立した目立つ配置） */}
+          <div className="mt-4">
+            <FollowButton teamId={team.id} teamName={team.name} />
+          </div>
         </div>
       </div>
 
