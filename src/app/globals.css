@@ -178,6 +178,19 @@ input:-webkit-autofill:focus {
 
 html { scroll-behavior: smooth; }
 
+/* ===== ホームのヒーロー写真: 旧→新へゆっくり切り替える ===== */
+
+@keyframes heroCrossfade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.hero-crossfade {
+  animation: heroCrossfade 2.8s ease-in-out 0.8s both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-crossfade { animation: none; opacity: 1; }
+}
+
 /* ===== スプラッシュ ===== */
 
 @keyframes splashLogo {

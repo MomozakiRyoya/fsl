@@ -36,11 +36,11 @@ export default function SplashScreen() {
       {/* ネイビー背景 */}
       <div className="absolute inset-0" style={{ background: "#0c1e42" }} />
 
-      {/* fsl-logo.jpg を全体表示（contain で全部見える） */}
+      {/* 集合写真を薄く敷く */}
       <div
         className="absolute inset-0"
         style={{
-          backgroundImage: "url(/fsl-season6-group.jpg)",
+          backgroundImage: "url(/fsl-season7-group.jpg)",
           backgroundSize: "cover",
           backgroundRepeat: "no-repeat",
           backgroundPosition: "center top",

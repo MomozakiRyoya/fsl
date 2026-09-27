@@ -150,12 +150,22 @@ export default async function HomePage() {
         </div>
 
         <div className="relative aspect-video lg:aspect-[5/2]">
+          {/* 旧写真を下に敷き、新写真をゆっくり重ねて切り替える */}
           <Image
             src="/fsl-season6-group.jpg"
-            alt="FSL に参加する選手たちの集合写真"
+            alt=""
+            aria-hidden
             fill
             sizes="(min-width: 1024px) 896px, (min-width: 512px) 512px, 100vw"
             className="object-cover object-center"
+            priority
+          />
+          <Image
+            src="/fsl-season7-group.jpg"
+            alt="FSL に参加する選手たちの集合写真"
+            fill
+            sizes="(min-width: 1024px) 896px, (min-width: 512px) 512px, 100vw"
+            className="hero-crossfade object-cover object-center"
             priority
           />
         </div>
