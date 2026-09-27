@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
+import { verifyHookRequest } from "./verify";
 
 const FROM =
   process.env.RESEND_FROM_EMAIL ?? "FSL <noreply@fukuokasuperleague.com>";
@@ -15,11 +16,7 @@ interface HookPayload {
     token_hash: string;
     redirect_to: string;
     email_action_type:
-      | "signup"
-      | "recovery"
-      | "invite"
-      | "email_change"
-      | "magiclink";
+      "signup" | "recovery" | "invite" | "email_change" | "magiclink";
     site_url: string;
   };
 }
@@ -28,9 +25,13 @@ function buildVerifyUrl(payload: HookPayload): string {
   const { token_hash, email_action_type, redirect_to, site_url } =
     payload.email_data;
 
+  // デバッグログ（トークン値は出力しない）
   console.log("[hook] email_action_type:", email_action_type);
-  console.log("[hook] redirect_to:", redirect_to);
   console.log("[hook] site_url:", site_url);
+  console.log(
+    "[hook] redirect_to domain:",
+    redirect_to ? new URL(redirect_to).hostname : "none",
+  );
   console.log("[hook] token_hash length:", token_hash?.length);
 
   if (email_action_type === "recovery") {
@@ -39,7 +40,7 @@ function buildVerifyUrl(payload: HookPayload): string {
       process.env.NEXT_PUBLIC_SITE_URL || "https://www.fukuokasuperleague.com"
     ).replace(/\/$/, "");
     const url = `${siteUrl}/auth/update-password?token_hash=${encodeURIComponent(token_hash)}&type=recovery`;
-    console.log("[hook] recovery URL:", url);
+    console.log("[hook] recovery URL built (token omitted)");
     return url;
   }
 
@@ -116,20 +117,56 @@ function recoveryHtml(verifyUrl: string): string {
 }
 
 export async function POST(request: Request) {
-  // シークレット検証（ログのみ・現在は拒否しない）
-  const hookSecret = process.env.SUPABASE_HOOK_SECRET;
-  if (hookSecret) {
-    const auth = request.headers.get("Authorization");
-    if (!auth?.includes(hookSecret.split(",")[1] ?? hookSecret)) {
-      console.warn(
-        "[send-email hook] Secret mismatch - headers:",
-        request.headers.get("Authorization")?.slice(0, 30),
+  // 署名検証 - Supabase の HTTP フックは Standard Webhooks の署名を付けてくる。
+  // 署名は本文そのものにかかるので、JSON にする前の文字列で確かめる
+  const body = await request.text();
+  const verification = verifyHookRequest(
+    process.env.SUPABASE_HOOK_SECRET,
+    body,
+    request.headers,
+  );
+  if (!verification.ok) {
+    if (verification.reason === "secret-missing") {
+      // 未設定のまま素通しすると誰でも認証メールを送らせられるので、止めて気づけるようにする
+      console.error(
+        "[send-email hook] SUPABASE_HOOK_SECRET is not set - request rejected",
+      );
+      return NextResponse.json(
+        { error: "Internal Server Error" },
+        { status: 500 },
       );
     }
+    console.warn(
+      "[send-email hook] Signature verification failed - request rejected",
+    );
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const payload: HookPayload = await request.json();
+  let payload: HookPayload;
+  try {
+    payload = JSON.parse(body);
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+
+  // 必須フィールドのバリデーション
   const { user, email_data } = payload;
+  if (!user?.id || !user?.email || typeof user.email !== "string") {
+    return NextResponse.json(
+      { error: "Missing required field: user.id or user.email" },
+      { status: 400 },
+    );
+  }
+  if (!email_data?.email_action_type || !email_data?.token_hash) {
+    return NextResponse.json(
+      {
+        error:
+          "Missing required field: email_data.email_action_type or token_hash",
+      },
+      { status: 400 },
+    );
+  }
+
   const verifyUrl = buildVerifyUrl(payload);
 
   const subjects: Record<string, string> = {

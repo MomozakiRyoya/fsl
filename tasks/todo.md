@@ -49,3 +49,19 @@ FST の SiteTabBar と同じ「浮いたガラスのピル＋金の細い縁＋�
       静的生成がサンドボックスで `.env.local` を読めず止まった。変更とは無関係）
 - [x] 375px で見た目を確認（明るい中身・写真が背後に来たとき。320px でもラベルは 1 行）
 - [x] 自分の変更ファイルだけコミットし、push コマンドを手渡す
+
+## send-email フックをシークレット未設定なら拒否する（2026-09-27）
+`SUPABASE_HOOK_SECRET` が無いと検証を素通しし、誰でも POST で認証メールを送らせられた（fail-open）。
+調べると照合の方式も違っていた。Supabase の HTTP フックは `Authorization` ではなく Standard Webhooks の署名
+（`webhook-id`・`webhook-timestamp`・`webhook-signature`）を付けてくるので、`Bearer` との照合では
+シークレットを入れた途端に本物の要求まで 401 になる。
+
+- [x] 検証を `src/app/api/auth/hook/send-email/verify.ts` に切り出す（今の動きのまま）
+- [x] 先にテストを書く（未設定は拒否・Supabase の署名は通す・改ざん／欠落／時刻ずれは拒否）→ 落ちることを確認
+      （新しい 6 件がすべて落ちた）
+- [x] Standard Webhooks の署名検証にし、未設定なら 500 で拒否してサーバー側にエラーを残す
+- [x] テスト・tsc を通す（テスト 27 件・tsc は通過。本物の route.ts の POST も 8 通り呼び、
+      未設定は 500、署名なし・旧 Bearer・別の鍵・10 分前は 401、正しい署名だけが本文の検査へ進むことを確認）
+- [x] 自分の変更ファイルだけコミットし、push コマンドを手渡す
+- 出す前に確認（ユーザー）: Vercel の本番に `SUPABASE_HOOK_SECRET` があり、Supabase の Auth Hooks 画面の
+  シークレット（`v1,whsec_...`）と同じ値であること。無い・違うと、登録確認とパスワード再設定のメールが止まる
