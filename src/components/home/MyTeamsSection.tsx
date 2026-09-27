@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useFollowedTeams } from "@/hooks/useFollowedTeams";
 import type { Team, TeamStanding, NewsItem } from "@/lib/types/app";
+import ArrowIcon from "@/components/ui/ArrowIcon";
 
 interface Props {
   teams: Team[];
@@ -30,33 +31,20 @@ export default function MyTeamsSection({ teams, standings, news }: Props) {
   ).length;
 
   return (
-    <section className="mb-5 animate-fade-in">
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="text-sm font-bold text-slate-700 flex items-center gap-2">
-          <span
-            className="w-1 h-4 rounded-full inline-block"
-            style={{ background: "linear-gradient(180deg, #c9921e, #e3c060)" }}
-          />
-          マイチーム
-        </h2>
+    <section className="section-rule animate-fade-in">
+      <div className="section-head">
+        <h2 className="section-title">マイチーム</h2>
         {myNewsCount > 0 && (
-          <Link
-            href="/my-news"
-            className="flex items-center gap-1 text-xs font-semibold transition-colors"
-            style={{ color: "#c9921e" }}
-          >
+          <Link href="/my-news" className="section-link">
             チームニュース
-            <span
-              className="inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-bold text-white"
-              style={{ background: "#c9921e" }}
-            >
+            <span className="border border-ink px-1 py-0.5 text-[10px] leading-none tabular-nums">
               {myNewsCount}
             </span>
-            →
+            <ArrowIcon />
           </Link>
         )}
       </div>
-      <div className="flex gap-3 overflow-x-auto pb-1 -mx-4 px-4">
+      <div className="flex gap-3 overflow-x-auto pb-1 -mx-5 px-5 lg:-mx-10 lg:px-10">
         {myTeams.map((team) => {
           const teamStandings = standings[team.leagueId] ?? [];
           const standing = teamStandings.find((s) => s.teamId === team.id);
@@ -64,44 +52,43 @@ export default function MyTeamsSection({ teams, standings, news }: Props) {
             <Link
               key={team.id}
               href={`/teams/${team.slug}`}
-              className="flex-none bg-white rounded-2xl border border-slate-100 p-3.5 w-40 hover:shadow-md transition-all active:scale-[0.97] shadow-sm"
+              className="group touch-active flex-none w-40 border border-ink/15 p-3.5 transition-colors hover:border-ink"
             >
-              <div className="flex items-center gap-2 mb-2.5">
+              <div className="flex items-center gap-2">
                 <div
-                  className="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold text-white flex-shrink-0 shadow-sm"
+                  className="w-8 h-8 flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
                   style={{ backgroundColor: team.homeColor }}
                 >
                   {team.name.slice(0, 2)}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-bold text-slate-900 truncate">
+                  <p className="text-xs font-bold text-ink truncate underline-offset-4 group-hover:underline">
                     {team.name}
                   </p>
-                  <p className="text-[10px] text-slate-400 mt-0.5">
+                  <p className="text-[10px] text-ink/70 mt-0.5 truncate">
                     {team.leagueName}
                   </p>
                 </div>
                 {/* フォロー中ハートアイコン */}
                 <svg
-                  className="w-3.5 h-3.5 flex-shrink-0"
-                  style={{ color: "#c9921e" }}
+                  className="w-3.5 h-3.5 flex-shrink-0 text-ink"
                   fill="currentColor"
                   viewBox="0 0 24 24"
+                  aria-hidden="true"
                 >
                   <path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z" />
                 </svg>
               </div>
               {standing && (
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] text-slate-400 font-medium">
-                    #{standing.rank}位
+                <div className="mt-2.5 flex items-baseline justify-between border-t border-ink/10 pt-2">
+                  <span className="text-xs font-bold text-ink tabular-nums">
+                    {standing.rank}位
                   </span>
-                  <span
-                    className="text-sm font-black tabular-nums"
-                    style={{ color: "#c9921e" }}
-                  >
+                  <span className="text-sm font-black text-ink tabular-nums">
                     {standing.totalPoints}
-                    <span className="text-[10px] font-medium ml-0.5">pt</span>
+                    <span className="text-[10px] font-normal text-ink/70 ml-0.5">
+                      pt
+                    </span>
                   </span>
                 </div>
               )}

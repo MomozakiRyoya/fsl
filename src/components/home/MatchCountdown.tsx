@@ -28,6 +28,37 @@ function pad(n: number) {
   return String(n).padStart(2, "0");
 }
 
+function CalendarIcon() {
+  return (
+    <svg
+      className="h-3.5 w-3.5 flex-shrink-0 text-white/70"
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.5}
+      aria-hidden="true"
+    >
+      <path d="M2.5 3.5h11v10h-11zM2.5 6.5h11M5.5 2v3M10.5 2v3" />
+    </svg>
+  );
+}
+
+function PinIcon() {
+  return (
+    <svg
+      className="h-3.5 w-3.5 flex-shrink-0"
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.5}
+      aria-hidden="true"
+    >
+      <path d="M8 14.5s4.5-4.2 4.5-7.75a4.5 4.5 0 0 0-9 0C3.5 10.3 8 14.5 8 14.5z" />
+      <circle cx="8" cy="6.75" r="1.5" />
+    </svg>
+  );
+}
+
 function MatchCard({
   round,
   league,
@@ -45,101 +76,72 @@ function MatchCard({
   return (
     <Link
       href={`/schedule/${round.id}`}
-      className="block rounded-2xl overflow-hidden flex-none w-[272px] select-none"
-      style={{
-        background: `linear-gradient(135deg, #0c1e42, ${league?.color ?? "#1a3a7a"})`,
-      }}
+      className="block flex-none w-[272px] select-none bg-[#0c1e42] text-white"
       draggable={false}
     >
-      <div className="px-4 pt-3.5 pb-4">
-        {/* ヘッダー */}
-        <div className="flex items-center justify-between mb-2.5">
-          <div className="flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse flex-shrink-0" />
-            <span
-              className="text-[9px] font-bold tracking-widest uppercase"
-              style={{ color: "rgba(255,255,255,0.45)" }}
-            >
-              NEXT MATCH
-            </span>
-          </div>
-          <span
-            className="text-[10px] font-semibold px-2 py-0.5 rounded-full truncate max-w-[120px]"
-            style={{
-              background: "linear-gradient(135deg, #c9921e, #e3c060)",
-              color: "#0c1e42",
-            }}
-          >
-            {round.name}
-          </span>
-        </div>
-
-        {/* 節名・リーグ */}
-        <p
-          className="text-xs font-semibold mb-0.5 truncate"
-          style={{ color: "rgba(255,255,255,0.6)" }}
-        >
+      {/* ヘッダー: ディビジョンの色見本・名前・節 */}
+      <div className="flex items-center gap-2 border-b border-white/20 px-4 py-2.5">
+        <span
+          className="h-2.5 w-2.5 flex-shrink-0 border border-white/40"
+          style={{ backgroundColor: league?.color ?? "#1a3a7a" }}
+          aria-hidden="true"
+        />
+        <span className="min-w-0 flex-1 truncate text-xs font-bold">
           {round.leagueName}
-        </p>
+        </span>
+        <span className="max-w-[112px] flex-shrink-0 truncate text-[11px] font-bold text-[#e3c060]">
+          {round.name}
+        </span>
+      </div>
 
+      <div className="px-4 pt-3 pb-4">
         {/* 日付・時刻 */}
-        <p className="text-sm font-black text-white mb-1">
-          📅 {formatRoundDateTime(round)}
+        <p className="flex items-center gap-1.5 text-sm font-bold">
+          <CalendarIcon />
+          {formatRoundDateTime(round)}
         </p>
 
         {/* カウントダウン */}
         {timeLeft ? (
-          <div className="flex items-end gap-1.5 mb-2.5">
+          <div className="mt-3 grid grid-cols-4 border-y border-white/20">
             {[
               { v: timeLeft.days, l: "日" },
               { v: timeLeft.hours, l: "時" },
               { v: timeLeft.minutes, l: "分" },
               { v: timeLeft.seconds, l: "秒" },
             ].map(({ v, l }, i) => (
-              <div key={l} className="flex items-end gap-0.5">
-                {i > 0 && (
-                  <span
-                    className="text-base font-black mb-0.5"
-                    style={{ color: "rgba(255,255,255,0.25)" }}
-                  >
-                    :
-                  </span>
-                )}
-                <span className="text-2xl font-black tabular-nums text-white leading-none">
+              <div
+                key={l}
+                className={
+                  i === 0
+                    ? "py-2 pr-2"
+                    : "border-l border-white/20 py-2 pl-2.5 pr-2"
+                }
+              >
+                <span className="block text-2xl font-black leading-none tabular-nums">
                   {pad(v)}
                 </span>
-                <span
-                  className="text-[9px] mb-0.5"
-                  style={{ color: "rgba(255,255,255,0.4)" }}
-                >
+                <span className="mt-1 block text-[10px] font-bold text-white/60">
                   {l}
                 </span>
               </div>
             ))}
           </div>
         ) : (
-          <p className="text-sm font-bold mb-2.5" style={{ color: "#e3c060" }}>
+          <p className="mt-3 border-y border-white/20 py-2 text-sm font-bold text-[#e3c060]">
             試合開始！
           </p>
         )}
 
-        {/* フォーマット・会場 */}
-        <div
-          className="pt-2.5 flex items-center justify-between"
-          style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}
-        >
-          <span
-            className="text-[10px] truncate"
-            style={{ color: "rgba(255,255,255,0.4)" }}
-          >
-            📍 {round.venue}
+        {/* 会場・フォーマット */}
+        <div className="mt-3 flex items-center justify-between gap-3 text-[11px] text-white/70">
+          <span className="flex min-w-0 items-center gap-1">
+            <PinIcon />
+            <span className="truncate">{round.venue}</span>
           </span>
           {round.format && (
-            <span
-              className="text-[10px] ml-2 truncate"
-              style={{ color: "rgba(201,146,30,0.7)" }}
-            >
-              🃏 {round.format}
+            <span className="max-w-[45%] flex-shrink-0 truncate">
+              {round.format}
             </span>
           )}
         </div>
@@ -171,11 +173,18 @@ export default function MatchCountdown({ rounds, leagues }: Props) {
     return [{ round: next, league }];
   }).sort((a, b) => getMatchTime(a.round) - getMatchTime(b.round));
 
-  if (upcoming.length === 0) return null;
+  // 見出しだけが残らないよう、無いことを書く
+  if (upcoming.length === 0) {
+    return (
+      <p className="border-y border-ink/15 py-4 text-sm text-ink/70">
+        予定されている試合はありません
+      </p>
+    );
+  }
 
   return (
-    <div className="-mx-4">
-      <AutoScroll speed={30} className="px-4">
+    <div className="-mx-5 lg:-mx-10">
+      <AutoScroll speed={30} className="px-5 lg:px-10">
         {upcoming.map(({ round, league }) => (
           <MatchCard key={round.id} round={round} league={league} tick={tick} />
         ))}

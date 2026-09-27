@@ -134,3 +134,86 @@ test("上のバーは不透明の紺（ぼかしとグラデーションを使�
   assert.doesNotMatch(topBar, GRADIENT);
   assert.match(topBar, NAVY);
 });
+
+// ===== ホーム =====
+const page = stripComments(read("src/app/page.tsx"));
+const home = (name) =>
+  stripComments(read(`src/components/home/${name}.tsx`));
+const EMOJI = /\p{Extended_Pictographic}/u;
+
+test("ホームの1画面目は左揃えで、見出しの h1 は1つだけ", () => {
+  const start = page.indexOf("home-hero");
+  assert.notEqual(start, -1, "home-hero が無い");
+  const hero = page.slice(start, page.indexOf("</section>", start));
+  assert.doesNotMatch(hero, /text-center|justify-center/);
+  assert.equal(page.match(/<h1[\s>]/g)?.length ?? 0, 1);
+  assert.doesNotMatch(page, /backdrop-blur|drop-shadow/);
+  assert.doesNotMatch(page, GRADIENT);
+});
+
+test("ホームの見出しは h2 の紺、リンクは明るい地に金の文字を置かない", () => {
+  assert.doesNotMatch(page, /<p className="section-title/);
+  assert.match(page, /<h2 className="section-title/);
+  assert.match(page, /section-rule/);
+  assert.doesNotMatch(page, /color:\s*["']#c9921e["']/i);
+});
+
+test("ホームと上のバーに絵文字を使わない", () => {
+  const files = {
+    page,
+    TopBar: stripComments(read("src/components/layout/TopBar.tsx")),
+    MatchCountdown: home("MatchCountdown"),
+    HomeNewsSection: home("HomeNewsSection"),
+    StandingsSection: home("StandingsSection"),
+    FeaturedPlayers: home("FeaturedPlayers"),
+    MyTeamsSection: home("MyTeamsSection"),
+  };
+  for (const [name, text] of Object.entries(files)) {
+    assert.doesNotMatch(text, EMOJI, `${name} に絵文字がある`);
+  }
+});
+
+test("カードの左端の色帯とグラデーションをやめる", () => {
+  assert.doesNotMatch(
+    home("HomeNewsSection"),
+    /CATEGORY_BORDER|absolute left-0 top-0 bottom-0|rounded-l-/,
+  );
+  assert.doesNotMatch(home("StandingsSection"), /borderLeft/);
+  for (const name of ["MatchCountdown", "MyTeamsSection", "FeaturedPlayers"]) {
+    assert.doesNotMatch(home(name), GRADIENT, `${name} にグラデーションがある`);
+  }
+});
+
+test("直近の試合が無いときは、見出しだけ残さず「無い」と書く", () => {
+  const countdown = home("MatchCountdown");
+  assert.doesNotMatch(countdown, /upcoming\.length\s*===\s*0\)\s*return null/);
+  assert.match(countdown, /予定されている試合はありません/);
+});
+
+test("明るい地の紺の文字と罫線は ink で書き、ダークでは明るい色に返す", () => {
+  // @theme inline だと値が埋め込まれて .dark で差し替えられないので、inline でない @theme に置く
+  const ink = css.match(/@theme\s*\{[^}]*--color-ink:\s*([^;]+);/);
+  assert.ok(ink, "--color-ink が inline でない @theme に無い");
+  assert.match(ink[1], NAVY);
+  const dark = block(css, "\n.dark {").body;
+  assert.ok(decl(dark, "--color-ink"), ".dark で --color-ink を差し替えていない");
+  for (const name of [
+    "StandingsSection",
+    "HomeNewsSection",
+    "FeaturedPlayers",
+    "MyTeamsSection",
+  ]) {
+    assert.doesNotMatch(
+      home(name),
+      /(?<![:\w-])(text|border)-\[#0c1e42\]/i,
+      `${name} が紺を直書きしている（ダークで消える）`,
+    );
+  }
+});
+
+test("body に背景色を直書きしない（.dark body の暗い背景が効くように）", () => {
+  const layout = stripComments(read("src/app/layout.tsx"));
+  const body = layout.match(/<body[^>]*>/s);
+  assert.ok(body, "layout.tsx に <body> が無い");
+  assert.doesNotMatch(body[0], /backgroundColor/, "body の style が .dark body を打ち消す");
+});

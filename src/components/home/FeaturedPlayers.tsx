@@ -56,18 +56,9 @@ export default function FeaturedPlayers({ players }: Props) {
     : `-${shift}%`;
 
   return (
-    <section className="animate-fade-in">
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="text-sm font-bold text-slate-700 flex items-center gap-2">
-          <svg
-            className="w-4 h-4 flex-shrink-0 text-amber-500"
-            viewBox="0 0 24 24"
-            fill="currentColor"
-          >
-            <path d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
-          </svg>
-          次回の出場選手
-        </h2>
+    <section className="section-rule animate-fade-in">
+      <div className="section-head">
+        <h2 className="section-title">次回の出場選手</h2>
       </div>
 
       {/* スライダー外枠 */}
@@ -107,46 +98,39 @@ export default function FeaturedPlayers({ players }: Props) {
           {pageSlices.map((slice, pi) => (
             <div
               key={pi}
-              className="grid grid-cols-2 gap-2.5 flex-shrink-0"
+              className="grid grid-cols-2 gap-3 flex-shrink-0"
               style={{ width: `${100 / pages}%` }}
             >
               {slice.map((player) => (
-                <div
-                  key={player.id}
-                  className="relative rounded-2xl overflow-hidden bg-slate-200"
-                  style={{ aspectRatio: "3/4" }}
-                >
-                  <img
-                    src={player.imageUrl}
-                    alt={player.playerName}
-                    className="w-full h-full object-cover"
-                  />
+                <figure key={player.id} className="min-w-0">
                   <div
-                    className="absolute bottom-0 left-0 right-0 px-2.5 pt-6 pb-2.5"
-                    style={{
-                      background:
-                        "linear-gradient(transparent, rgba(0,0,0,0.25) 20%, rgba(0,0,0,0.72) 100%)",
-                    }}
+                    className="relative overflow-hidden bg-ink/10"
+                    style={{ aspectRatio: "3/4" }}
                   >
+                    <img
+                      src={player.imageUrl}
+                      alt={player.playerName}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <figcaption className="mt-2">
+                    <p className="text-sm font-black text-ink leading-tight truncate">
+                      {player.playerName}
+                    </p>
                     {player.teamName && (
-                      <p
-                        className="text-[9px] font-black uppercase tracking-widest leading-none mb-0.5"
-                        style={{ color: "#e3c060" }}
-                      >
+                      <p className="mt-0.5 text-[11px] text-ink/70 truncate">
                         {player.teamName}
                       </p>
                     )}
-                    <p className="text-sm font-black text-white leading-tight">
-                      {player.playerName}
-                    </p>
-                  </div>
-                </div>
+                  </figcaption>
+                </figure>
               ))}
               {/* 空きスロット埋め（奇数枚時） */}
               {slice.length % 2 !== 0 && (
                 <div
-                  className="rounded-2xl bg-slate-100"
+                  className="bg-ink/5"
                   style={{ aspectRatio: "3/4" }}
+                  aria-hidden="true"
                 />
               )}
             </div>
@@ -154,23 +138,27 @@ export default function FeaturedPlayers({ players }: Props) {
         </div>
       </div>
 
-      {/* ページインジケーター */}
+      {/* ページ送り */}
       {pages > 1 && (
-        <div className="flex justify-center gap-1.5 mt-3">
+        <div className="flex gap-1 mt-2">
           {Array.from({ length: pages }).map((_, i) => (
             <button
               key={i}
+              type="button"
               onClick={() => {
                 goTo(i);
                 resetTimer();
               }}
-              className="transition-all duration-300 rounded-full"
-              style={{
-                width: i === page ? 20 : 7,
-                height: 7,
-                background: i === page ? "#0c1e42" : "#cbd5e1",
-              }}
-            />
+              aria-label={`${i + 1}ページ目を表示`}
+              aria-current={i === page ? "true" : undefined}
+              className="py-2"
+            >
+              <span
+                className={`block h-1 w-6 transition-colors duration-300 ${
+                  i === page ? "bg-ink" : "bg-ink/20"
+                }`}
+              />
+            </button>
           ))}
         </div>
       )}

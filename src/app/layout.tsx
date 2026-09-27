@@ -44,10 +44,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body
-        className="min-h-screen font-sans"
-        style={{ backgroundColor: "#f5f3ee" }}
-      >
+      <body className="min-h-screen font-sans">
         <InstallGuide />
         <SplashScreen />
         <ClientLayoutWrapper>{children}</ClientLayoutWrapper>

@@ -7,7 +7,7 @@ import {
   getRounds,
   getTeams,
 } from "@/lib/data";
-import AutoScroll from "@/components/ui/AutoScroll";
+import ArrowIcon from "@/components/ui/ArrowIcon";
 import { getLatestYouTubeVideo } from "@/lib/youtube";
 import CountUp from "@/components/ui/CountUp";
 import ScrollReveal from "@/components/ui/ScrollReveal";
@@ -130,106 +130,100 @@ export default async function HomePage() {
     .filter((r) => r.leagueId === "premier" && r.status === "finished")
     .sort((a, b) => b.roundNumber - a.roundNumber)[0];
 
+  const heroStats = [
+    { label: "チーム", value: teamCount, duration: 4500 },
+    { label: "ディビジョン", value: divisionCount, duration: 3500 },
+    { label: "節", value: maxRoundNumber, duration: 4000 },
+  ];
+
   return (
     <div className="max-w-lg lg:max-w-4xl mx-auto">
-      {/* ヒーローセクション */}
-      <section
-        className="relative overflow-hidden animate-fade-in lg:min-h-[400px]"
-        style={{ minHeight: 320 }}
-      >
-        {/* Season 1 バナー背景 */}
-        <div className="absolute inset-0">
+      {/* ヒーロー: 文字・写真・数字・ディビジョンを縦に積む */}
+      <section className="home-hero bg-[#0c1e42] text-white animate-fade-in">
+        <div className="px-5 pt-8 pb-6 lg:px-10 lg:pt-12">
+          <p className="text-[11px] font-bold tracking-[0.14em] text-[#e3c060]">
+            福岡ポーカーチームリーグ
+          </p>
+          <h1 className="mt-3 font-black leading-[0.92] tracking-[-0.02em] text-[clamp(44px,15vw,88px)]">
+            <span className="block">FUKUOKA</span>
+            <span className="block">SUPER</span>
+            <span className="block">LEAGUE</span>
+          </h1>
+          <p className="mt-4 text-[17px] font-bold">すべてを、背負え。</p>
+        </div>
+
+        <div className="relative aspect-video lg:aspect-[5/2]">
           <Image
             src="/fsl-season6-group.jpg"
-            alt="FSL Season 7"
+            alt="FSL に参加する選手たちの集合写真"
             fill
-            className="object-cover object-center animate-zoom-in"
+            sizes="(min-width: 1024px) 896px, (min-width: 512px) 512px, 100vw"
+            className="object-cover object-center"
             priority
           />
-          {/* 没入感のあるグラデーションオーバーレイ */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/50 to-black/80" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0c1e42]/60 via-transparent to-transparent" />
         </div>
 
-        {/* コンテンツ */}
-        <div className="relative px-6 pt-12 pb-6 text-center text-white">
-          <h1 className="text-3xl font-black tracking-wide mb-0.5 drop-shadow-lg">
-            FUKUOKA
-          </h1>
-          <h1 className="text-3xl font-black tracking-wide mb-2 drop-shadow-lg">
-            SUPER LEAGUE
-          </h1>
-          <p className="text-white/60 text-xs tracking-[0.2em] mb-6 uppercase">
-            すべてを、背負え。
+        <dl className="grid grid-cols-3 border-t border-white/25">
+          {heroStats.map((stat, i) => (
+            <div
+              key={stat.label}
+              className={
+                i === 0
+                  ? "pl-5 pr-3 py-4 lg:pl-10"
+                  : "px-4 py-4 border-l border-white/25"
+              }
+            >
+              <dt className="text-[11px] font-bold tracking-[0.04em] text-white/60">
+                {stat.label}
+              </dt>
+              <dd className="mt-1.5 text-[32px] font-black leading-none tabular-nums">
+                <CountUp value={stat.value} duration={stat.duration} />
+              </dd>
+            </div>
+          ))}
+        </dl>
+
+        {latestFinishedRound && (
+          <p className="border-t border-white/25 px-5 py-3 text-xs text-white/70 lg:px-10">
+            最新節:{" "}
+            <span className="font-bold text-white">
+              {latestFinishedRound.name}
+            </span>{" "}
+            完了
           </p>
+        )}
 
-          <div className="flex items-center justify-center gap-6">
-            <div className="text-center">
-              <p className="stat-number text-white">
-                <CountUp value={teamCount} duration={4500} />
-              </p>
-              <p className="text-white/50 text-[11px] tracking-wide mt-1">
-                チーム
-              </p>
-            </div>
-            <div className="w-px h-8 bg-white/20" />
-            <div className="text-center">
-              <p className="stat-number text-white">
-                <CountUp value={divisionCount} duration={3500} />
-              </p>
-              <p className="text-white/50 text-[11px] tracking-wide mt-1">
-                ディビジョン
-              </p>
-            </div>
-            <div className="w-px h-8 bg-white/20" />
-            <div className="text-center">
-              <p className="stat-number text-white">
-                <CountUp value={maxRoundNumber} duration={4000} />
-              </p>
-              <p className="text-white/50 text-[11px] tracking-wide mt-1">節</p>
-            </div>
-          </div>
-
-          {/* 最新節サブテキスト */}
-          {latestFinishedRound && (
-            <p className="text-white/40 text-[11px] mt-3 font-medium tracking-wide">
-              最新節: {latestFinishedRound.name} 完了
-            </p>
-          )}
-        </div>
-
-        {/* リーグタブ（自動スクロール） */}
-        <div className="relative px-4 pb-4">
-          <AutoScroll speed={22} startOffset={0}>
-            {leagues.map((league) => (
-              <Link
-                key={league.id}
-                href={`/standings?league=${league.id}`}
-                className="flex-none flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-white/15 backdrop-blur-sm border border-white/20 text-white hover:bg-white/25 transition-colors whitespace-nowrap"
-              >
-                <span
-                  className="w-2 h-2 rounded-full flex-shrink-0"
-                  style={{ backgroundColor: league.color }}
-                />
-                {league.name}
-              </Link>
-            ))}
-          </AutoScroll>
-        </div>
+        <nav
+          aria-label="ディビジョン別の順位"
+          className="grid grid-cols-2 gap-px border-t border-white/25 bg-white/25"
+        >
+          {leagues.map((league) => (
+            <Link
+              key={league.id}
+              href={`/standings?league=${league.id}`}
+              className="group flex items-center gap-2.5 bg-[#0c1e42] px-5 py-3.5 text-[13px] font-bold text-white transition-colors hover:bg-white hover:text-[#0c1e42] odd:last:col-span-2 lg:px-10"
+            >
+              <span
+                className="h-2.5 w-2.5 flex-shrink-0 border border-white/40"
+                style={{ backgroundColor: league.color }}
+                aria-hidden="true"
+              />
+              <span className="min-w-0 flex-1 truncate">{league.name}</span>
+              <ArrowIcon className="h-3.5 w-3.5 flex-shrink-0 text-white/60 group-hover:text-[#0c1e42]" />
+            </Link>
+          ))}
+        </nav>
       </section>
 
-      <div className="px-4 py-6 space-y-8">
+      <div className="px-5 pt-8 pb-10 space-y-10 lg:px-10">
         {/* 1. 最新の総合順位 */}
         <ScrollReveal>
-          <section>
-            <div className="flex items-center justify-between mb-3">
-              <p className="section-title">最新の総合順位</p>
-              <Link
-                href="/standings"
-                className="text-xs font-semibold transition-colors"
-                style={{ color: "#c9921e" }}
-              >
-                全順位 →
+          <section className="section-rule">
+            <div className="section-head">
+              <h2 className="section-title">最新の総合順位</h2>
+              <Link href="/standings" className="section-link">
+                全順位
+                <ArrowIcon />
               </Link>
             </div>
             <StandingsSection leagues={leagues} standings={standings} />
@@ -242,15 +236,12 @@ export default async function HomePage() {
         )}
 
         {/* 2. 直近の試合日程 */}
-        <section>
-          <div className="flex items-center justify-between mb-3">
-            <p className="section-title">直近の試合</p>
-            <Link
-              href="/schedule"
-              className="text-xs font-semibold transition-colors"
-              style={{ color: "#c9921e" }}
-            >
-              日程を全て見る →
+        <section className="section-rule">
+          <div className="section-head">
+            <h2 className="section-title">直近の試合</h2>
+            <Link href="/schedule" className="section-link">
+              日程をすべて見る
+              <ArrowIcon />
             </Link>
           </div>
           <MatchCountdown rounds={rounds} leagues={leagues} />
@@ -261,9 +252,9 @@ export default async function HomePage() {
 
         {/* 4. ニュース */}
         <ScrollReveal delay={50}>
-          <section>
-            <div className="flex items-center justify-between mb-3">
-              <p className="section-title">ニュース</p>
+          <section className="section-rule">
+            <div className="section-head">
+              <h2 className="section-title">ニュース</h2>
             </div>
             <HomeNewsSection news={news} />
           </section>
@@ -271,49 +262,61 @@ export default async function HomePage() {
 
         {/* 5. プレイヤーポイントランキング */}
         <ScrollReveal delay={80}>
-          <TopScorers playerStats={playerStats} />
+          <div className="section-rule">
+            <TopScorers playerStats={playerStats} />
+          </div>
         </ScrollReveal>
 
         {/* コミュニティ */}
-        <section className="animate-spring-in">
-          <p className="section-title mb-3">コミュニティ</p>
-          <div className="grid grid-cols-1 gap-3">
-            {/* 意見箱 */}
-            <Link
-              href="/feedback"
-              className="card-native p-4 touch-active flex items-center gap-4"
-            >
-              <div
-                className="w-11 h-11 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
-                style={{
-                  background: "linear-gradient(135deg, #1a3268, #2255a0)",
-                }}
-              >
-                📮
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-slate-900">匿名意見箱</p>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  運営への意見・要望を匿名で送れる
-                </p>
-              </div>
-              <span className="text-xs text-slate-300">→</span>
-            </Link>
+        <section className="section-rule">
+          <div className="section-head">
+            <h2 className="section-title">コミュニティ</h2>
           </div>
+          <Link
+            href="/feedback"
+            className="group flex items-center gap-4 border-y border-ink/15 py-4"
+          >
+            <span
+              className="flex h-11 w-11 flex-shrink-0 items-center justify-center bg-[#0c1e42] text-white"
+              aria-hidden="true"
+            >
+              <svg
+                className="h-5 w-5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={1.75}
+              >
+                <path d="M3.5 6.5h17v11h-17z" strokeLinejoin="miter" />
+                <path d="M3.5 6.5 12 13l8.5-6.5" strokeLinejoin="miter" />
+              </svg>
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-[15px] font-bold text-ink group-hover:underline underline-offset-4">
+                匿名意見箱
+              </span>
+              <span className="mt-0.5 block text-xs text-ink/70">
+                運営への意見・要望を匿名で送れる
+              </span>
+            </span>
+            <ArrowIcon className="h-4 w-4 flex-shrink-0 text-ink" />
+          </Link>
         </section>
 
         {/* YouTube セクション */}
-        <section className="animate-spring-in animate-delay-300">
-          <p className="section-title mb-3">公式動画</p>
+        <section className="section-rule">
+          <div className="section-head">
+            <h2 className="section-title">公式動画</h2>
+          </div>
           <a
             href={
               latestVideo?.url ?? "https://www.youtube.com/@FukuokaSuperLeague"
             }
             target="_blank"
             rel="noopener noreferrer"
-            className="block card-native overflow-hidden touch-active"
+            className="group block"
           >
-            <div className="relative bg-slate-900 aspect-video">
+            <div className="relative aspect-video bg-[#0c1e42]">
               {latestVideo ? (
                 <>
                   <Image
@@ -323,46 +326,45 @@ export default async function HomePage() {
                     className="object-cover"
                     unoptimized
                   />
-                  <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-                    <div className="w-14 h-14 rounded-full bg-red-600/90 flex items-center justify-center shadow-lg">
-                      <svg
-                        className="w-6 h-6 text-white ml-1"
-                        fill="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path d="M8 5v14l11-7z" />
-                      </svg>
-                    </div>
-                  </div>
+                  <span
+                    className="absolute left-0 bottom-0 flex h-12 w-12 items-center justify-center bg-white text-[#0c1e42]"
+                    aria-hidden="true"
+                  >
+                    <svg
+                      className="h-5 w-5"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                    >
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                  </span>
                 </>
               ) : (
-                <>
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary-900/50 to-slate-900" />
-                  <div className="relative h-full flex flex-col items-center justify-center gap-3">
-                    <div className="w-14 h-14 rounded-full bg-red-600 flex items-center justify-center shadow-lg">
-                      <svg
-                        className="w-6 h-6 text-white ml-1"
-                        fill="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path d="M8 5v14l11-7z" />
-                      </svg>
-                    </div>
-                    <p className="text-white text-sm font-medium">
-                      FSL 公式 YouTube
-                    </p>
-                    <p className="text-slate-300 text-xs">
-                      試合ハイライト・インタビュー配信中
-                    </p>
-                  </div>
-                </>
+                <div className="flex h-full flex-col p-5 text-white">
+                  <span
+                    className="flex h-12 w-12 items-center justify-center bg-white text-[#0c1e42]"
+                    aria-hidden="true"
+                  >
+                    <svg
+                      className="h-5 w-5"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                    >
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                  </span>
+                  <p className="mt-auto text-lg font-bold">FSL 公式 YouTube</p>
+                  <p className="mt-1 text-xs text-white/70">
+                    試合ハイライト・インタビュー配信中
+                  </p>
+                </div>
               )}
             </div>
-            <div className="p-3 flex items-center justify-between gap-2">
-              <span className="text-sm font-medium text-slate-900 truncate">
+            <div className="flex items-baseline justify-between gap-3 border-b border-ink/15 py-3">
+              <span className="truncate text-sm font-bold text-ink group-hover:underline underline-offset-4">
                 {latestVideo?.title ?? "FUKUOKA SUPER LEAGUE公式YouTube"}
               </span>
-              <span className="text-xs text-slate-400 flex-shrink-0">
+              <span className="flex-shrink-0 text-xs text-ink/70">
                 YouTube
               </span>
             </div>

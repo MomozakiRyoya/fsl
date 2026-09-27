@@ -55,6 +55,12 @@ input[type=number] { -moz-appearance: textfield; }
   --shadow-2xl: 0 0 0 1px rgba(12, 30, 66, 0.12);
 }
 
+/* 明るい地に置く紺の文字と罫線（text-ink・border-ink/15 など）。
+   inline にしないので、ダークモードでは .dark の値に差し替わる */
+@theme {
+  --color-ink: #0c1e42;
+}
+
 :root {
   color-scheme: light;
   --navy: #0c1e42;
@@ -420,6 +426,9 @@ html { scroll-behavior: smooth; }
 }
 
 /* ===== ダークモード ===== */
+.dark {
+  --color-ink: #e2e8f0;
+}
 .dark body {
   background-color: #0a0f1e;
   color: #e2e8f0;
