@@ -35,16 +35,16 @@ input[type=number] { -moz-appearance: textfield; }
   /* 欧文と数字は Helvetica 系、和文はヒラギノ角ゴ */
   --font-sans: "Helvetica Neue", Helvetica, Arial, "Hiragino Sans", "Noto Sans JP", sans-serif;
 
-  /* ===== 角と影（角を立て、影の代わりに 1px の細線） ===== */
-  --radius: 0;
-  --radius-xs: 0;
-  --radius-sm: 0;
-  --radius-md: 0;
-  --radius-lg: 0;
-  --radius-xl: 0;
-  --radius-2xl: 0;
-  --radius-3xl: 0;
-  --radius-4xl: 0;
+  /* ===== 角と影（角丸は SwiftPieces の段階、影の代わりに 1px の細線） ===== */
+  --radius: 8px;
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 12px;
+  --radius-2xl: 18px;
+  --radius-3xl: 26px;
+  --radius-4xl: 34px;
   --shadow: 0 0 0 1px rgba(12, 30, 66, 0.12);
   --shadow-2xs: 0 0 0 1px rgba(12, 30, 66, 0.12);
   --shadow-xs: 0 0 0 1px rgba(12, 30, 66, 0.12);
@@ -56,9 +56,16 @@ input[type=number] { -moz-appearance: textfield; }
 }
 
 /* 明るい地に置く紺の文字と罫線（text-ink・border-ink/15 など）。
-   inline にしないので、ダークモードでは .dark の値に差し替わる */
+   inline にしないので、ダークモードでは .dark の値に差し替わる。
+   butter〜silver は状態を示す色の面（SwiftPieces のブロック色。butter は金の明るい色に寄せた）。
+   面はダークでも明るいままなので、上に載せる文字 on-block は .dark で差し替えない */
 @theme {
   --color-ink: #0c1e42;
+  --color-butter: #e3c060;
+  --color-sage: #a9dcb7;
+  --color-sand: #e9d5b3;
+  --color-silver: #d9dee7;
+  --color-on-block: #0c1e42;
 }
 
 :root {
@@ -269,12 +276,12 @@ html { scroll-behavior: smooth; }
   box-shadow: 0 4px 16px rgba(201,146,30,0.2), 0 1px 4px rgba(201,146,30,0.1);
 }
 
-/* ===== タッチフィードバック ===== */
+/* ===== タッチフィードバック（SwiftPieces の押し込み。0.97 まで縮み、ばねの緩急で戻る） ===== */
 .touch-active {
-  transition: opacity 120ms ease;
+  transition: transform 380ms var(--ease-spring), opacity 120ms ease;
 }
 .touch-active:active {
-  opacity: 0.7;
+  transform: scale(0.97);
 }
 
 /* ===== グラスモーフィズム ===== */
@@ -292,12 +299,16 @@ html { scroll-behavior: smooth; }
 /* ===== プレミアムカード ===== */
 .card-native {
   background: white;
-  border-radius: 0;
+  border-radius: var(--radius-2xl);
   box-shadow: 0 0 0 1px rgba(12,30,66,0.12);
   transition: background-color 150ms ease;
 }
 .card-native:active {
   background: #f8f7f3;
+}
+/* 押し込みと重ねたとき、上の transition が .touch-active のばねを打ち消さないように両方を並べる */
+.card-native.touch-active {
+  transition: background-color 150ms ease, transform 380ms var(--ease-spring);
 }
 
 /* ===== スコア・数値表示 ===== */
@@ -418,7 +429,7 @@ html { scroll-behavior: smooth; }
   align-items: center;
   justify-content: center;
   padding: 2px 10px;
-  border-radius: 0;
+  border-radius: 999px;
   font-size: 0.6875rem;
   font-weight: 600;
   letter-spacing: 0.02em;
@@ -460,6 +471,10 @@ html { scroll-behavior: smooth; }
 .dark .border-slate-200 { border-color: rgba(255,255,255,0.1); }
 .dark .bg-slate-50 { background-color: rgba(255,255,255,0.04); }
 .dark .bg-slate-100 { background-color: rgba(255,255,255,0.06); }
+/* 白地の入力欄は白のまま残る。文字だけ上の決めで明るくなると白地に白文字になるので、濃いまま戻す */
+.dark input.bg-white,
+.dark textarea.bg-white,
+.dark select.bg-white { color: #0f172a; }
 .dark .section-title { color: #cbd5e1; }
 .dark .section-rule { border-top-color: rgba(255,255,255,0.3); }
 .dark .section-link { color: #e2e8f0; }
@@ -467,6 +482,16 @@ html { scroll-behavior: smooth; }
   background: rgba(10, 15, 30, 0.9);
   border-bottom-color: rgba(255,255,255,0.06);
 }
+/* 地に直接置くチップとトラックは、暗い地で読める色に替える（色の面の上は紺のまま） */
+.dark .glide-chip {
+  color: #cbd5e1;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.18);
+}
+.dark .glide-chip[aria-pressed="true"] { color: var(--color-on-block); box-shadow: none; }
+.dark .glide-indicator--rail { background: #e2e8f0; }
+.dark .glide-track { background: #0f1a35; box-shadow: 0 0 0 1px rgba(255,255,255,0.1); }
+.dark .glide-option { color: #94a3b8; }
+.dark .glide-option[aria-pressed="true"] { color: var(--color-on-block); }
 
 /* ===== レスポンシブユーティリティ ===== */
 
@@ -536,6 +561,115 @@ html { scroll-behavior: smooth; }
   50%       { text-shadow: 0 0 12px rgba(201,146,30,0.6); }
 }
 .animate-number-glow { animation: numberGlow 1.5s ease-in-out; }
+
+/* ===== SwiftPieces の部品（滑る選択の印・状態のタイムライン・桁ごとに回る数字） ===== */
+/* 出典 https://github.com/Saivion/SwiftPieces 。色は紺・金・生成り地のまま、作りだけを合わせる */
+:root {
+  --ease-spring: cubic-bezier(0.34, 1.3, 0.64, 1);
+  --ease-glide: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* 選択の印（GlideTabs.tsx）。位置が決まるまでは出さず、最初の 1 回は滑らせない */
+.glide-indicator {
+  position: absolute;
+  top: 4px;
+  left: 0;
+  height: calc(100% - 8px);
+  border-radius: 999px;
+  pointer-events: none;
+  opacity: 0;
+}
+.glide-indicator[data-ready] {
+  opacity: 1;
+  transition: transform 500ms var(--ease-glide), width 500ms var(--ease-glide);
+}
+.glide-track {
+  background: #fff;
+  box-shadow: 0 0 0 1px rgba(12, 30, 66, 0.12);
+}
+.glide-indicator--track {
+  background: var(--color-butter);
+}
+.glide-indicator--rail {
+  top: 0;
+  height: 100%;
+  background: var(--navy);
+}
+.glide-option {
+  color: #5c5a56;
+  transition: color 200ms ease, transform 380ms var(--ease-spring);
+}
+.glide-option[aria-pressed="true"] {
+  color: var(--color-on-block);
+}
+.glide-chip {
+  color: #5c5a56;
+  box-shadow: inset 0 0 0 1px rgba(12, 30, 66, 0.15);
+  transition: color 200ms ease, box-shadow 200ms ease, transform 380ms var(--ease-spring);
+}
+.glide-chip[aria-pressed="true"] {
+  color: #fff;
+  box-shadow: none;
+}
+/* 横に流すレールは、溢れている側の端だけを薄くする */
+.glide-rail[data-fade="start"] {
+  mask-image: linear-gradient(to right, transparent, #000 24px);
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 24px);
+}
+.glide-rail[data-fade="end"] {
+  mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent);
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent);
+}
+.glide-rail[data-fade="both"] {
+  mask-image: linear-gradient(to right, transparent, #000 24px, #000 calc(100% - 24px), transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 24px, #000 calc(100% - 24px), transparent);
+}
+
+/* 状態のタイムライン（日程）。次節の輪だけが呼吸する */
+@keyframes timelineBreathe {
+  from { transform: scale(1); opacity: 0.9; }
+  to { transform: scale(1.5); opacity: 0; }
+}
+.timeline-breathe {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: var(--color-butter);
+  animation: timelineBreathe 1.6s var(--ease-glide) infinite;
+}
+
+/* 桁ごとに回る数字（CountUp.tsx）。桁の窓は clip-path で切る */
+.odometer {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.odometer-slot {
+  position: relative;
+  display: inline-block;
+  clip-path: inset(0);
+}
+.odometer-ghost {
+  visibility: hidden;
+}
+.odometer-reel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+}
+.odometer[data-rolling] .odometer-slot {
+  mask-image: linear-gradient(to bottom, transparent, #000 22%, #000 78%, transparent);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 22%, #000 78%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .touch-active:active { transform: none; opacity: 0.7; }
+  .glide-indicator[data-ready] { transition: none; }
+  .timeline-breathe { animation: none; opacity: 0; }
+}
 
 /* ===== 下部タブバー（浮いたガラスのピル） ===== */
 /* FST のタブバーと同じ作り。画面の端から離して浮かせた板をガラスにし、

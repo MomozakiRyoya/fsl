@@ -7,9 +7,12 @@ import RankChart from "@/components/standings/RankChart";
 import StandingsSimulator from "@/components/standings/StandingsSimulator";
 import PlayoffBracket from "@/components/standings/PlayoffBracket";
 import AiAnalysis from "@/components/standings/AiAnalysis";
+import GlideTabs from "@/components/ui/GlideTabs";
+import BreakableName from "@/components/ui/BreakableName";
 
 const SUB_TABS = ["順位表", "シミュレーター"] as const;
 type SubTab = (typeof SUB_TABS)[number];
+const SUB_TAB_OPTIONS = SUB_TABS.map((tab) => ({ key: tab, label: tab }));
 
 const LEAGUE_SHORT: Record<string, string> = {
   premier: "プレミア",
@@ -19,36 +22,26 @@ const LEAGUE_SHORT: Record<string, string> = {
   club: "クローバー",
 };
 
+// 上位 3 つは色の面の札（金・銀・銅）。数字は札の中にそのまま出す
+const RANK_BLOCK: Record<number, string> = {
+  1: "bg-butter",
+  2: "bg-silver",
+  3: "bg-sand",
+};
+
 function RankBadge({ rank }: { rank: number }) {
-  if (rank === 1) {
+  const block = RANK_BLOCK[rank];
+  if (block) {
     return (
       <span
-        className="inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold shadow-sm"
-        style={{
-          background: "linear-gradient(135deg, #c9921e, #e3c060)",
-          color: "#0c1e42",
-        }}
+        className={`inline-flex items-center justify-center w-7 h-7 rounded-lg text-xs font-extrabold tabular-nums text-on-block ${block}`}
       >
-        1
-      </span>
-    );
-  }
-  if (rank === 2) {
-    return (
-      <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-slate-400 text-white text-xs font-bold shadow-sm">
-        2
-      </span>
-    );
-  }
-  if (rank === 3) {
-    return (
-      <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-amber-600 text-white text-xs font-bold shadow-sm">
-        3
+        {rank}
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center justify-center w-7 h-7 text-slate-500 text-sm font-medium">
+    <span className="inline-flex items-center justify-center w-7 h-7 text-slate-500 text-sm font-medium tabular-nums">
       {rank}
     </span>
   );
@@ -81,36 +74,31 @@ function StandingsTable({
     .reverse();
   const hasRounds = lastRounds.length > 0;
 
+  // 名前に幅を渡すため、順位・節・合計の列は中身が収まるぎりぎりまで詰める
+  // （順位の札 28px・節 28px・合計 40px。375px で名前の列が 63px から 111px になる）
   const gridStyle: React.CSSProperties = {
     display: "grid",
     gridTemplateColumns: hasRounds
-      ? `2rem 1fr ${lastRounds.map(() => "2.5rem").join(" ")} 3rem`
-      : "2rem 1fr 3rem",
+      ? `1.75rem minmax(0,1fr) ${lastRounds.map(() => "1.75rem").join(" ")} 2.5rem`
+      : "1.75rem minmax(0,1fr) 2.5rem",
     gap: "0.25rem",
   };
 
   return (
-    <div className="bg-white rounded-2xl overflow-hidden shadow-native animate-spring-in">
+    <div className="card-native overflow-hidden animate-spring-in">
       <div
-        className="px-3 py-2.5 border-b border-white/10"
-        style={{ ...gridStyle, background: "#0c1e42" }}
+        className="px-3 pt-3.5 pb-2 border-b border-slate-100 text-[10px] font-bold tracking-[0.08em] text-slate-500"
+        style={gridStyle}
       >
-        <span className="text-[11px] font-bold text-white/50 text-center">
-          #
-        </span>
-        <span className="text-[11px] font-bold text-white/50">チーム</span>
+        <span className="text-center">#</span>
+        <span>チーム</span>
         {hasRounds &&
           lastRounds.map((r) => (
-            <span
-              key={r}
-              className="text-[11px] font-bold text-white/40 text-center"
-            >
+            <span key={r} className="text-center">
               {r}節
             </span>
           ))}
-        <span className="text-[11px] font-bold text-white/50 text-right">
-          合計
-        </span>
+        <span className="text-right">合計</span>
       </div>
       {standings.map((team, i) => {
         const isPremier = leagueId === "premier";
@@ -128,17 +116,6 @@ function StandingsTable({
             : team.rank === 1
               ? "rgba(201,146,30,0.12)"
               : undefined,
-          borderLeft: isPremier
-            ? team.rank === 1
-              ? "3px solid rgba(201,146,30,0.7)"
-              : team.rank <= 3
-                ? "3px solid rgba(34,197,94,0.5)"
-                : team.rank === 6
-                  ? "3px solid rgba(239,68,68,0.5)"
-                  : "3px solid transparent"
-            : team.rank === 1
-              ? "3px solid rgba(201,146,30,0.7)"
-              : "3px solid transparent",
           borderBottom:
             isPremier && team.rank === 3
               ? "2px solid rgba(239,68,68,0.5)"
@@ -153,23 +130,24 @@ function StandingsTable({
             <div className="flex justify-center">
               <RankBadge rank={team.rank} />
             </div>
+            {/* 360px 未満はロゴを畳んで名前に幅を渡す（残すと 320px で「BARTENDER」が語の途中で割れる） */}
             <div className="flex items-center gap-2 min-w-0">
               {team.teamLogoUrl ? (
                 <img
                   src={team.teamLogoUrl}
                   alt={team.teamName}
-                  className="w-7 h-7 rounded-full object-cover flex-shrink-0 shadow-sm"
+                  className="hidden min-[360px]:block w-7 h-7 rounded-full object-cover flex-shrink-0 shadow-sm"
                 />
               ) : (
                 <div
-                  className="w-7 h-7 rounded-full flex items-center justify-center text-[9px] font-black text-white flex-shrink-0 shadow-sm"
+                  className="hidden min-[360px]:flex w-7 h-7 rounded-full items-center justify-center text-[9px] font-black text-white flex-shrink-0 shadow-sm"
                   style={{ backgroundColor: leagueColor }}
                 >
                   {getInitials(team.teamName)}
                 </div>
               )}
-              <span className="text-sm font-semibold text-slate-900 truncate">
-                {team.teamName}
+              <span className="text-sm font-semibold leading-tight text-slate-900 line-clamp-2 break-words text-balance">
+                <BreakableName name={team.teamName} />
               </span>
             </div>
             {hasRounds &&
@@ -178,19 +156,13 @@ function StandingsTable({
                 return (
                   <span
                     key={r}
-                    className="text-xs tabular-nums text-center font-medium"
-                    style={{
-                      color: pts != null ? "#334155" : "rgba(148,163,184,0.5)",
-                    }}
+                    className={`text-xs tabular-nums text-center font-medium ${pts != null ? "text-slate-700" : "text-slate-400"}`}
                   >
                     {pts != null ? pts : "—"}
                   </span>
                 );
               })}
-            <span
-              className="text-sm font-black tabular-nums text-right"
-              style={{ color: team.rank <= 3 ? leagueColor : "#334155" }}
-            >
+            <span className="text-lg font-light leading-none tabular-nums tracking-[-0.02em] text-right text-slate-900">
               {team.totalPoints}
             </span>
           </>
@@ -270,40 +242,27 @@ export default function StandingsPageClient({ leagues, standings }: Props) {
       </div>
 
       <div className="px-4 py-4">
-        <div className="flex border-b border-slate-200 bg-white -mx-4 px-4 mb-4">
-          {SUB_TABS.map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveSubTab(tab)}
-              className={`flex-1 py-3 text-sm font-semibold transition-colors duration-150 ${activeSubTab === tab ? "text-amber-600 border-b-2 border-amber-500" : "text-slate-400 hover:text-slate-600"}`}
-            >
-              {tab}
-            </button>
-          ))}
-        </div>
+        <GlideTabs
+          ariaLabel="表示の切り替え"
+          options={SUB_TAB_OPTIONS}
+          value={activeSubTab}
+          onChange={(key) => setActiveSubTab(key as SubTab)}
+          className="mb-4"
+        />
 
         {activeSubTab === "順位表" && (
           <>
-            <div className="flex gap-1.5 mb-4 p-1.5 bg-slate-100 rounded-2xl overflow-x-auto">
-              {leagues.map((league) => (
-                <button
-                  key={league.id}
-                  onClick={() => setActiveLeague(league.id)}
-                  className="flex-1 py-2 rounded-xl text-xs font-semibold transition-all duration-200 active:scale-95 whitespace-nowrap"
-                  style={
-                    activeLeague === league.id
-                      ? {
-                          background: "#0c1e42",
-                          color: "white",
-                          boxShadow: "0 2px 6px rgba(12,30,66,0.2)",
-                        }
-                      : { color: "#64748b" }
-                  }
-                >
-                  {LEAGUE_SHORT[league.id] ?? league.name}
-                </button>
-              ))}
-            </div>
+            <GlideTabs
+              variant="rail"
+              ariaLabel="ディビジョン"
+              options={leagues.map((league) => ({
+                key: league.id,
+                label: LEAGUE_SHORT[league.id] ?? league.name,
+              }))}
+              value={activeLeague}
+              onChange={setActiveLeague}
+              className="-mx-4 px-4 mb-4"
+            />
 
             <StandingsTable
               standings={currentStandings}

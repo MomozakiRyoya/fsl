@@ -1,7 +1,7 @@
 // 画面全体の組み方の約束事（色は紺・金・生成り地のまま、design-swiss に寄せる）。
-//  - 角は立てる。影は 1px の細線だけ。グラデーションとぼかしは使わない
+//  - 影は 1px の細線だけ。グラデーションとぼかしは使わない
 //  - 見出しは左揃え・大文字にしない。セクションは 1px の紺の罫線で区切る
-//  - 押しても動かさない（色と濃さで返す）
+//  - 角の丸めと押したときの動きは SwiftPieces に合わせた（swiftpieces-parts.test.mjs が見る）
 //  - 例外は下部のガラスのタブバー（tabbar-glass.test.mjs が見る）
 // 実行: npm test
 import { test } from "node:test";
@@ -67,22 +67,6 @@ test("書体は和文を先に決める（Inter 始まりにしない）", () =>
   assert.match(font, /Hiragino Sans/);
 });
 
-test("角丸のトークンはすべて 0", () => {
-  for (const name of [
-    "--radius",
-    "--radius-xs",
-    "--radius-sm",
-    "--radius-md",
-    "--radius-lg",
-    "--radius-xl",
-    "--radius-2xl",
-    "--radius-3xl",
-    "--radius-4xl",
-  ]) {
-    assert.equal(decl(theme, name), "0", `${name} が 0 でない`);
-  }
-});
-
 test("影のトークンはすべて 1px の細線", () => {
   for (const name of [
     "--shadow",
@@ -111,19 +95,9 @@ test("セクション見出しは大文字にせず紺、区切りは 1px の紺
   assert.match(border, NAVY);
 });
 
-test("カードとバッジは角を立て、押しても動かさない", () => {
+test("カードの縁と影は 1px の細線", () => {
   const card = block(css, "\n.card-native {").body;
-  assert.equal(decl(card, "border-radius"), "0");
   assert.match(decl(card, "box-shadow") ?? "", /^0 0 0 1px /);
-  const cardActive = block(css, "\n.card-native:active {").body;
-  assert.equal(decl(cardActive, "transform"), null);
-
-  const touchActive = block(css, "\n.touch-active:active {").body;
-  assert.equal(decl(touchActive, "transform"), null);
-
-  const pill = block(css, "\n.pill {").body;
-  assert.equal(decl(pill, "border-radius"), "0");
-
   const shadow = block(css, "\n.shadow-native {").body;
   assert.match(decl(shadow, "box-shadow") ?? "", /^0 0 0 1px /);
 });

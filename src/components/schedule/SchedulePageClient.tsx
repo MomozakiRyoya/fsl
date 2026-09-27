@@ -2,81 +2,120 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import type { League, Round } from "@/lib/types/app";
+import type { League, Round, RoundStatus } from "@/lib/types/app";
 import { getEffectiveStatus } from "@/lib/round-status";
 import { formatRoundDateTime } from "@/lib/start-time";
+import GlideTabs from "@/components/ui/GlideTabs";
 
-const STATUS_STYLES: Record<string, string> = {
-  finished: "bg-slate-100 text-slate-500",
-  next: "",
-  scheduled: "bg-white border border-[#e8dfc0] text-slate-600",
-};
-
-const STATUS_LABELS: Record<string, string> = {
+const STATUS_LABELS: Record<RoundStatus, string> = {
   finished: "終了",
   next: "次節",
   scheduled: "予定",
 };
 
-function RoundCard({ round }: { round: Round }) {
-  const effectiveStatus = getEffectiveStatus(round);
-  const isNext = effectiveStatus === "next";
-  const isPlayoff = round.isPlayoff;
+/** 節の丸（SwiftPieces の StatusTimeline）。終わった節はチェック、次節は呼吸する輪、先の節は線の輪に節番号 */
+function StatusNode({
+  status,
+  roundNumber,
+}: {
+  status: RoundStatus;
+  roundNumber: number;
+}) {
+  const base =
+    "relative flex items-center justify-center w-[30px] h-[30px] rounded-full text-xs font-extrabold tabular-nums";
+  if (status === "finished") {
+    return (
+      <span aria-hidden="true" className={`${base} bg-sage text-on-block`}>
+        <svg
+          className="w-3.5 h-3.5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={3}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M5 13l4 4L19 7"
+          />
+        </svg>
+      </span>
+    );
+  }
+  if (status === "next") {
+    return (
+      <span aria-hidden="true" className={`${base} bg-butter text-on-block`}>
+        <span className="timeline-breathe" />
+        <span className="relative">{roundNumber}</span>
+      </span>
+    );
+  }
+  return (
+    <span
+      aria-hidden="true"
+      className={`${base} shadow-[inset_0_0_0_2px_var(--color-silver)] text-slate-500`}
+    >
+      {roundNumber}
+    </span>
+  );
+}
+
+function RoundRow({
+  round,
+  isLast,
+  delay,
+}: {
+  round: Round;
+  isLast: boolean;
+  delay: number;
+}) {
+  const status = getEffectiveStatus(round);
+  const isNext = status === "next";
 
   return (
-    <Link
-      href={`/schedule/${round.id}`}
-      className={`block bg-white rounded-xl border p-4 transition-all duration-200 hover:shadow-md active:scale-[0.99] ${isPlayoff ? "border-amber-200" : "border-[#e8dfc0]"}`}
-      style={isNext ? { borderLeft: "3px solid #c9921e" } : {}}
+    <li
+      className="relative grid grid-cols-[30px_1fr] gap-x-3 pb-3 animate-slide-up"
+      style={{ animationDelay: `${delay}ms` }}
     >
-      <div className="flex items-start justify-between gap-3">
+      {!isLast && (
+        <span
+          aria-hidden="true"
+          className={`absolute left-[13.5px] top-[34px] bottom-1 w-[3px] rounded-full ${status === "finished" ? "bg-sage" : "bg-silver"}`}
+        />
+      )}
+      <StatusNode status={status} roundNumber={round.roundNumber} />
+      <Link
+        href={`/schedule/${round.id}`}
+        className={`group touch-active flex items-center gap-3 min-w-0 rounded-2xl ${isNext ? "bg-butter text-on-block p-4" : "py-1"}`}
+      >
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1.5">
-            {isPlayoff && (
-              <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium">
-                PLAYOFF
-              </span>
-            )}
-            {effectiveStatus === "next" ? (
-              <span
-                className="text-xs px-2 py-0.5 rounded-full font-bold"
-                style={{
-                  background: "linear-gradient(135deg, #c9921e, #e3c060)",
-                  color: "#0c1e42",
-                }}
-              >
-                {STATUS_LABELS[round.status]}
-              </span>
-            ) : (
-              <span
-                className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_STYLES[round.status]}`}
-              >
-                {STATUS_LABELS[round.status]}
-              </span>
+          <div className="flex items-center gap-1.5 mb-0.5">
+            <span
+              className={`text-[10px] font-bold tracking-[0.08em] ${isNext ? "" : "text-slate-500"}`}
+            >
+              {STATUS_LABELS[status]}
+            </span>
+            {round.isPlayoff && (
+              <span className="pill bg-sand text-on-block">PLAYOFF</span>
             )}
           </div>
+          {/* 字の間では折らず、空白と括弧の前で折る。320px で「（合同エースマッ／チ）」と 2 字だけ落ちていた */}
           <p
-            className={`font-semibold ${isNext ? "" : isPlayoff ? "text-amber-700" : "text-slate-900"} text-sm`}
-            style={isNext ? { color: "#0c1e42" } : {}}
+            className={`text-sm font-bold [word-break:keep-all] break-words underline-offset-2 group-hover:underline ${isNext ? "" : "text-slate-900"}`}
           >
             {round.name}
           </p>
-          {round.format && (
-            <p
-              className="text-[11px] font-medium mt-0.5"
-              style={{ color: isNext ? "rgba(201,146,30,0.9)" : "#94a3b8" }}
-            >
-              🃏 {round.format}
-            </p>
-          )}
-          <div className="flex flex-col gap-1 mt-2">
-            <div className="flex items-center gap-1.5 text-xs text-body">
+          <div
+            className={`flex flex-col gap-0.5 mt-1 text-xs ${isNext ? "text-on-block/70" : "text-slate-500"}`}
+          >
+            <span className="inline-flex items-center gap-1">
               <svg
-                className="w-3.5 h-3.5 text-slate-400 flex-shrink-0"
+                className="w-3.5 h-3.5 flex-shrink-0"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
                 strokeWidth={2}
+                aria-hidden="true"
               >
                 <path
                   strokeLinecap="round"
@@ -85,14 +124,15 @@ function RoundCard({ round }: { round: Round }) {
                 />
               </svg>
               {formatRoundDateTime(round)}
-            </div>
-            <div className="flex items-center gap-1.5 text-xs text-body">
+            </span>
+            <span className="inline-flex items-center gap-1">
               <svg
-                className="w-3.5 h-3.5 text-slate-400 flex-shrink-0"
+                className="w-3.5 h-3.5 flex-shrink-0"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
                 strokeWidth={2}
+                aria-hidden="true"
               >
                 <path
                   strokeLinecap="round"
@@ -106,17 +146,61 @@ function RoundCard({ round }: { round: Round }) {
                 />
               </svg>
               {round.venue}
-            </div>
+            </span>
+            {round.format && (
+              <span className="inline-flex items-center gap-1">
+                <svg
+                  className="w-3.5 h-3.5 flex-shrink-0"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  aria-hidden="true"
+                >
+                  <rect x="8" y="3" width="12" height="16" rx="2" />
+                  <path strokeLinecap="round" d="M5 7v11a3 3 0 003 3h7" />
+                </svg>
+                {round.format}
+              </span>
+            )}
           </div>
         </div>
-        {isNext && (
-          <div
-            className="flex-shrink-0 w-2 h-2 rounded-full mt-1.5 animate-pulse"
-            style={{ background: "#c9921e" }}
-          />
-        )}
-      </div>
-    </Link>
+        <svg
+          className={`w-4 h-4 flex-shrink-0 ${isNext ? "text-on-block/50" : "text-slate-400"}`}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+          aria-hidden="true"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+        </svg>
+      </Link>
+    </li>
+  );
+}
+
+/** 節を上から順に丸と線でつなぐ。線は終わった節から伸びるものだけ色が付く */
+function RoundTimeline({
+  rounds,
+  step,
+  className = "",
+}: {
+  rounds: Round[];
+  step: number;
+  className?: string;
+}) {
+  return (
+    <ol className={className}>
+      {rounds.map((round, i) => (
+        <RoundRow
+          key={round.id}
+          round={round}
+          isLast={i === rounds.length - 1}
+          delay={Math.min(i * step, 300)}
+        />
+      ))}
+    </ol>
   );
 }
 
@@ -143,72 +227,52 @@ export default function SchedulePageClient({ leagues, rounds }: Props) {
     <div className="max-w-lg mx-auto px-4 py-6">
       <h1 className="text-xl font-bold text-slate-900 mb-4">日程</h1>
 
-      <div className="flex gap-2 overflow-x-auto scroll-x-hidden pb-2 mb-5 -mx-4 px-4">
-        {leagues.map((league) => {
-          const isActive = activeLeague === league.id;
-          return (
-            <button
-              key={league.id}
-              onClick={() => setActiveLeague(league.id)}
-              className={`flex-none flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 active:scale-95 ${isActive ? "text-white shadow-sm" : "bg-white border border-slate-200 text-slate-600 hover:border-slate-300"}`}
-              style={isActive ? { backgroundColor: league.color } : {}}
-            >
+      <GlideTabs
+        variant="rail"
+        ariaLabel="ディビジョン"
+        options={leagues.map((league) => ({
+          key: league.id,
+          label: (
+            <>
               <span
-                className={`w-1.5 h-1.5 rounded-full ${isActive ? "bg-white/70" : ""}`}
-                style={!isActive ? { backgroundColor: league.color } : {}}
+                aria-hidden="true"
+                className={`w-1.5 h-1.5 rounded-full ${activeLeague === league.id ? "ring-1 ring-white/70" : ""}`}
+                style={{ backgroundColor: league.color }}
               />
               {league.name}
-            </button>
-          );
-        })}
-      </div>
+            </>
+          ),
+        }))}
+        value={activeLeague}
+        onChange={setActiveLeague}
+        className="-mx-4 px-4 mb-5"
+      />
 
       <section className="mb-6 animate-fade-in">
         {/* これからの試合 */}
         {upcomingRounds.length > 0 && (
           <>
-            <div className="flex items-center gap-2 mb-3">
-              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+            <div className="flex items-baseline gap-2 mb-3">
               <h2 className="text-sm font-bold text-slate-700">
                 これからの試合
               </h2>
-              <span className="text-xs text-slate-400">
+              <span className="text-xs text-slate-400 tabular-nums">
                 {upcomingRounds.length}節
               </span>
             </div>
-            <div className="space-y-2 mb-5">
-              {upcomingRounds.map((round, i) => (
-                <div
-                  key={round.id}
-                  className="animate-slide-up"
-                  style={{ animationDelay: `${Math.min(i * 30, 300)}ms` }}
-                >
-                  <RoundCard round={round} />
-                </div>
-              ))}
-            </div>
+            <RoundTimeline rounds={upcomingRounds} step={30} className="mb-4" />
           </>
         )}
         {/* 終了した試合 */}
         {finishedRounds.length > 0 && (
           <>
-            <div className="flex items-center gap-2 mb-3 mt-4">
-              <h2 className="text-sm font-bold text-slate-400">終了した試合</h2>
-              <span className="text-xs text-slate-300">
+            <div className="flex items-baseline gap-2 mb-3 mt-4">
+              <h2 className="text-sm font-bold text-slate-500">終了した試合</h2>
+              <span className="text-xs text-slate-400 tabular-nums">
                 {finishedRounds.length}節
               </span>
             </div>
-            <div className="space-y-2">
-              {finishedRounds.map((round, i) => (
-                <div
-                  key={round.id}
-                  className="animate-slide-up"
-                  style={{ animationDelay: `${Math.min(i * 30, 300)}ms` }}
-                >
-                  <RoundCard round={round} />
-                </div>
-              ))}
-            </div>
+            <RoundTimeline rounds={finishedRounds} step={30} />
           </>
         )}
         {regularRounds.length === 0 && (
@@ -221,8 +285,13 @@ export default function SchedulePageClient({ leagues, rounds }: Props) {
       {playoffRounds.length > 0 && (
         <section className="animate-fade-in animate-delay-300">
           <div className="flex items-center gap-2 mb-3">
-            <h2 className="text-sm font-bold text-amber-700 flex items-center gap-1.5">
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+            <h2 className="text-sm font-bold text-slate-700 flex items-center gap-1.5">
+              <svg
+                className="w-4 h-4 text-gold-500"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
                 <path
                   fillRule="evenodd"
                   d="M5.166 2.621v.858c-1.035.148-2.059.33-3.071.543a.75.75 0 0 0-.584.859 6.753 6.753 0 0 0 6.138 5.6 6.73 6.73 0 0 0 2.743 1.346A6.707 6.707 0 0 1 9.279 15H8.54c-1.036 0-1.875.84-1.875 1.875V19.5h-.75a2.25 2.25 0 0 0-2.25 2.25c0 .414.336.75.75.75h15a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-2.25-2.25h-.75v-2.625c0-1.036-.84-1.875-1.875-1.875h-.739a6.706 6.706 0 0 1-1.112-3.173 6.73 6.73 0 0 0 2.743-1.347 6.753 6.753 0 0 0 6.139-5.6.75.75 0 0 0-.585-.858 47.077 47.077 0 0 0-3.07-.543V2.62a.75.75 0 0 0-.658-.744 49.798 49.798 0 0 0-6.093-.377c-2.063 0-4.096.128-6.093.377a.75.75 0 0 0-.657.744Zm0 2.629c0 1.196.312 2.32.857 3.294A5.266 5.266 0 0 1 3.16 5.337a45.6 45.6 0 0 1 2.006-.343v.256Zm13.5 0v-.256c.674.1 1.343.214 2.006.343a5.265 5.265 0 0 1-2.863 3.207 6.72 6.72 0 0 0 .857-3.294Z"
@@ -232,17 +301,7 @@ export default function SchedulePageClient({ leagues, rounds }: Props) {
               プレーオフ
             </h2>
           </div>
-          <div className="space-y-2">
-            {playoffRounds.map((round, i) => (
-              <div
-                key={round.id}
-                className="animate-slide-up"
-                style={{ animationDelay: `${i * 60}ms` }}
-              >
-                <RoundCard round={round} />
-              </div>
-            ))}
-          </div>
+          <RoundTimeline rounds={playoffRounds} step={60} />
         </section>
       )}
     </div>

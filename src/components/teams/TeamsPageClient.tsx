@@ -4,6 +4,8 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useFollowedTeams } from "@/hooks/useFollowedTeams";
 import type { Team, League, TeamStanding } from "@/lib/types/app";
+import GlideTabs from "@/components/ui/GlideTabs";
+import BreakableName from "@/components/ui/BreakableName";
 
 function getInitials(name: string): string {
   const stripped = name.replace(/\s+/g, "");
@@ -22,18 +24,17 @@ function TeamCard({
   return (
     <Link
       href={`/teams/${team.slug}`}
-      className="flex items-center gap-3 bg-white rounded-2xl border border-slate-100 p-4 shadow-sm hover:shadow-md active:scale-[0.98] transition-all duration-200"
-      style={{ borderLeft: league ? `3px solid ${league.color}60` : undefined }}
+      className="group card-native touch-active flex items-center gap-3 p-4"
     >
       {team.logoUrl ? (
         <img
           src={team.logoUrl}
           alt={team.name}
-          className="w-12 h-12 rounded-2xl object-cover flex-shrink-0 shadow-sm"
+          className="w-12 h-12 rounded-xl object-cover flex-shrink-0 ring-1 ring-black/5"
         />
       ) : (
         <div
-          className="w-12 h-12 rounded-2xl flex items-center justify-center text-sm font-bold text-white flex-shrink-0 shadow-sm"
+          className="w-12 h-12 rounded-xl flex items-center justify-center text-sm font-bold text-white flex-shrink-0"
           style={{ backgroundColor: team.homeColor }}
           role="img"
           aria-label={team.name}
@@ -42,11 +43,35 @@ function TeamCard({
         </div>
       )}
       <div className="flex-1 min-w-0">
-        <p className="font-bold text-slate-900 text-base truncate leading-tight">
-          {team.name}
+        {/* 札は名前の上に置く（右端だと 320px で名前の列が縮み、ディビジョン名が切れる） */}
+        {isFollowing && (
+          <div className="flex mb-1">
+            <span className="pill gap-1 bg-butter text-on-block">
+              <svg
+                className="w-3 h-3"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z" />
+              </svg>
+              フォロー中
+            </span>
+          </div>
+        )}
+        <p className="font-bold text-slate-900 text-base line-clamp-2 break-words leading-tight underline-offset-2 group-hover:underline">
+          <BreakableName name={team.name} />
         </p>
-        <p className="text-xs text-slate-500 mt-0.5 truncate">
-          {team.leagueName}
+        {/* ディビジョンは色の点と名前で示す（右端の色札は名前と同じ文字の重複だったので畳んだ） */}
+        <p className="flex items-center gap-1.5 min-w-0 text-xs text-slate-500 mt-1">
+          {league && (
+            <span
+              aria-hidden="true"
+              className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+              style={{ backgroundColor: league.color }}
+            />
+          )}
+          <span className="truncate">{team.leagueName}</span>
         </p>
         {team.captainName && (
           <p className="text-xs text-slate-400 mt-0.5 truncate">
@@ -54,37 +79,23 @@ function TeamCard({
           </p>
         )}
       </div>
-      <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
-        {isFollowing && (
-          <span
-            className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
-            style={{
-              background: "rgba(201,146,30,0.15)",
-              color: "#c9921e",
-              border: "1px solid rgba(201,146,30,0.3)",
-            }}
-          >
-            ★ フォロー中
+      {team.rank !== undefined && (
+        <p className="flex-shrink-0 text-slate-900 tabular-nums leading-none">
+          <span className="text-xl font-light tracking-[-0.02em]">
+            {team.points}
           </span>
-        )}
-        {team.rank !== undefined && (
-          <p className="text-xs font-bold text-slate-600">{team.points}pt</p>
-        )}
-        {league && (
-          <span
-            className="text-[10px] px-2 py-0.5 rounded-lg font-semibold text-white"
-            style={{ backgroundColor: league.color }}
-          >
-            {team.leagueName.replace("Division ", "D")}
+          <span className="ml-0.5 text-[10px] font-bold text-slate-500">
+            pt
           </span>
-        )}
-      </div>
+        </p>
+      )}
       <svg
-        className="w-4 h-4 text-slate-300 flex-shrink-0 ml-1"
+        className="w-4 h-4 text-slate-400 flex-shrink-0 ml-1"
         fill="none"
         viewBox="0 0 24 24"
         stroke="currentColor"
         strokeWidth={2}
+        aria-hidden="true"
       >
         <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
       </svg>
@@ -121,13 +132,16 @@ function LeagueSection({
       >
         <div className="flex items-center gap-2">
           <span
+            aria-hidden="true"
             className="w-2.5 h-2.5 rounded-full flex-shrink-0"
             style={{ backgroundColor: league.color }}
           />
-          <span className="text-sm font-bold" style={{ color: "#0c1e42" }}>
+          <span className="text-sm font-bold text-slate-900">
             {league.name}
           </span>
-          <span className="text-xs text-slate-400">{teams.length}チーム</span>
+          <span className="text-xs text-slate-400 tabular-nums">
+            {teams.length}チーム
+          </span>
         </div>
         <svg
           className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
@@ -135,6 +149,7 @@ function LeagueSection({
           viewBox="0 0 24 24"
           stroke="currentColor"
           strokeWidth={2}
+          aria-hidden="true"
         >
           <path
             strokeLinecap="round"
@@ -143,8 +158,9 @@ function LeagueSection({
           />
         </svg>
       </button>
+      {/* 器は lg まで 512px なので段は割らない。lg の 3 列でも名前の列が 82px しか無く、語の途中で割れていた */}
       {isOpen && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 animate-fade-in">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 animate-fade-in">
           {teamsWithRank.map((team, i) => (
             <div
               key={team.id}
@@ -165,13 +181,14 @@ function LeagueSection({
   );
 }
 
+// 記号だけのチップは、読み上げ用の名前を別に持つ
 const ALL_DIVISIONS = [
   { key: "all", label: "すべて" },
-  { key: "premier", label: "PL" },
-  { key: "spade", label: "♠" },
-  { key: "diamond", label: "♦" },
-  { key: "club", label: "♣" },
-  { key: "heart", label: "♥" },
+  { key: "premier", label: "PL", ariaLabel: "プレミア" },
+  { key: "spade", label: "♠", ariaLabel: "スペード" },
+  { key: "diamond", label: "♦", ariaLabel: "ダイヤ" },
+  { key: "club", label: "♣", ariaLabel: "クローバー" },
+  { key: "heart", label: "♥", ariaLabel: "ハート" },
 ];
 
 interface Props {
@@ -228,11 +245,12 @@ export default function TeamsPageClient({ teams, leagues, standings }: Props) {
       <div className="px-4 py-4">
         <div className="relative mb-4">
           <svg
-            className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"
+            className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
             strokeWidth={2}
+            aria-hidden="true"
           >
             <path
               strokeLinecap="round"
@@ -245,13 +263,13 @@ export default function TeamsPageClient({ teams, leagues, standings }: Props) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="チーム名で検索..."
-            className="w-full pl-10 pr-4 py-3 text-sm bg-white text-slate-900 border-2 border-slate-200 rounded-2xl focus:outline-none focus:border-[#c9921e] focus:ring-4 focus:ring-[#c9921e20] caret-[#c9921e] placeholder:text-slate-400 transition-all shadow-sm"
+            className="w-full pl-11 pr-11 py-3 text-sm bg-white text-slate-900 border border-slate-200 rounded-full focus:outline-none focus:border-gold-500 focus:ring-3 focus:ring-gold-500/20 caret-gold-500 placeholder:text-slate-400 transition-[border-color,box-shadow] duration-150"
             aria-label="チーム検索"
           />
           {query && (
             <button
               onClick={() => setQuery("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors"
+              className="touch-active absolute right-2.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100"
               aria-label="検索をクリア"
             >
               <svg
@@ -260,6 +278,7 @@ export default function TeamsPageClient({ teams, leagues, standings }: Props) {
                 viewBox="0 0 24 24"
                 stroke="currentColor"
                 strokeWidth={2}
+                aria-hidden="true"
               >
                 <path
                   strokeLinecap="round"
@@ -272,33 +291,14 @@ export default function TeamsPageClient({ teams, leagues, standings }: Props) {
         </div>
 
         {filtered === null && (
-          <div className="flex gap-1.5 overflow-x-auto pb-2 mb-4 -mx-4 px-4 scroll-x-hidden">
-            {ALL_DIVISIONS.map((div) => {
-              const isActive = activeDiv === div.key;
-              return (
-                <button
-                  key={div.key}
-                  onClick={() => setActiveDiv(div.key)}
-                  className="flex-none px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 active:scale-95"
-                  style={
-                    isActive
-                      ? {
-                          background: "#0c1e42",
-                          color: "white",
-                          boxShadow: "0 2px 8px rgba(12,30,66,0.25)",
-                        }
-                      : {
-                          background: "white",
-                          color: "#64748b",
-                          border: "1px solid #e2e8f0",
-                        }
-                  }
-                >
-                  {div.label}
-                </button>
-              );
-            })}
-          </div>
+          <GlideTabs
+            variant="rail"
+            ariaLabel="ディビジョンで絞り込み"
+            options={ALL_DIVISIONS}
+            value={activeDiv}
+            onChange={setActiveDiv}
+            className="-mx-4 px-4 mb-4"
+          />
         )}
 
         {filtered !== null ? (
