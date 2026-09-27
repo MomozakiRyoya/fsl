@@ -8,23 +8,13 @@ export default function TopBar() {
   if (pathname.startsWith("/auth/") || pathname === "/chat") return null;
 
   return (
-    <header
-      className="lg:hidden fixed top-0 left-0 right-0 z-40 h-11 flex items-center justify-between px-4"
-      style={{
-        background: "rgba(10,15,35,0.72)",
-        backdropFilter: "blur(16px)",
-        WebkitBackdropFilter: "blur(16px)",
-      }}
-    >
+    <header className="lg:hidden fixed top-0 left-0 right-0 z-40 h-11 flex items-center justify-between px-4 bg-[#0c1e42] border-b border-white/15">
       {/* ロゴ */}
-      <Link href="/" className="flex items-center gap-1.5">
-        <span
-          className="text-xs font-black px-1.5 py-0.5 rounded"
-          style={{ background: "linear-gradient(135deg,#c9921e,#e3c060)", color: "#0c1e42" }}
-        >
+      <Link href="/" className="flex items-center gap-2">
+        <span className="text-xs font-black px-1.5 py-0.5 bg-[#c9921e] text-[#0c1e42]">
           FSL
         </span>
-        <span className="text-[11px] font-semibold text-white/50 tracking-wide">
+        <span className="text-[11px] font-semibold text-white/70 tracking-wide">
           Fukuoka Super League
         </span>
       </Link>
@@ -33,8 +23,7 @@ export default function TopBar() {
       <Link
         href="/account"
         aria-label="プロフィール設定"
-        className="w-8 h-8 rounded-full flex items-center justify-center active:opacity-70 transition-opacity"
-        style={{ background: "rgba(255,255,255,0.1)" }}
+        className="w-8 h-8 flex items-center justify-center border border-white/20 hover:bg-white/10 active:bg-white/10 transition-colors"
       >
         <svg
           className="w-4 h-4 text-white/70"

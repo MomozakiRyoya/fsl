@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: '福岡ポーカーチームリーグ公式アプリ',
     start_url: '/',
     display: 'standalone',
-    background_color: '#ffffff',
-    theme_color: '#2b70ef',
+    background_color: '#f5f3ee',
+    theme_color: '#0c1e42',
     orientation: 'portrait',
     icons: [
       { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
