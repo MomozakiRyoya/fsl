@@ -141,10 +141,7 @@ export default async function HomePage() {
       {/* ヒーロー: 文字・写真・数字・ディビジョンを縦に積む */}
       <section className="home-hero bg-[#0c1e42] text-white animate-fade-in">
         <div className="px-5 pt-8 pb-6 lg:px-10 lg:pt-12">
-          <p className="text-[11px] font-bold tracking-[0.14em] text-[#e3c060]">
-            福岡ポーカーチームリーグ
-          </p>
-          <h1 className="mt-3 font-black leading-[0.92] tracking-[-0.02em] text-[clamp(44px,15vw,88px)]">
+          <h1 className="font-black leading-[0.92] tracking-[-0.02em] text-[clamp(44px,15vw,88px)]">
             <span className="block">FUKUOKA</span>
             <span className="block">SUPER</span>
             <span className="block">LEAGUE</span>
