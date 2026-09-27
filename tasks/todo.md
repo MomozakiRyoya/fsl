@@ -1,25 +1,37 @@
 # FSL 開発タスク
 
+チェックボックスは自分の手で進められる作業にだけ使う。判断待ち・不要になったものは箇条書きで置く。
+スキャフォールド時から未チェックだった11件は、2026-09-27 に本番とコードで1件ずつ確かめて整理した。
+
 ## Phase 1 - MVP基盤
 - [x] プロジェクト初期化
 - [x] Notionクライアント・クエリ実装
 - [x] ページルーティング設定
 - [x] BottomNav実装
-- [ ] Notionワークスペース・DB作成
-- [ ] 環境変数設定
-- [ ] Vercelデプロイ
+- [x] 環境変数設定（本番もローカルも Supabase の実データが表示される）
+- [x] Vercelデプロイ（プロジェクト `fsl`。本番は https://www.fukuokasuperleague.com 、別名 https://fsl-gilt.vercel.app ）
+- 不要: Notionワークスペース・DB作成。データ元は Supabase に移った。`src/lib/notion/` はどこからも読まれていない
 
 ## Phase 2 - コアページ実装
-- [ ] ホームページ（完全版）
-- [ ] 順位表ページ
-- [ ] 日程ページ
-- [ ] チームページ・詳細
-- [ ] ルール・情報ページ
+- [x] ホームページ（完全版）
+- [x] 順位表ページ
+- [x] 日程ページ（節ごとの詳細 `/schedule/[roundId]` も）
+- [x] チームページ・詳細（`/teams/[slug]`）
+- [x] ルール・情報ページ（`/rules`・`/info`）
+- 判断待ち: シーズンの数字が画面ごとに食い違う。データ上は 5 ディビジョン・38 チーム・5/9 開幕。
+  一方で `/info` は「3月開幕・6ディビジョン・48チーム・全22節」、`/rules` は「全16節・6ディビジョン × 8チーム」、
+  `/standings` の見出しは「第1シーズン」、`/archive` とチャットの定型回答は「48チーム」。
+  正しい数字が決まったら直す（`src/app/info/page.tsx:64`・`src/app/rules/page.tsx:93`・
+  `src/components/standings/StandingsPageClient.tsx:271`・`src/app/archive/page.tsx:71`・`src/app/chat/page.tsx:25`）
 
 ## Phase 3 - PWA
-- [ ] Service Worker実装
-- [ ] ホーム画面追加バナー
-- [ ] プッシュ通知
+ネイティブアプリの器（Capacitor。本番の URL をそのまま読み込む設定）があるので、PWA を続けるかの判断が先。
+- 判断待ち: Service Worker。未実装（本番の `/sw.js` は 404、登録は 0 件）。キャッシュで更新が届かない事故の元に
+  なるので、要否を決めてから入れる。更新通知の `src/components/pwa/UpdateToast.tsx` はこれが無いと出ない
+  （出すときは `bottom-20` を `--fsl-tabbar-space` 基準に直す。今のままだと下端に余白がある iPhone でタブバーに重なる）
+- 判断待ち: ホーム画面追加バナー。部品 `src/components/pwa/InstallBanner.tsx` はあるが、どこにも組み込まれていない
+- 判断待ち: プッシュ通知。未実装（`web-push` は依存にあるが使われていない）。何を通知するか、Web Push（VAPID 鍵）か
+  ネイティブ（APNs・FCM）かを決める。鍵・証明書の用意はユーザー側
 
 ## レビュー
 - Phase 1 スキャフォールド完了: 2026-03-28
