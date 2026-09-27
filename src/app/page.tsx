@@ -152,7 +152,7 @@ export default async function HomePage() {
         <div className="relative aspect-video lg:aspect-[5/2]">
           {/* 旧写真を下に敷き、新写真をゆっくり重ねて切り替える */}
           <Image
-            src="/fsl-season6-group.jpg"
+            src="/fsl-season6-group-v2.jpg"
             alt=""
             aria-hidden
             fill
