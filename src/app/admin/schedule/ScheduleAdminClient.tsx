@@ -23,6 +23,7 @@ const LEAGUES = [
   { value: "diamond", label: "♦ Division" },
   { value: "club", label: "♣ Division" },
   { value: "heart", label: "♥ Division" },
+  { value: "joker", label: "Joker Division" },
 ];
 
 const STATUS_OPTIONS = [

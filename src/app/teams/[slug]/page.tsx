@@ -101,7 +101,7 @@ export default async function TeamDetailPage({ params }: Props) {
     1,
     ...standings.flatMap((s) => Object.values(s.roundPoints)),
   );
-  const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(`${team.name} | FSL Season 7`)}&url=${encodeURIComponent(`https://fsl-gilt.vercel.app/teams/${team.slug}`)}`;
+  const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(`${team.name} | FSL Season 8`)}&url=${encodeURIComponent(`https://fsl-gilt.vercel.app/teams/${team.slug}`)}`;
 
   return (
     <div className="max-w-lg lg:max-w-4xl mx-auto">

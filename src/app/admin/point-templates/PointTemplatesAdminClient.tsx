@@ -5,6 +5,8 @@ import { useState } from "react";
 interface PointRow {
   rank: number;
   pts: number;
+  // 「10〜12位」「3-0 勝ち」のように順位の言い方を変えたい行だけに入る
+  label?: string;
 }
 
 interface PointTemplate {
@@ -59,7 +61,7 @@ function PointsEditor({
   points: PointRow[];
   onChange: (p: PointRow[]) => void;
 }) {
-  const update = (i: number, field: keyof PointRow, val: number) => {
+  const update = (i: number, field: "rank" | "pts", val: number) => {
     onChange(points.map((r, idx) => (idx === i ? { ...r, [field]: val } : r)));
   };
   const remove = (i: number) => onChange(points.filter((_, idx) => idx !== i));
@@ -286,7 +288,7 @@ export default function PointTemplatesAdminClient({
                             className="text-[11px] px-2 py-0.5 rounded"
                             style={{ background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.5)" }}
                           >
-                            {p.rank}位: <span className="text-amber-400 font-bold">{p.pts}pt</span>
+                            {p.label ?? `${p.rank}位`}: <span className="text-amber-400 font-bold">{p.pts}pt</span>
                           </span>
                         ))}
                       </div>

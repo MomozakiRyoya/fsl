@@ -4,7 +4,7 @@ import { useState, useRef } from "react";
 import type { BlindLevel } from "@/lib/types/app";
 import { parseStructureText } from "@/lib/parse-structure";
 
-const LEAGUE_ORDER = ["premier", "spade", "diamond", "club", "heart"];
+const LEAGUE_ORDER = ["premier", "spade", "diamond", "club", "heart", "joker"];
 
 function groupRoundsByLeague(
   rounds: {

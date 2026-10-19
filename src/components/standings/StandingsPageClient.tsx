@@ -20,6 +20,7 @@ const LEAGUE_SHORT: Record<string, string> = {
   heart: "ハート",
   diamond: "ダイヤ",
   club: "クローバー",
+  joker: "ジョーカー",
 };
 
 // 上位 3 つは色の面の札（金・銀・銅）。数字は札の中にそのまま出す
@@ -234,7 +235,7 @@ export default function StandingsPageClient({ leagues, standings }: Props) {
         }}
       >
         <p className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] mb-1">
-          Season 7
+          Season 8
         </p>
         <h1 className="text-2xl font-black text-white tracking-tight">
           LEAGUE STANDINGS

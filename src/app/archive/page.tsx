@@ -35,9 +35,9 @@ export default function ArchivePage() {
           >
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-base font-bold text-white">FSL Season 7</h2>
+                <h2 className="text-base font-bold text-white">FSL Season 8</h2>
                 <p className="text-xs mt-0.5" style={{ color: "#e3c060" }}>
-                  2026年 開催中
+                  2026年11月 開幕
                 </p>
               </div>
               <span
@@ -52,8 +52,8 @@ export default function ArchivePage() {
             <div className="grid grid-cols-3 gap-3 mb-4">
               {[
                 { label: "ディビジョン", value: "6" },
-                { label: "参加チーム", value: "48" },
-                { label: "開催節数", value: "22" },
+                { label: "参加チーム", value: "46" },
+                { label: "節数（P/R）", value: "20 / 16" },
               ].map(({ label, value }) => (
                 <div key={label} className="text-center p-3 bg-gray-50 rounded-lg">
                   <p
@@ -67,8 +67,8 @@ export default function ArchivePage() {
               ))}
             </div>
             <p className="text-xs text-body leading-relaxed">
-              FSL初となるSeason
-              1が2026年3月より開催中。6ディビジョン・48チームがプレーオフ進出を目指して戦います。
+              Season 8
+              は2026年11月に開幕。プレミア6チームとレギュラー5ディビジョン40チーム、計46チームがプレーオフ進出を目指して戦います。
             </p>
             <Link
               href="/standings"

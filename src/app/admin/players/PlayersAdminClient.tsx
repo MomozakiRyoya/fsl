@@ -32,6 +32,7 @@ const LEAGUE_IDS = [
   { value: "diamond", label: "♦" },
   { value: "club", label: "♣" },
   { value: "heart", label: "♥" },
+  { value: "joker", label: "Joker" },
 ];
 
 function Modal({

@@ -9,6 +9,7 @@ const LEAGUE_SHORT: Record<string, string> = {
   heart: "ハートリーグ",
   diamond: "ダイヤリーグ",
   club: "クローバーリーグ",
+  joker: "ジョーカーリーグ",
 };
 
 const CANVAS_WIDTH = 420;

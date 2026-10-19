@@ -185,7 +185,10 @@ export async function fetchStandingsFromSupabase(): Promise<
 
   const [{ data: teams }, { data: matches }, { data: rounds }] =
     await Promise.all([
-      supabase.from("teams").select("team_id, name, slug, logo_url, league_id"),
+      supabase
+        .from("teams")
+        .select("team_id, name, slug, logo_url, league_id")
+        .eq("is_active", true),
       supabase
         .from("matches")
         .select("round_id, home_team_id, home_team_name, home_round_pt")

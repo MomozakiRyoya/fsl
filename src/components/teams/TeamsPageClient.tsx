@@ -190,6 +190,7 @@ const ALL_DIVISIONS = [
   { key: "diamond", label: "♦", ariaLabel: "ダイヤ" },
   { key: "club", label: "♣", ariaLabel: "クローバー" },
   { key: "heart", label: "♥", ariaLabel: "ハート" },
+  { key: "joker", label: "JK", ariaLabel: "ジョーカー" },
 ];
 
 interface Props {
@@ -229,7 +230,7 @@ export default function TeamsPageClient({ teams, leagues, standings }: Props) {
         }}
       >
         <p className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] mb-1">
-          Season 7
+          Season 8
         </p>
         <h1 className="text-2xl font-black text-white tracking-tight">TEAMS</h1>
         <div className="flex items-center gap-3 mt-1.5">

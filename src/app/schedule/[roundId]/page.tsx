@@ -31,7 +31,8 @@ function formatNum(n: number) {
 interface PointTemplate {
   name: string;
   description: string;
-  points: { rank: number; pts: number }[];
+  // label は「10〜12位」「3-0 勝ち」のように順位の言い方を変えたい行だけに入る
+  points: { rank: number; label?: string; pts: number }[];
 }
 
 function PointsTable({ template }: { template: PointTemplate }) {
@@ -68,11 +69,13 @@ function PointsTable({ template }: { template: PointTemplate }) {
                   className="border-b border-slate-50 last:border-0 hover:bg-slate-50"
                 >
                   <td className="px-4 py-2.5 text-slate-700 font-medium">
-                    {p.rank}位
+                    {p.label ?? `${p.rank}位`}
                   </td>
                   <td
                     className="px-4 py-2.5 text-right font-black"
-                    style={{ color: p.rank <= 3 ? "#c9921e" : "#0c1e42" }}
+                    style={{
+                      color: p.rank <= 3 && p.pts > 0 ? "#c9921e" : "#0c1e42",
+                    }}
                   >
                     {p.pts} pt
                   </td>
@@ -227,7 +230,7 @@ export default async function RoundDetailPage({ params }: Props) {
           pointTemplate = {
             name: ptData.name as string,
             description: (ptData.description as string) ?? "",
-            points: (ptData.points as { rank: number; pts: number }[]) ?? [],
+            points: (ptData.points as PointTemplate["points"]) ?? [],
           };
         }
       }
@@ -469,7 +472,10 @@ export default async function RoundDetailPage({ params }: Props) {
         )}
 
         {/* ストラクチャー */}
-        {structure && <StructureTable structure={structure} />}
+        {/* ポイント表をつなぐためだけのストラクチャー（ブラインド未設定）は出さない */}
+        {structure && structure.levels.length > 0 && (
+          <StructureTable structure={structure} />
+        )}
 
         {/* ポイントテンプレート */}
         {pointTemplate && pointTemplate.points.length > 0 && (

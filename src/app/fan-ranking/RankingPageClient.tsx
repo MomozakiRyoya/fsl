@@ -109,7 +109,7 @@ export default function RankingPageClient({
         />
         <div className="relative">
           <p className="text-white/50 text-xs tracking-[0.25em] uppercase mb-1">
-            FSL Season 7
+            FSL Season 8
           </p>
           <h1 className="text-2xl font-black text-white tracking-widest">
             RANKING

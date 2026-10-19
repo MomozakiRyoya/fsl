@@ -14,6 +14,7 @@ const LEAGUE_OPTIONS = [
   { value: "diamond", label: "♦ Division" },
   { value: "club", label: "♣ Division" },
   { value: "heart", label: "♥ Division" },
+  { value: "joker", label: "Joker Division" },
 ];
 
 type FormData = {
