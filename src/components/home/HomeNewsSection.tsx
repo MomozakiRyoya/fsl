@@ -3,7 +3,14 @@ import type { NewsItem, NewsCategory } from "@/lib/types/app";
 import { NEWS_CATEGORY_COLORS } from "@/lib/constants";
 
 export default function HomeNewsSection({ news }: { news: NewsItem[] }) {
-  if (news.length === 0) return null;
+  // 見出し「ニュース」は page.tsx 側にあるので、0 本でも消さずに無いことを書く
+  if (news.length === 0) {
+    return (
+      <p className="border-y border-ink/15 py-6 text-center text-sm text-ink/70">
+        公開中のニュースはありません
+      </p>
+    );
+  }
 
   return (
     <ul className="border-t border-ink/15 md:grid md:grid-cols-2 md:gap-x-8 lg:grid-cols-3">

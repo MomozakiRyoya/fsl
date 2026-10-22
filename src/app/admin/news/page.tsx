@@ -1,7 +1,7 @@
-import { getNews } from "@/lib/data";
+import { getAllNews } from "@/lib/data";
 import NewsAdminClient from "./NewsAdminClient";
 
 export default async function AdminNewsPage() {
-  const news = await getNews().catch(() => []);
+  const news = await getAllNews().catch(() => []);
   return <NewsAdminClient initialNews={news} />;
 }

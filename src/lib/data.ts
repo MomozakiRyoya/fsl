@@ -37,6 +37,7 @@ import {
   fetchPlayerStatsFromSupabase,
 } from "./supabase/queries";
 import { stripEmoji } from "./strip-emoji";
+import { onlyPublished } from "./news-visibility";
 
 async function safe<T>(fn: () => Promise<T>, fallback: T): Promise<T> {
   try {
@@ -96,7 +97,13 @@ export async function getPlayerStats(): Promise<PlayerStats[]> {
   }
 }
 
+/** 公開画面用。非公開の記事は含めない */
 export async function getNews(): Promise<NewsItem[]> {
+  return onlyPublished(await getAllNews());
+}
+
+/** 管理画面用。非公開の記事も含める（並ばないと公開に戻せない） */
+export async function getAllNews(): Promise<NewsItem[]> {
   try {
     return await fetchNewsFromSupabase();
   } catch {

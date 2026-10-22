@@ -1,10 +1,10 @@
-import { getTeams, getRounds, getNews, getPlayers } from "@/lib/data";
+import { getTeams, getRounds, getAllNews, getPlayers } from "@/lib/data";
 
 export default async function DashboardPage() {
   const [teams, rounds, news, players] = await Promise.all([
     getTeams().catch(() => []),
     getRounds().catch(() => []),
-    getNews().catch(() => []),
+    getAllNews().catch(() => []),
     getPlayers().catch(() => []),
   ]);
 
