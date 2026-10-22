@@ -36,6 +36,7 @@ import {
   fetchMatchResultsFromSupabase,
   fetchPlayerStatsFromSupabase,
 } from "./supabase/queries";
+import { fetchAllNewsAsAdmin } from "./supabase/admin-news";
 import { stripEmoji } from "./strip-emoji";
 import { onlyPublished } from "./news-visibility";
 
@@ -97,15 +98,19 @@ export async function getPlayerStats(): Promise<PlayerStats[]> {
   }
 }
 
-/** 公開画面用。非公開の記事は含めない */
+/** 公開画面用。非公開の記事は含めない（DB の読み取り許可と、ここでの絞り込みの二重） */
 export async function getNews(): Promise<NewsItem[]> {
-  return onlyPublished(await getAllNews());
+  try {
+    return onlyPublished(await fetchNewsFromSupabase());
+  } catch {
+    return [];
+  }
 }
 
-/** 管理画面用。非公開の記事も含める（並ばないと公開に戻せない） */
+/** 管理画面用。非公開の記事も含める（並ばないと公開に戻せない）。service role で読むので管理画面以外から呼ばない */
 export async function getAllNews(): Promise<NewsItem[]> {
   try {
-    return await fetchNewsFromSupabase();
+    return await fetchAllNewsAsAdmin();
   } catch {
     return [];
   }

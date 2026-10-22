@@ -1,6 +1,7 @@
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createClient as createAdmin } from "@supabase/supabase-js";
 
 function isAdmin(email: string) {
   return (process.env.ADMIN_EMAILS ?? "")
@@ -17,15 +18,22 @@ async function checkAdmin() {
   return user;
 }
 
+function getAdmin() {
+  return createAdmin(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+}
+
 export async function POST(request: Request) {
   const user = await checkAdmin();
   if (!user)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await request.json();
-  const supabase = await createClient();
+  const admin = getAdmin();
 
-  const { data, error } = await supabase
+  const { data, error } = await admin
     .from("players")
     .insert({
       player_id: body.playerId || `${body.teamId}-${Date.now()}`,

@@ -1,6 +1,7 @@
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createClient as createAdmin } from "@supabase/supabase-js";
 
 function isAdmin(email: string) {
   const admins = (process.env.ADMIN_EMAILS ?? "")
@@ -18,6 +19,13 @@ async function checkAdmin() {
   return user;
 }
 
+function getAdmin() {
+  return createAdmin(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+}
+
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -29,14 +37,14 @@ export async function PATCH(
   const { id } = await params;
   const body = await request.json();
 
-  const supabase = await createClient();
+  const admin = getAdmin();
   const updates: Record<string, unknown> = {};
   if (body.title !== undefined) updates.title = body.title;
   if (body.category !== undefined) updates.category = body.category;
   if (body.body !== undefined) updates.body = body.body;
   if (body.isPublished !== undefined) updates.is_published = body.isPublished;
 
-  const { data, error } = await supabase
+  const { data, error } = await admin
     .from("news")
     .update(updates)
     .eq("id", id)
@@ -70,9 +78,9 @@ export async function DELETE(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id } = await params;
-  const supabase = await createClient();
+  const admin = getAdmin();
 
-  const { error } = await supabase.from("news").delete().eq("id", id);
+  const { error } = await admin.from("news").delete().eq("id", id);
   if (error)
     return NextResponse.json({ error: "削除に失敗しました" }, { status: 500 });
 

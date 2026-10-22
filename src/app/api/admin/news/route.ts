@@ -1,6 +1,7 @@
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createClient as createAdmin } from "@supabase/supabase-js";
 
 function isAdmin(email: string) {
   const admins = (process.env.ADMIN_EMAILS ?? "")
@@ -18,6 +19,13 @@ async function checkAdmin() {
   return user;
 }
 
+function getAdmin() {
+  return createAdmin(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+}
+
 export async function POST(request: Request) {
   const user = await checkAdmin();
   if (!user)
@@ -29,8 +37,8 @@ export async function POST(request: Request) {
   if (!title)
     return NextResponse.json({ error: "タイトルは必須です" }, { status: 400 });
 
-  const supabase = await createClient();
-  const { data, error } = await supabase
+  const admin = getAdmin();
+  const { data, error } = await admin
     .from("news")
     .insert({
       title,
