@@ -6,6 +6,7 @@ import { useFollowedTeams } from "@/hooks/useFollowedTeams";
 import type { Team, League, TeamStanding } from "@/lib/types/app";
 import GlideTabs from "@/components/ui/GlideTabs";
 import BreakableName from "@/components/ui/BreakableName";
+import MoonIcon from "@/components/ui/MoonIcon";
 import { sortTeamsByPoints } from "./team-order";
 
 function getInitials(name: string): string {
@@ -190,7 +191,7 @@ const ALL_DIVISIONS = [
   { key: "diamond", label: "♦", ariaLabel: "ダイヤ" },
   { key: "club", label: "♣", ariaLabel: "クローバー" },
   { key: "heart", label: "♥", ariaLabel: "ハート" },
-  { key: "joker", label: "JK", ariaLabel: "ジョーカー" },
+  { key: "joker", label: <MoonIcon />, ariaLabel: "ジョーカー" },
 ];
 
 interface Props {
