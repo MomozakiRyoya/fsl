@@ -8,6 +8,7 @@ import {
   getTeams,
 } from "@/lib/data";
 import ArrowIcon from "@/components/ui/ArrowIcon";
+import MoonIcon from "@/components/ui/MoonIcon";
 import { getLatestYouTubeVideo } from "@/lib/youtube";
 import CountUp from "@/components/ui/CountUp";
 import ScrollReveal from "@/components/ui/ScrollReveal";
@@ -215,7 +216,12 @@ export default async function HomePage() {
                 style={{ backgroundColor: league.color }}
                 aria-hidden="true"
               />
-              <span className="min-w-0 flex-1 truncate">{league.name}</span>
+              <span className="min-w-0 flex-1 truncate">
+                {league.id === "joker" && (
+                  <MoonIcon className="mr-1 inline-block h-[0.8em] w-[0.8em] align-[-0.05em]" />
+                )}
+                {league.name}
+              </span>
               <ArrowIcon className="h-3.5 w-3.5 flex-shrink-0 text-white/60 group-hover:text-[#0c1e42]" />
             </Link>
           ))}

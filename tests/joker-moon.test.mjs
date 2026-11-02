@@ -26,6 +26,16 @@ test("チーム一覧: ジョーカーのチップは月の図形で、読み上
   assert.match(src, /import MoonIcon from "@\/components\/ui\/MoonIcon";/);
 });
 
+test("ホーム: ディビジョン別の順位リンクで、ジョーカーの行にだけ月の図形を出す", () => {
+  const src = read("src/app/page.tsx");
+  const nav = src.slice(
+    src.indexOf('aria-label="ディビジョン別の順位"'),
+    src.indexOf("</nav>"),
+  );
+  assert.match(nav, /league\.id === "joker" && \(\s*<MoonIcon/);
+  assert.match(src, /import MoonIcon from "@\/components\/ui\/MoonIcon";/);
+});
+
 test("MoonIcon: 文字色 1 色の塗りつぶしで、文字の大きさに合わせて伸び縮みする", () => {
   const src = read("src/components/ui/MoonIcon.tsx");
   assert.match(src, /fill="currentColor"/);
