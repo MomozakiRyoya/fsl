@@ -1,6 +1,11 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { getPlayers, getPlayerStats, getTeams } from "@/lib/data";
+import { getPlayers, getRounds, getTeams } from "@/lib/data";
+import { fetchTeamPlayerResults } from "@/lib/supabase/player-results";
+import {
+  summarizePlayerSeason,
+  type PlayerResultRow,
+} from "@/lib/player-season";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -11,206 +16,223 @@ function getInitials(name: string): string {
   return stripped.slice(0, 2).toUpperCase();
 }
 
+/** 1〜3 位の面の色。チーム詳細・順位表と同じ（文字は text-on-block） */
+const RANK_BLOCK: Record<number, string> = {
+  1: "bg-butter",
+  2: "bg-silver",
+  3: "bg-sand",
+};
+
+function rankBlock(rank: number | null, rest: string): string {
+  const block = rank ? RANK_BLOCK[rank] : undefined;
+  return block ? `${block} text-on-block` : rest;
+}
+
+const HERO_BUTTON =
+  "touch-active inline-flex h-9 items-center gap-1.5 rounded-lg bg-white/10 px-3 text-xs font-bold text-white ring-1 ring-inset ring-white/15";
+
+/** 個人ポイントの記録が読めなくても、選手ページ自体は出す */
+async function loadTeamResults(teamId: string): Promise<PlayerResultRow[]> {
+  try {
+    return await fetchTeamPlayerResults(teamId);
+  } catch (e) {
+    console.error("[players/[id]] player_results の取得に失敗:", e);
+    return [];
+  }
+}
+
+function formatDate(date: string): string {
+  if (!date) return "";
+  const [, m, d] = date.split("-");
+  return m && d ? `${Number(m)}/${Number(d)}` : date;
+}
+
 export default async function PlayerDetailPage({ params }: Props) {
   const { id } = await params;
-  const [players, allStats, teams] = await Promise.all([
+  const [players, teams, rounds] = await Promise.all([
     getPlayers(),
-    getPlayerStats(),
     getTeams(),
+    getRounds(),
   ]);
   const player = players.find((p) => p.id === id);
 
   if (!player) notFound();
 
-  const stat = allStats.find((s) => s.playerId === id);
   const team = teams.find((t) => t.id === player.teamId);
+  const rows = await loadTeamResults(player.teamId);
+  const season = summarizePlayerSeason(rows, rounds, player);
+
+  const stats = [
+    { label: "合計ポイント", value: season.totalPoints, unit: "pt" },
+    { label: "出場節数", value: season.roundsPlayed, unit: "節" },
+    { label: "平均ポイント", value: season.averagePoints ?? "—", unit: "pt" },
+    { label: "最高ポイント", value: season.bestPoints ?? "—", unit: "pt" },
+  ];
 
   return (
-    <div className="max-w-lg mx-auto">
-      {/* ヘッダー */}
-      <div
-        className="relative px-4 pt-6 pb-10 overflow-hidden"
-        style={{
-          background: `linear-gradient(160deg, ${team?.homeColor ?? "#F59E0B"}25 0%, ${team?.homeColor ?? "#F59E0B"}08 50%, #ffffff 100%)`,
-          borderBottom: `1px solid ${team?.homeColor ?? "#F59E0B"}35`,
-        }}
-      >
-        <div
-          className="absolute top-0 right-0 w-48 h-48 rounded-full opacity-10 -translate-y-1/2 translate-x-1/2"
-          style={{ backgroundColor: team?.homeColor ?? "#F59E0B" }}
-        />
+    <div className="max-w-lg lg:max-w-4xl mx-auto">
+      {/* 見出しの帯: チーム詳細と同じ紺の面 */}
+      <section className="bg-[#0c1e42] px-5 pt-4 pb-6 text-white animate-fade-in lg:px-10">
+        <Link
+          href={team ? `/teams/${team.slug}` : "/players"}
+          className={HERO_BUTTON}
+        >
+          <svg
+            className="h-3.5 w-3.5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+            aria-hidden="true"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M15 19l-7-7 7-7"
+            />
+          </svg>
+          {team ? team.name : "選手一覧"}
+        </Link>
 
-        <div className="relative">
-          {/* 戻るリンク */}
-          <div className="flex items-center justify-between mb-5">
-            <Link
-              href="/players"
-              className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-600 hover:text-slate-900 bg-white/70 backdrop-blur-sm rounded-full px-3 py-1.5 border border-slate-200/70 transition-colors"
+        <div className="mt-6">
+          {player.photoUrl ? (
+            <img
+              src={player.photoUrl}
+              alt=""
+              className="h-16 w-16 rounded-xl bg-white object-cover ring-1 ring-white/15"
+            />
+          ) : (
+            <div
+              aria-hidden="true"
+              className="flex h-16 w-16 items-center justify-center rounded-xl bg-white text-xl font-black text-[#0c1e42]"
             >
-              <svg
-                className="w-3.5 h-3.5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-              選手一覧
-            </Link>
-          </div>
-
-          {/* アバター + 名前 */}
-          <div className="flex items-center gap-5">
-            {player.photoUrl ? (
-              <img
-                src={player.photoUrl}
-                alt={player.name}
-                className="w-24 h-24 rounded-3xl object-cover shadow-lg flex-shrink-0"
-              />
-            ) : (
-              <div
-                className="w-24 h-24 rounded-3xl flex items-center justify-center text-3xl font-black text-white shadow-lg flex-shrink-0"
-                style={{
-                  background: `linear-gradient(135deg, #F59E0B 0%, #D97706 100%)`,
-                  boxShadow: `0 8px 24px #F59E0B50`,
-                }}
-                role="img"
-                aria-label={player.name}
-              >
-                {getInitials(player.name)}
-              </div>
-            )}
-
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-2xl font-black text-slate-900 tracking-tight">
-                  {player.name}
-                </h1>
-                <span
-                  className="text-sm font-bold text-white px-2.5 py-0.5 rounded-full"
-                  style={{ backgroundColor: team?.homeColor ?? "#F59E0B" }}
-                >
-                  #{player.number}
-                </span>
-              </div>
+              {getInitials(player.name)}
             </div>
-          </div>
+          )}
+          <p className="mt-5 text-[11px] font-bold tracking-[0.04em] text-white/60">
+            {player.teamName}
+            {team?.leagueName ? ` ・ ${team.leagueName}` : ""}
+          </p>
+          <h1 className="mt-2 text-[clamp(30px,9vw,48px)] font-black leading-[1.05] tracking-[-0.01em] text-white text-balance break-words">
+            {player.name}
+          </h1>
+          {player.isCaptain && (
+            <p className="mt-3 inline-block rounded-md bg-white/10 px-2 py-0.5 text-xs font-bold text-white ring-1 ring-inset ring-white/15">
+              キャプテン
+            </p>
+          )}
         </div>
-      </div>
+      </section>
 
-      {/* コンテンツ */}
-      <div className="px-4 py-6 space-y-5">
-        {/* 所属情報 */}
-        <section>
-          <h2 className="text-xs font-semibold text-slate-400 mb-3 uppercase tracking-wider">
-            所属情報
-          </h2>
-          <div className="bg-white rounded-xl border border-slate-200 divide-y divide-slate-100">
-            <div className="px-4 py-3 flex items-center justify-between">
-              <span className="text-xs text-slate-500">チーム</span>
-              <span className="text-sm font-medium text-slate-900">
-                {player.teamName}
-              </span>
-            </div>
-            <div className="px-4 py-3 flex items-center justify-between">
-              <span className="text-xs text-slate-500">ディビジョン</span>
-              <span className="text-sm font-medium text-slate-900">
-                Division 1
-              </span>
-            </div>
-            <div className="px-4 py-3 flex items-center justify-between">
-              <span className="text-xs text-slate-500">背番号</span>
-              <span className="text-sm font-medium text-slate-900">
-                #{player.number}
-              </span>
-            </div>
+      <div className="px-5 pt-8 pb-10 space-y-10 lg:px-10">
+        {/* 今シーズンの成績（個人ポイント） */}
+        <section className="section-rule animate-fade-in animate-delay-100">
+          <div className="section-head">
+            <h2 className="section-title">今シーズンの成績</h2>
           </div>
+          <dl className="grid grid-cols-2 gap-2 lg:grid-cols-4">
+            {stats.map((s) => (
+              <div key={s.label} className="card-native p-4">
+                <dt className="text-[11px] font-bold tracking-[0.04em] text-slate-500">
+                  {s.label}
+                </dt>
+                <dd className="mt-1.5 flex items-baseline gap-1 text-slate-900">
+                  <span className="stat-number">{s.value}</span>
+                  {s.value !== "—" && (
+                    <span className="text-xs font-bold text-slate-500">
+                      {s.unit}
+                    </span>
+                  )}
+                </dd>
+              </div>
+            ))}
+          </dl>
         </section>
 
-        {/* スタッツ */}
-        {stat && (
-          <section>
-            <h2 className="text-xs font-semibold text-slate-400 mb-3 uppercase tracking-wider">
-              今シーズンの成績
-            </h2>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-white rounded-2xl border border-slate-100 p-4 text-center shadow-sm">
-                <p className="text-3xl font-black tabular-nums text-amber-500">
-                  {stat.goals}
-                </p>
-                <p className="text-xs text-slate-400 font-medium mt-1">得点</p>
-              </div>
-              <div className="bg-white rounded-2xl border border-slate-100 p-4 text-center shadow-sm">
-                <p className="text-3xl font-black tabular-nums text-slate-700">
-                  {stat.assists}
-                </p>
-                <p className="text-xs text-slate-400 font-medium mt-1">
-                  アシスト
-                </p>
-              </div>
-              <div className="bg-white rounded-2xl border border-slate-100 p-4 text-center shadow-sm">
-                <p className="text-3xl font-black tabular-nums text-slate-700">
-                  {stat.games}
-                </p>
-                <p className="text-xs text-slate-400 font-medium mt-1">
-                  出場試合数
-                </p>
-              </div>
-              <div className="bg-white rounded-2xl border border-slate-100 p-4 text-center shadow-sm">
-                <div className="flex items-center justify-center gap-1.5">
-                  <p className="text-3xl font-black tabular-nums text-slate-700">
-                    {stat.mvpCount}
-                  </p>
-                  {stat.mvpCount > 0 && <span className="text-lg">🏆</span>}
-                </div>
-                <p className="text-xs text-slate-400 font-medium mt-1">
-                  MVPバッジ
-                </p>
-              </div>
-            </div>
-          </section>
-        )}
+        {/* 節ごとの成績 */}
+        <section className="section-rule animate-fade-in animate-delay-200">
+          <div className="section-head">
+            <h2 className="section-title">節ごとの成績</h2>
+          </div>
+          {season.history.length === 0 ? (
+            <p className="card-native px-4 py-6 text-center text-sm text-slate-500">
+              まだ個人ポイントの記録がありません
+            </p>
+          ) : (
+            <ul className="card-native overflow-hidden">
+              {season.history.map((h, i) => (
+                <li
+                  key={h.roundId}
+                  className={`flex items-center gap-3 px-4 py-3 ${i > 0 ? "border-t border-slate-100" : ""}`}
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-bold text-slate-900">
+                      {h.roundName || "節"}
+                    </p>
+                    {h.date && (
+                      <p className="mt-0.5 text-[11px] tabular-nums text-slate-500">
+                        {formatDate(h.date)}
+                      </p>
+                    )}
+                  </div>
+                  {h.teamRank != null && (
+                    <span
+                      className={`rounded-md px-1.5 py-0.5 text-[11px] font-bold ${rankBlock(h.teamRank, "bg-slate-100 text-slate-700")}`}
+                    >
+                      チーム{h.teamRank}位
+                    </span>
+                  )}
+                  <span className="w-16 flex-shrink-0 text-right text-base font-black tabular-nums text-slate-900">
+                    {h.points}
+                    <span className="ml-0.5 text-[10px] font-bold text-slate-500">
+                      pt
+                    </span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
 
-        {/* チームを見るリンク */}
+        {/* 所属 */}
         {team && (
-          <section>
+          <section className="section-rule animate-fade-in animate-delay-300">
+            <div className="section-head">
+              <h2 className="section-title">所属</h2>
+            </div>
             <Link
               href={`/teams/${team.slug}`}
-              className="flex items-center justify-between bg-white rounded-xl border border-slate-200 px-4 py-3.5 hover:bg-slate-50 transition-colors"
+              className="card-native flex items-center gap-3 px-4 py-3"
             >
-              <div className="flex items-center gap-3">
-                {team.logoUrl ? (
-                  <img
-                    src={team.logoUrl}
-                    alt={team.name}
-                    className="w-9 h-9 rounded-xl object-cover flex-shrink-0"
-                  />
-                ) : (
-                  <div
-                    className="w-9 h-9 rounded-xl flex items-center justify-center text-xs font-black text-white flex-shrink-0"
-                    style={{ backgroundColor: team.homeColor }}
-                  >
-                    {getInitials(team.name)}
-                  </div>
-                )}
-                <div>
-                  <p className="text-sm font-semibold text-slate-900">
-                    {team.name}
-                  </p>
-                  <p className="text-xs text-slate-500">{team.leagueName}</p>
-                </div>
-              </div>
+              {team.logoUrl ? (
+                <img
+                  src={team.logoUrl}
+                  alt=""
+                  className="h-9 w-9 flex-shrink-0 rounded-lg object-cover"
+                />
+              ) : (
+                <span
+                  aria-hidden="true"
+                  className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-silver text-xs font-black text-on-block"
+                >
+                  {getInitials(team.name)}
+                </span>
+              )}
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm font-bold text-slate-900">
+                  {team.name}
+                </span>
+                <span className="block text-xs text-slate-500">
+                  {team.leagueName}
+                </span>
+              </span>
               <svg
-                className="w-4 h-4 text-slate-400 flex-shrink-0"
+                className="h-3.5 w-3.5 flex-shrink-0 text-slate-500"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
                 strokeWidth={2}
+                aria-hidden="true"
               >
                 <path
                   strokeLinecap="round"

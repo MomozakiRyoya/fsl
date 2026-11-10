@@ -370,9 +370,9 @@ export default async function TeamDetailPage({ params }: Props) {
                     ) : (
                       <span
                         aria-hidden="true"
-                        className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-silver text-xs font-black tabular-nums text-on-block"
+                        className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-silver text-xs font-black text-on-block"
                       >
-                        {player.number}
+                        {getInitials(player.name)}
                       </span>
                     )}
                     <span className="min-w-0 flex-1 truncate text-sm font-bold text-slate-900">
