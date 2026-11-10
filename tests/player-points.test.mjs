@@ -75,6 +75,18 @@ test("選手ページはポーカー用の項目だけを出す", () => {
   }
 });
 
+// ホームの個人ランキングは service role で player_results を読んでいる。
+// 選手ページだけ一般の接続（RLS がかかる）で読むと行が欠け、ホームと合計が食い違った
+test("選手ページの個人ポイントは、ホームのランキングと同じ管理者用の接続で読む", () => {
+  const src = read("src/lib/supabase/player-results.ts");
+  assert.ok(src.includes("SUPABASE_SERVICE_ROLE_KEY"), "service role で読む");
+  assert.ok(!src.includes('from "./server"'), "RLS がかかる接続を使わない");
+  assert.ok(
+    src.includes('.select("round_id, player_name, team_id, rank, points")'),
+    "必要な列だけを読む",
+  );
+});
+
 test("チーム詳細のメンバー一覧は、写真が無いとき背番号ではなく頭文字を出す", () => {
   const src = read("src/app/teams/[slug]/page.tsx");
   assert.ok(!src.includes("{player.number}"), "背番号を出さない");
