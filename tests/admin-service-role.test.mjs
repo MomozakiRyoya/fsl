@@ -18,6 +18,7 @@ const ROUTES = [
   "src/app/api/admin/news/[id]/route.ts",
   "src/app/api/admin/players/route.ts",
   "src/app/api/admin/players/[id]/route.ts",
+  "src/app/api/admin/rosters/route.ts",
   "src/app/api/admin/rounds/route.ts",
   "src/app/api/admin/rounds/[id]/route.ts",
   "src/app/api/admin/teams/route.ts",
